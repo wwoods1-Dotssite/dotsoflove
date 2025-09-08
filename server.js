@@ -27,6 +27,11 @@ const EMAIL_RECIPIENTS = [
 // Set SendGrid API key
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+// Debug logging - ADD THESE LINES
+console.log('SendGrid API Key exists:', !!process.env.SENDGRID_API_KEY);
+console.log('SendGrid API Key starts with SG:', process.env.SENDGRID_API_KEY?.startsWith('SG.'));
+console.log('SendGrid API Key length:', process.env.SENDGRID_API_KEY?.length);
+
 // Initialize SQLite database
 const db = new sqlite3.Database('./contacts.db');
 
