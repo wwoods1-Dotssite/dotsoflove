@@ -19,7 +19,8 @@ app.use(express.json());
 // Email configuration - Update these recipients as needed
 const EMAIL_RECIPIENTS = [
     'dotty.j.woods@gmail.com',
-    'wwoods1@gmail.com'
+    'wwoods1@gmail.com',
+    'dotsoflovepetsitting@gmail.com'
 ];
 
 // Create transporter for sending emails
