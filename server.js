@@ -168,7 +168,7 @@ async function sendEmailNotification(contactData) {
     `;
     
     const msg = {
-        to: ['dotty.j.woods@gmail.com', 'wwoods1@gmail.com'],
+        to: ['dotty.j.woods@gmail.com', 'wwoods1@gmail.com','dotsoflovepetsitting@gmail.com'],
         from: 'dotsoflovepetsitting@gmail.com',
         subject: `🐾 New Pet Sitting Request from ${contactData.name}`,
         html: emailHTML,
