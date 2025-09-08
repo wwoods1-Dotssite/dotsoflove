@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-    origin: ['https://dotsoflovepetsitting.com', 'https://www.dotsoflovepetsitting.com', 'http://localhost:3000'],
+    origin: ['https://dotsoflovepetsitting.com', 'https://www.dotsoflovepetsitting.com','https://visionary-queijadas-65e069.netlify.app', 'http://localhost:3000'],
     credentials: true
 }));
 app.use(express.json());
