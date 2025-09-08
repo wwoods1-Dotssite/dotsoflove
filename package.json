@@ -1,0 +1,27 @@
+{
+  "name": "dots-pet-sitting-backend",
+  "version": "1.0.0",
+  "description": "Backend service for Dot's of Love Pet Sitting website",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "nodemailer": "^6.9.7",
+    "sqlite3": "^5.1.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "pet-sitting",
+    "contact-form",
+    "email-service"
+  ],
+  "author": "Dorothy Woods",
+  "license": "MIT"
+}
