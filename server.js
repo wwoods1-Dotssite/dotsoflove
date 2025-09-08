@@ -1,6 +1,7 @@
 // server.js - Pet Sitting Backend Service
 const express = require('express');
 const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');  // Added to support SendGrid to send the emails for contact now
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const path = require('path');
@@ -23,14 +24,8 @@ const EMAIL_RECIPIENTS = [
     'dotsoflovepetsitting@gmail.com'
 ];
 
-// Create transporter for sending emails
-const transporter = nodemailer.createTransport({
-    service: 'SendGrid',
-    auth: {
-        user: 'apikey',
-        pass: process.env.SENDGRID_API_KEY
-    }
-});
+// Set SendGrid API key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Initialize SQLite database
 const db = new sqlite3.Database('./contacts.db');
@@ -139,7 +134,7 @@ app.get('/api/email-recipients', (req, res) => {
     res.json({ recipients: EMAIL_RECIPIENTS });
 });
 
-// Function to send email notification
+// Function to send email notification using SendGrid
 async function sendEmailNotification(contactData) {
     const emailHTML = `
         <h2>🐾 New Pet Sitting Request</h2>
@@ -172,16 +167,16 @@ async function sendEmailNotification(contactData) {
         </div>
     `;
     
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: EMAIL_RECIPIENTS.join(','),
+    const msg = {
+        to: ['dotty.j.woods@gmail.com', 'wwoods1@gmail.com'],
+        from: 'dotsoflovepetsitting@gmail.com',
         subject: `🐾 New Pet Sitting Request from ${contactData.name}`,
-        html: emailHTML
+        html: emailHTML,
     };
     
     try {
-        await transporter.sendMail(mailOptions);
-        console.log('Email notification sent successfully to:', EMAIL_RECIPIENTS.join(', '));
+        await sgMail.send(msg);
+        console.log('Email notification sent successfully to:', msg.to.join(', '));
     } catch (error) {
         console.error('Failed to send email notification:', error);
     }
