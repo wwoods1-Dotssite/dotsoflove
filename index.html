@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dot's of Love Pet Sitting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo::before {
+            content: '🐾';
+            font-size: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .admin-link {
+            background: linear-gradient(45deg, #667eea, #764ba2) !important;
+            color: white !important;
+        }
+
+        .page {
+            display: none;
+            padding: 2rem 0;
+            min-height: calc(100vh - 80px);
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .profile-section {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .profile-image {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .service-item {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .service-item:hover {
+            transform: scale(1.05);
+        }
+
+        .service-item h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .featured-service {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+            transform: translateY(-5px);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .featured-service::before {
+            content: '⭐ FEATURED SERVICE ⭐';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffd700;
+            color: #333;
+            padding: 0.3rem 1rem;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .featured-service h3 {
+            color: white !important;
+            font-size: 1.4rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .featured-service p {
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .featured-service strong {
+            color: #ffd700;
+            font-size: 1.1rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .featured-service:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 50px rgba(102, 126, 234, 0.6);
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .gallery-item {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 0;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .gallery-image {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gallery-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            transition: transform 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .gallery-image::after {
+            content: '🔍 Click to view full size';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            color: white;
+            padding: 2rem 1rem 0.8rem;
+            font-size: 0.9rem;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .gallery-item:hover .gallery-image::after {
+            opacity: 1;
+        }
+
+        .gallery-item:hover .gallery-image img {
+            transform: scale(1.05);
+        }
+
+        .gallery-content {
+                padding: 2rem;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+        }
+
+        .pet-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .pet-date {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .pet-story {
+            color: #333;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        .dorothy-pet-badge {
+            background: #ffd700;
+            color: #333;
+            padding: 0.2rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow: hidden;
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close {
+            color: white;
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1001;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .close:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .modal-image-container {
+            width: 100%;
+            max-height: 60vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: auto;
+            max-height: 60vh;
+            object-fit: contain;
+        }
+
+        .modal-details {
+            padding: 2rem;
+        }
+
+        .modal-pet-name {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-pet-date {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .modal-pet-story {
+            color: #333;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        .modal-badge {
+            background: #ffd700;
+            color: #333;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .admin-panel {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .admin-form {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .file-upload {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            margin: 1rem 0;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload:hover {
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-btn {
+            background: #667eea;
+            color: white;
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .admin-gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .admin-gallery-item {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .auth-form {
+            max-width: 400px;
+            margin: 4rem auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+        }
+
+        .testimonials {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .testimonial {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .testimonial-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .customer-name {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .rating {
+            color: #ffd700;
+            font-size: 1.2rem;
+        }
+
+        .contact-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .profile-section {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .profile-image {
+                height: 200px;
+                font-size: 3rem;
+            }
+
+            .gallery-item {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .gallery-image {
+                width: 100%;
+                height: 250px;
+            }
+
+            .gallery-content {
+                padding: 1.5rem;
+            }
+
+            .pet-name {
+                font-size: 1.3rem;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+
+            .modal-pet-name {
+                font-size: 1.5rem;
+            }
+
+            .close {
+                top: 10px;
+                right: 15px;
+                font-size: 25px;
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">Dot's of Love Pet Sitting</div>
+            <ul class="nav-links">
+                <li><a href="#about" class="nav-link active">About Me</a></li>
+                <li><a href="#gallery" class="nav-link">Gallery</a></li>
+                <li><a href="#testimonials" class="nav-link">Reviews</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+                <li><a href="#admin" class="nav-link admin-link">Admin</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-image-container">
+                <img id="modalImage" class="modal-image" src="" alt="">
+            </div>
+            <div class="modal-details">
+                <div id="modalBadge" class="modal-badge" style="display: none;">Dorothy's Pet</div>
+                <div id="modalPetName" class="modal-pet-name"></div>
+                <div id="modalPetDate" class="modal-pet-date"></div>
+                <div id="modalPetStory" class="modal-pet-story"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Me Page -->
+    <div id="about" class="page active">
+        <div class="container">
+            <div class="hero">
+                <h1>Hi, I'm Dorothy!</h1>
+                <p>Your trusted neighborhood pet sitter (call me Dot or Dotty!)</p>
+            </div>
+            
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">My Services</h2>
+                <div class="services-grid">
+                    <div class="service-item featured-service">
+                        <h3>🏠 In-Home Pet Sitting</h3>
+                        <p>I'll stay at your home to provide 24/7 care for your pets in their familiar environment.</p>
+                        <strong>$50/night (up to 3 pets)<br>+$10 per additional pet</strong>
+                    </div>
+                    <div class="service-item">
+                        <h3>🚶 Daily Dog Walks</h3>
+                        <p>Regular walks to keep your dog happy, healthy, and exercised while you're at work.</p>
+                        <strong>$15/walk</strong>
+                    </div>
+                    <div class="service-item">
+                        <h3>🏡 Pet Visits & Playtime</h3>
+                        <p>Daily check-ins to feed, play with, and care for your pets in your home. Each visit includes interactive playtime and lasts a minimum of 1 hour.</p>
+                        <strong>$20/visit</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="profile-section">
+                    <div class="profile-image">
+                        👩🐕🐱
+                    </div>
+                    <div>
+                        <h2>About Me</h2>
+                        <p>Hi there! I'm Dorothy, but everyone calls me Dot or Dotty. I'm a 25-year-old animal lover who has been caring for pets professionally for over 8 years. I understand how important your furry family members are to you, and I'm here to provide them with the love, attention, and care they deserve while you're away.</p>
+                        
+                        <p>Growing up with four dogs (Connie Sioux, Tarnation, Nala, and Beau) and four cats (Nimbus, Orion, Rafiki, and Jonesy) of my own, I've learned to read animal behavior and understand their unique needs. As a dedicated professional, I'm responsible, reliable, and genuinely passionate about animal welfare.</p>
+                        
+                        <h3 style="margin-top: 2rem; color: #667eea;">Why Choose Me?</h3>
+                        <ul style="margin-top: 1rem; padding-left: 1.5rem;">
+                            <li>🏆 8+ years of professional pet sitting experience</li>
+                            <li>📱 Regular photo and text updates</li>
+                            <li>🚨 Trained in pet first aid</li>
+                            <li>👍 Flexible scheduling including holidays</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gallery Page -->
+    <div id="gallery" class="page">
+        <div class="container">
+            <div class="hero">
+                <h1>Pet Gallery</h1>
+                <p>Meet some of the wonderful pets I've cared for and my own fur family!</p>
+            </div>
+
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">Our Pet Family</h2>
+                <div class="gallery-grid" id="galleryGrid">
+                    <!-- Gallery items will be loaded here -->
+                </div>
+                <div id="galleryLoading" style="text-align: center; padding: 2rem;">
+                    <p>Loading gallery...</p>
+                </div>
+                <div id="galleryEmpty" style="text-align: center; padding: 2rem; display: none;">
+                    <p>No pets in the gallery yet. Check back soon!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Testimonials Page -->
+    <div id="testimonials" class="page">
+        <div class="container">
+            <div class="hero">
+                <h1>Happy Customers</h1>
+                <p>See what pet parents are saying about our services</p>
+            </div>
+
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">Customer Reviews</h2>
+                <div class="testimonials">
+                    <div class="testimonial">
+                        <div class="testimonial-header">
+                            <span class="customer-name">Emma S.</span>
+                            <span class="rating">⭐⭐⭐⭐⭐</span>
+                        </div>
+                        <p>"This is only a TEST-imonial.  Dad jokes for the win!"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Page -->
+    <div id="contact" class="page">
+        <div class="container">
+            <div class="hero">
+                <h1>Let's Connect!</h1>
+                <p>Ready to give your pet the best care possible?</p>
+            </div>
+
+            <div class="card">
+                <div class="contact-form">
+                    <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">Request Pet Sitting Services</h2>
+                    <form id="contactForm">
+                        <div class="form-group">
+                            <label for="name">Your Name *</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="phone">
+                            <small style="color: #666; font-size: 0.9em;">* Either email or phone number is required</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bestTime">Best Time to Call *</label>
+                            <select id="bestTime" name="bestTime" required>
+                                <option value="">Select a time...</option>
+                                <option value="morning">Morning (8 AM - 12 PM)</option>
+                                <option value="afternoon">Afternoon (12 PM - 5 PM)</option>
+                                <option value="evening">Evening (5 PM - 8 PM)</option>
+                                <option value="weekend">Weekends</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="service">Service Needed</label>
+                            <select id="service" name="service">
+                                <option value="">Select a service...</option>
+                                <option value="overnight">Overnight Pet Sitting</option>
+                                <option value="walks">Daily Dog Walks</option>
+                                <option value="visits">Pet Visits</option>
+                                <option value="playtime">Pet Playtime</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="petInfo">Tell me about your pet(s)</label>
+                            <textarea id="petInfo" name="petInfo" rows="4" placeholder="Pet's name, breed, age, special needs, etc."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dates">Preferred Dates</label>
+                            <textarea id="dates" name="dates" rows="2" placeholder="When do you need pet sitting services?"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message">Additional Message</label>
+                            <textarea id="message" name="message" rows="3" placeholder="Any other details or questions?"></textarea>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <button type="submit" class="btn">Send Request</button>
+                        </div>
+
+                        <div class="success-message" id="successMessage">
+                            Thank you for your request! We'll contact you soon via your preferred method to discuss your pet sitting needs.
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Page -->
+    <div id="admin" class="page">
+        <div class="container">
+            <div id="adminAuth" class="auth-form">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">Admin Login</h2>
+                <form id="authForm">
+                    <div class="form-group">
+                        <label for="adminUsername">Username:</label>
+                        <input type="text" id="adminUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">Password:</label>
+                        <input type="password" id="adminPassword" required>
+                    </div>
+                    <div style="text-align: center;">
+                        <button type="submit" class="btn">Login</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="adminPanel" class="admin-panel" style="display: none;">
+                <div class="hero">
+                    <h1>Gallery Management</h1>
+                    <p>Add and manage pet photos and stories</p>
+                </div>
+
+                <div class="admin-form">
+                    <h3 style="color: #667eea; margin-bottom: 1rem;">Add New Pet</h3>
+                    <form id="addPetForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="petName">Pet Name *</label>
+                            <input type="text" id="petName" name="petName" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="storyDescription">Story Description</label>
+                            <textarea id="storyDescription" name="storyDescription" rows="4" placeholder="Tell us about this pet and your experience caring for them..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="serviceDate">Service Date (optional)</label>
+                            <input type="text" id="serviceDate" name="serviceDate" placeholder="e.g., Summer 2024, March 2025">
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="isDorothyPet" name="isDorothyPet" style="margin-right: 0.5rem;">
+                                This is one of Dorothy's own pets
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Pet Photo</label>
+                            <div class="file-upload" onclick="document.getElementById('petImage').click()">
+                                <button type="button" class="file-upload-btn">Choose Photo</button>
+                                <p style="margin-top: 1rem; color: #666;">Click to upload a photo (max 5MB)</p>
+                                <input type="file" id="petImage" name="image" accept="image/*">
+                            </div>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <button type="submit" class="btn">Add to Gallery</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: #667eea; margin-bottom: 1rem;">Current Gallery</h3>
+                    <div class="admin-gallery-grid" id="adminGalleryGrid">
+                        <!-- Admin gallery items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Navigation functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pages = document.querySelectorAll('.page');
+            let isAdminAuthenticated = false;
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all links and pages
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    pages.forEach(p => p.classList.remove('active'));
+                    
+                    // Add active class to clicked link
+                    this.classList.add('active');
+                    
+                    // Show corresponding page
+                    const targetPage = this.getAttribute('href').substring(1);
+                    document.getElementById(targetPage).classList.add('active');
+                    
+                    // Load page-specific content
+                    if (targetPage === 'gallery') {
+                        loadGallery();
+                    } else if (targetPage === 'admin') {
+                        if (!isAdminAuthenticated) {
+                            document.getElementById('adminAuth').style.display = 'block';
+                            document.getElementById('adminPanel').style.display = 'none';
+                        }
+                    }
+                });
+            });
+
+            // Load gallery on page load
+            loadGallery();
+
+            // Gallery functionality with modal support
+            async function loadGallery() {
+                try {
+                    const response = await fetch('https://dotsoflove-production.up.railway.app/api/gallery');
+                    const pets = await response.json();
+                    
+                    const galleryGrid = document.getElementById('galleryGrid');
+                    const galleryLoading = document.getElementById('galleryLoading');
+                    const galleryEmpty = document.getElementById('galleryEmpty');
+                    
+                    galleryLoading.style.display = 'none';
+                    
+                    if (pets.length === 0) {
+                        galleryEmpty.style.display = 'block';
+                        galleryGrid.innerHTML = '';
+                        return;
+                    }
+                    
+                    galleryEmpty.style.display = 'none';
+                    galleryGrid.innerHTML = pets.map(pet => `
+                        <div class="gallery-item" onclick="openModal(${JSON.stringify(pet).replace(/"/g, '&quot;')})">
+                            <div class="gallery-image">
+                                ${pet.image_url ? 
+                                    `<img src="https://dotsoflove-production.up.railway.app${pet.image_url}" alt="${pet.pet_name}">` :
+                                    `🐾`
+                                }
+                            </div>
+                            <div class="gallery-content">
+                                ${pet.is_dorothy_pet ? '<div class="dorothy-pet-badge">Dorothy\'s Pet</div>' : ''}
+                                <div class="pet-name">${pet.pet_name}</div>
+                                ${pet.service_date ? `<div class="pet-date">${pet.service_date}</div>` : ''}
+                                ${pet.story_description ? `<div class="pet-story">${pet.story_description}</div>` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                } catch (error) {
+                    console.error('Error loading gallery:', error);
+                    document.getElementById('galleryLoading').innerHTML = '<p>Error loading gallery. Please try again later.</p>';
+                }
+            }
+
+            // Admin authentication
+            document.getElementById('authForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('adminUsername').value;
+                const password = document.getElementById('adminPassword').value;
+                
+                try {
+                    const response = await fetch('https://dotsoflove-production.up.railway.app/api/admin/auth', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    if (response.ok) {
+                        isAdminAuthenticated = true;
+                        document.getElementById('adminAuth').style.display = 'none';
+                        document.getElementById('adminPanel').style.display = 'block';
+                        loadAdminGallery();
+                    } else {
+                        alert('Invalid credentials. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Auth error:', error);
+                    alert('Login failed. Please try again.');
+                }
+            });
+
+            // Add pet form submission
+            document.getElementById('addPetForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                
+                try {
+                    const response = await fetch('https://dotsoflove-production.up.railway.app/api/admin/gallery', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        alert('Pet added to gallery successfully!');
+                        this.reset();
+                        loadAdminGallery();
+                        loadGallery(); // Refresh public gallery
+                    } else {
+                        const error = await response.json();
+                        alert('Error: ' + error.error);
+                    }
+                } catch (error) {
+                    console.error('Error adding pet:', error);
+                    alert('Failed to add pet. Please try again.');
+                }
+            });
+
+            // Load admin gallery
+            async function loadAdminGallery() {
+                try {
+                    const response = await fetch('https://dotsoflove-production.up.railway.app/api/gallery');
+                    const pets = await response.json();
+                    
+                    const adminGrid = document.getElementById('adminGalleryGrid');
+                    adminGrid.innerHTML = pets.map(pet => `
+                        <div class="admin-gallery-item">
+                            <button class="delete-btn" onclick="deletePet(${pet.id})">&times;</button>
+                            ${pet.image_url ? 
+                                `<img src="https://dotsoflove-production.up.railway.app${pet.image_url}" alt="${pet.pet_name}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem;">` :
+                                `<div style="width: 100%; height: 150px; background: #f0f0f0; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🐾</div>`
+                            }
+                            <div style="font-weight: bold; color: #667eea;">${pet.pet_name}</div>
+                            ${pet.service_date ? `<div style="font-size: 0.9rem; color: #666;">${pet.service_date}</div>` : ''}
+                            ${pet.is_dorothy_pet ? '<div style="background: #ffd700; color: #333; padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.8rem; margin-top: 0.5rem; display: inline-block;">Dorothy\'s Pet</div>' : ''}
+                        </div>
+                    `).join('');
+                } catch (error) {
+                    console.error('Error loading admin gallery:', error);
+                }
+            }
+
+            // Make deletePet function global
+            window.deletePet = async function(petId) {
+                if (!confirm('Are you sure you want to delete this pet from the gallery?')) return;
+                
+                try {
+                    const response = await fetch(`https://dotsoflove-production.up.railway.app/api/admin/gallery/${petId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        loadAdminGallery();
+                        loadGallery(); // Refresh public gallery
+                    } else {
+                        alert('Failed to delete pet. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Error deleting pet:', error);
+                    alert('Failed to delete pet. Please try again.');
+                }
+            };
+
+            // Modal functionality
+            window.openModal = function(pet) {
+                const modal = document.getElementById('imageModal');
+                const modalImage = document.getElementById('modalImage');
+                const modalPetName = document.getElementById('modalPetName');
+                const modalPetDate = document.getElementById('modalPetDate');
+                const modalPetStory = document.getElementById('modalPetStory');
+                const modalBadge = document.getElementById('modalBadge');
+
+                // Set modal content
+                if (pet.image_url) {
+                    modalImage.src = `https://dotsoflove-production.up.railway.app${pet.image_url}`;
+                    modalImage.alt = pet.pet_name;
+                    modalImage.style.display = 'block';
+                } else {
+                    modalImage.style.display = 'none';
+                }
+
+                modalPetName.textContent = pet.pet_name;
+                modalPetDate.textContent = pet.service_date || '';
+                modalPetDate.style.display = pet.service_date ? 'block' : 'none';
+                modalPetStory.textContent = pet.story_description || '';
+                modalPetStory.style.display = pet.story_description ? 'block' : 'none';
+                
+                modalBadge.style.display = pet.is_dorothy_pet ? 'block' : 'none';
+
+                // Show modal
+                modal.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            };
+
+            // Close modal function
+            window.closeModal = function() {
+                const modal = document.getElementById('imageModal');
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto'; // Re-enable scrolling
+            };
+
+            // Modal event listeners
+            document.getElementById('imageModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+
+            document.querySelector('.close').addEventListener('click', closeModal);
+
+            // Keyboard support
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+
+            // Contact form submission
+            document.getElementById('contactForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Validate that either email or phone is provided
+                const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                
+                if (!email && !phone) {
+                    alert('Please provide either an email address or phone number so we can contact you.');
+                    return;
+                }
+                
+                // Get form data
+                const formData = new FormData(this);
+                const data = {};
+                formData.forEach((value, key) => {
+                    data[key] = value;
+                });
+                
+                // Show loading state
+                const submitButton = this.querySelector('.btn');
+                const originalText = submitButton.textContent;
+                submitButton.textContent = 'Sending...';
+                submitButton.disabled = true;
+                
+                try {
+                    // Send to backend service
+                    const response = await fetch('https://dotsoflove-production.up.railway.app/api/contact', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        // Show success message
+                        document.getElementById('successMessage').style.display = 'block';
+                        
+                        // Reset form
+                        this.reset();
+                        
+                        // Hide success message after 5 seconds
+                        setTimeout(() => {
+                            document.getElementById('successMessage').style.display = 'none';
+                        }, 5000);
+                    } else {
+                        throw new Error(result.error || 'Failed to submit request');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error submitting form:', error);
+                    alert('There was an error submitting your request. Please try again or call directly.');
+                } finally {
+                    // Reset button state
+                    submitButton.textContent = originalText;
+                    submitButton.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
