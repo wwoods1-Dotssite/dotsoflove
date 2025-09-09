@@ -215,6 +215,7 @@
             box-shadow: 0 15px 50px rgba(102, 126, 234, 0.6);
         }
 
+        /* Enhanced Gallery Styles */
         .gallery-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -260,8 +261,20 @@
             background: #f8f9fa;
         }
 
+        .image-count {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
         .gallery-image::after {
-            content: '🔍 Click to view full size';
+            content: '🔍 Click to view';
             position: absolute;
             bottom: 0;
             left: 0;
@@ -285,10 +298,10 @@
         }
 
         .gallery-content {
-                padding: 2rem;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .pet-name {
@@ -321,7 +334,7 @@
             margin-bottom: 0.5rem;
         }
 
-        /* Modal Styles */
+        /* Enhanced Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -340,7 +353,7 @@
             padding: 0;
             border-radius: 15px;
             width: 90%;
-            max-width: 800px;
+            max-width: 900px;
             max-height: 90vh;
             overflow: hidden;
             position: relative;
@@ -383,7 +396,8 @@
 
         .modal-image-container {
             width: 100%;
-            max-height: 60vh;
+            height: 60vh;
+            position: relative;
             overflow: hidden;
             display: flex;
             align-items: center;
@@ -391,10 +405,89 @@
             background: #f8f9fa;
         }
 
-        .modal-image {
+        /* Image Carousel Styles */
+        .image-carousel {
+            position: relative;
             width: 100%;
-            height: auto;
-            max-height: 60vh;
+            height: 100%;
+        }
+
+        .carousel-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .carousel-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .carousel-image.active {
+            opacity: 1;
+        }
+
+        .carousel-prev,
+        .carousel-next {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            padding: 1rem;
+            cursor: pointer;
+            font-size: 1.5rem;
+            border-radius: 50%;
+            z-index: 10;
+            transition: background 0.3s ease;
+        }
+
+        .carousel-prev:hover,
+        .carousel-next:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .carousel-prev {
+            left: 20px;
+        }
+
+        .carousel-next {
+            right: 20px;
+        }
+
+        .carousel-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .dot.active {
+            background: white;
+        }
+
+        .single-image {
+            width: 100%;
+            height: 100%;
             object-fit: contain;
         }
 
@@ -432,9 +525,117 @@
             margin-bottom: 1rem;
         }
 
+        /* Rates Section Styles */
+        .rates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .rate-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rate-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .rate-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .rate-price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .rate-unit {
+            color: #666;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .rate-description {
+            color: #333;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .featured-rate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white;
+            border: 3px solid #ffd700 !important;
+            transform: scale(1.05);
+        }
+
+        .featured-rate .rate-title {
+            color: white !important;
+        }
+
+        .featured-rate .rate-price {
+            color: #ffd700 !important;
+        }
+
+        .featured-rate .rate-unit {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        .featured-rate .rate-description {
+            color: rgba(255, 255, 255, 0.95) !important;
+        }
+
+        /* Enhanced Admin Panel */
         .admin-panel {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
+        }
+
+        .admin-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 0.5rem;
+            margin-bottom: 2rem;
+            gap: 0.5rem;
+        }
+
+        .admin-tab {
+            flex: 1;
+            padding: 1rem;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .admin-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .admin-tab-content {
+            display: none;
+        }
+
+        .admin-tab-content.active {
+            display: block;
         }
 
         .admin-form {
@@ -442,6 +643,12 @@
             padding: 2rem;
             border-radius: 15px;
             margin-bottom: 2rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
         }
 
         .file-upload {
@@ -470,34 +677,61 @@
             border-radius: 25px;
             cursor: pointer;
             font-size: 1rem;
+            margin-bottom: 1rem;
         }
 
         .admin-gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
         }
 
         .admin-gallery-item {
             background: white;
-            border-radius: 10px;
-            padding: 1rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             position: relative;
+            transition: transform 0.3s ease;
         }
 
-        .delete-btn {
+        .admin-gallery-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .admin-actions {
             position: absolute;
             top: 10px;
             right: 10px;
-            background: #ff4444;
-            color: white;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .edit-btn, .delete-btn {
             border: none;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 35px;
+            height: 35px;
             cursor: pointer;
             font-size: 1rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background: #28a745;
+        }
+
+        .edit-btn:hover {
+            background: #218838;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
         }
 
         .auth-form {
@@ -590,6 +824,18 @@
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
         .success-message {
             background: #d4edda;
             color: #155724;
@@ -599,9 +845,29 @@
             display: none;
         }
 
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
         @media (max-width: 768px) {
             .nav-links {
-                gap: 1rem;
+                gap: 0.5rem;
+            }
+
+            .nav-links a {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.9rem;
             }
 
             .hero h1 {
@@ -652,6 +918,36 @@
                 width: 40px;
                 height: 40px;
             }
+
+            .carousel-prev,
+            .carousel-next {
+                padding: 0.5rem;
+                font-size: 1.2rem;
+            }
+
+            .carousel-prev {
+                left: 10px;
+            }
+
+            .carousel-next {
+                right: 10px;
+            }
+
+            .rates-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-tabs {
+                flex-direction: column;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-gallery-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -660,8 +956,9 @@
         <nav class="container">
             <div class="logo">Dot's of Love Pet Sitting</div>
             <ul class="nav-links">
-                <li><a href="#about" class="nav-link active">About Me</a></li>
+                <li><a href="#about" class="nav-link active">About</a></li>
                 <li><a href="#gallery" class="nav-link">Gallery</a></li>
+                <li><a href="#rates" class="nav-link">Rates</a></li>
                 <li><a href="#testimonials" class="nav-link">Reviews</a></li>
                 <li><a href="#contact" class="nav-link">Contact</a></li>
                 <li><a href="#admin" class="nav-link admin-link">Admin</a></li>
@@ -669,12 +966,12 @@
         </nav>
     </header>
 
-    <!-- Image Modal -->
+    <!-- Enhanced Image Modal -->
     <div id="imageModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <div class="modal-image-container">
-                <img id="modalImage" class="modal-image" src="" alt="">
+            <div class="modal-image-container" id="modalImageContainer">
+                <!-- Images will be loaded here -->
             </div>
             <div class="modal-details">
                 <div id="modalBadge" class="modal-badge" style="display: none;">Dorothy's Pet</div>
@@ -699,17 +996,17 @@
                     <div class="service-item featured-service">
                         <h3>🏠 In-Home Pet Sitting</h3>
                         <p>I'll stay at your home to provide 24/7 care for your pets in their familiar environment.</p>
-                        <strong>$50/night (up to 3 pets)<br>+$10 per additional pet</strong>
+                        <strong>Starting at $75/night</strong>
                     </div>
                     <div class="service-item">
                         <h3>🚶 Daily Dog Walks</h3>
                         <p>Regular walks to keep your dog happy, healthy, and exercised while you're at work.</p>
-                        <strong>$15/walk</strong>
+                        <strong>Starting at $25/walk</strong>
                     </div>
                     <div class="service-item">
-                        <h3>🏡 Pet Visits & Playtime</h3>
-                        <p>Daily check-ins to feed, play with, and care for your pets in your home. Each visit includes interactive playtime and lasts a minimum of 1 hour.</p>
-                        <strong>$20/visit</strong>
+                        <h3>🏡 Pet Visits & Care</h3>
+                        <p>Daily check-ins to feed, play with, and care for your pets in your home.</p>
+                        <strong>Starting at $30/visit</strong>
                     </div>
                 </div>
             </div>
@@ -751,11 +1048,34 @@
                 <div class="gallery-grid" id="galleryGrid">
                     <!-- Gallery items will be loaded here -->
                 </div>
-                <div id="galleryLoading" style="text-align: center; padding: 2rem;">
+                <div id="galleryLoading" class="loading">
                     <p>Loading gallery...</p>
                 </div>
                 <div id="galleryEmpty" style="text-align: center; padding: 2rem; display: none;">
                     <p>No pets in the gallery yet. Check back soon!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rates Page -->
+    <div id="rates" class="page">
+        <div class="container">
+            <div class="hero">
+                <h1>Service Rates</h1>
+                <p>Transparent pricing for quality pet care</p>
+            </div>
+
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">Current Rates</h2>
+                <div class="rates-grid" id="ratesGrid">
+                    <!-- Rates will be loaded here -->
+                </div>
+                <div id="ratesLoading" class="loading">
+                    <p>Loading current rates...</p>
+                </div>
+                <div id="ratesEmpty" style="text-align: center; padding: 2rem; display: none;">
+                    <p>Rates information will be available soon!</p>
                 </div>
             </div>
         </div>
@@ -777,7 +1097,7 @@
                             <span class="customer-name">Emma S.</span>
                             <span class="rating">⭐⭐⭐⭐⭐</span>
                         </div>
-                        <p>"This is only a TEST-imonial.  Dad jokes for the win!"</p>
+                        <p>"This is only a TEST-imonial. Dad jokes for the win!"</p>
                     </div>
                 </div>
             </div>
@@ -863,7 +1183,7 @@
         </div>
     </div>
 
-    <!-- Admin Page -->
+    <!-- Enhanced Admin Page -->
     <div id="admin" class="page">
         <div class="container">
             <div id="adminAuth" class="auth-form">
@@ -880,59 +1200,134 @@
                     <div style="text-align: center;">
                         <button type="submit" class="btn">Login</button>
                     </div>
+                    <div class="error-message" id="authError"></div>
                 </form>
             </div>
 
             <div id="adminPanel" class="admin-panel" style="display: none;">
                 <div class="hero">
-                    <h1>Gallery Management</h1>
-                    <p>Add and manage pet photos and stories</p>
+                    <h1>Admin Dashboard</h1>
+                    <p>Manage gallery and rates</p>
                 </div>
 
-                <div class="admin-form">
-                    <h3 style="color: #667eea; margin-bottom: 1rem;">Add New Pet</h3>
-                    <form id="addPetForm" enctype="multipart/form-data">
-                        <div class="form-group">
-                            <label for="petName">Pet Name *</label>
-                            <input type="text" id="petName" name="petName" required>
-                        </div>
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="switchAdminTab('gallery')">Gallery Management</button>
+                    <button class="admin-tab" onclick="switchAdminTab('rates')">Rates Management</button>
+                </div>
 
-                        <div class="form-group">
-                            <label for="storyDescription">Story Description</label>
-                            <textarea id="storyDescription" name="storyDescription" rows="4" placeholder="Tell us about this pet and your experience caring for them..."></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="serviceDate">Service Date (optional)</label>
-                            <input type="text" id="serviceDate" name="serviceDate" placeholder="e.g., Summer 2024, March 2025">
-                        </div>
-
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="isDorothyPet" name="isDorothyPet" style="margin-right: 0.5rem;">
-                                This is one of Dorothy's own pets
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Pet Photo</label>
-                            <div class="file-upload" onclick="document.getElementById('petImage').click()">
-                                <button type="button" class="file-upload-btn">Choose Photo</button>
-                                <p style="margin-top: 1rem; color: #666;">Click to upload a photo (max 5MB)</p>
-                                <input type="file" id="petImage" name="image" accept="image/*">
+                <!-- Gallery Management Tab -->
+                <div id="galleryTab" class="admin-tab-content active">
+                    <div class="admin-form">
+                        <h3 style="color: #667eea; margin-bottom: 1rem;">Add New Pet</h3>
+                        <form id="addPetForm" enctype="multipart/form-data">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="petName">Pet Name *</label>
+                                    <input type="text" id="petName" name="petName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="serviceDate">Service Date</label>
+                                    <input type="text" id="serviceDate" name="serviceDate" placeholder="e.g., Summer 2024">
+                                </div>
                             </div>
-                        </div>
 
-                        <div style="text-align: center;">
-                            <button type="submit" class="btn">Add to Gallery</button>
+                            <div class="form-group">
+                                <label for="storyDescription">Story Description</label>
+                                <textarea id="storyDescription" name="storyDescription" rows="4" placeholder="Tell us about this pet and your experience caring for them..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="isDorothyPet" name="isDorothyPet" style="margin-right: 0.5rem;">
+                                    This is one of Dorothy's own pets
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Pet Photos (Multiple files supported)</label>
+                                <div class="file-upload" onclick="document.getElementById('petImages').click()">
+                                    <button type="button" class="file-upload-btn">Choose Photos</button>
+                                    <p style="margin-top: 1rem; color: #666;">Click to upload photos (max 5MB each)</p>
+                                    <input type="file" id="petImages" name="images" accept="image/*" multiple>
+                                    <div id="filePreview" style="margin-top: 1rem;"></div>
+                                </div>
+                            </div>
+
+                            <div style="text-align: center;">
+                                <button type="submit" class="btn">Add to Gallery</button>
+                            </div>
+                            <div class="success-message" id="addPetSuccess"></div>
+                            <div class="error-message" id="addPetError"></div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="color: #667eea; margin-bottom: 1rem;">Current Gallery</h3>
+                        <div class="admin-gallery-grid" id="adminGalleryGrid">
+                            <!-- Admin gallery items will be loaded here -->
                         </div>
-                    </form>
+                        <div id="adminGalleryLoading" class="loading">
+                            <p>Loading gallery...</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="card">
-                    <h3 style="color: #667eea; margin-bottom: 1rem;">Current Gallery</h3>
-                    <div class="admin-gallery-grid" id="adminGalleryGrid">
-                        <!-- Admin gallery items will be loaded here -->
+                <!-- Rates Management Tab -->
+                <div id="ratesTab" class="admin-tab-content">
+                    <div class="admin-form">
+                        <h3 style="color: #667eea; margin-bottom: 1rem;">Add/Edit Rate</h3>
+                        <form id="rateForm">
+                            <input type="hidden" id="rateId" name="rateId">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="serviceType">Service Type *</label>
+                                    <input type="text" id="serviceType" name="serviceType" required placeholder="e.g., Pet Sitting (Overnight)">
+                                </div>
+                                <div class="form-group">
+                                    <label for="ratePerUnit">Rate *</label>
+                                    <input type="number" id="ratePerUnit" name="ratePerUnit" step="0.01" required placeholder="75.00">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="unitType">Unit Type *</label>
+                                    <select id="unitType" name="unitType" required>
+                                        <option value="">Select unit...</option>
+                                        <option value="per_night">Per Night</option>
+                                        <option value="per_day">Per Day</option>
+                                        <option value="per_visit">Per Visit</option>
+                                        <option value="per_walk">Per Walk</option>
+                                        <option value="per_hour">Per Hour</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="isActive" name="isActive" checked style="margin-right: 0.5rem;">
+                                        Active Rate
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <textarea id="description" name="description" rows="3" placeholder="Brief description of this service..."></textarea>
+                            </div>
+                            <div style="text-align: center;">
+                                <button type="submit" class="btn" id="rateSubmitBtn">Add Rate</button>
+                                <button type="button" class="btn btn-secondary" onclick="resetRateForm()" style="margin-left: 1rem;">Cancel</button>
+                            </div>
+                            <div class="success-message" id="rateSuccess"></div>
+                            <div class="error-message" id="rateError"></div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="color: #667eea; margin-bottom: 1rem;">Current Rates</h3>
+                        <div id="adminRatesGrid">
+                            <!-- Admin rates will be loaded here -->
+                        </div>
+                        <div id="adminRatesLoading" class="loading">
+                            <p>Loading rates...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -940,11 +1335,16 @@
     </div>
 
     <script>
+        // Global variables
+        const API_BASE = 'https://dotsoflove-production.up.railway.app';
+        let adminToken = localStorage.getItem('adminToken');
+        let currentImageIndex = 0;
+        let currentImages = [];
+
         // Navigation functionality
         document.addEventListener('DOMContentLoaded', function() {
             const navLinks = document.querySelectorAll('.nav-link');
             const pages = document.querySelectorAll('.page');
-            let isAdminAuthenticated = false;
 
             navLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
@@ -964,42 +1364,49 @@
                     // Load page-specific content
                     if (targetPage === 'gallery') {
                         loadGallery();
+                    } else if (targetPage === 'rates') {
+                        loadRates();
                     } else if (targetPage === 'admin') {
-                        if (!isAdminAuthenticated) {
-                            document.getElementById('adminAuth').style.display = 'block';
-                            document.getElementById('adminPanel').style.display = 'none';
-                        }
+                        checkAdminAuth();
                     }
                 });
             });
 
-            // Load gallery on page load
+            // Load initial content
             loadGallery();
+            loadRates();
+        });
 
-            // Gallery functionality with modal support
-            async function loadGallery() {
-                try {
-                    const response = await fetch('https://dotsoflove-production.up.railway.app/api/gallery');
-                    const pets = await response.json();
+        // Enhanced Gallery functionality
+        async function loadGallery() {
+            try {
+                const response = await fetch(`${API_BASE}/api/gallery`);
+                const pets = await response.json();
+                
+                const galleryGrid = document.getElementById('galleryGrid');
+                const galleryLoading = document.getElementById('galleryLoading');
+                const galleryEmpty = document.getElementById('galleryEmpty');
+                
+                galleryLoading.style.display = 'none';
+                
+                if (pets.length === 0) {
+                    galleryEmpty.style.display = 'block';
+                    galleryGrid.innerHTML = '';
+                    return;
+                }
+                
+                galleryEmpty.style.display = 'none';
+                galleryGrid.innerHTML = pets.map(pet => {
+                    const images = pet.images || [];
+                    const primaryImage = images.find(img => img.isPrimary) || images[0];
+                    const hasMultipleImages = images.length > 1;
                     
-                    const galleryGrid = document.getElementById('galleryGrid');
-                    const galleryLoading = document.getElementById('galleryLoading');
-                    const galleryEmpty = document.getElementById('galleryEmpty');
-                    
-                    galleryLoading.style.display = 'none';
-                    
-                    if (pets.length === 0) {
-                        galleryEmpty.style.display = 'block';
-                        galleryGrid.innerHTML = '';
-                        return;
-                    }
-                    
-                    galleryEmpty.style.display = 'none';
-                    galleryGrid.innerHTML = pets.map(pet => `
+                    return `
                         <div class="gallery-item" onclick="openModal(${JSON.stringify(pet).replace(/"/g, '&quot;')})">
                             <div class="gallery-image">
-                                ${pet.image_url ? 
-                                    `<img src="https://dotsoflove-production.up.railway.app${pet.image_url}" alt="${pet.pet_name}">` :
+                                ${primaryImage ? 
+                                    `<img src="${API_BASE}${primaryImage.url}" alt="${pet.pet_name}">
+                                     ${hasMultipleImages ? `<div class="image-count">${images.length} photos</div>` : ''}` :
                                     `🐾`
                                 }
                             </div>
@@ -1010,229 +1417,605 @@
                                 ${pet.story_description ? `<div class="pet-story">${pet.story_description}</div>` : ''}
                             </div>
                         </div>
-                    `).join('');
-                } catch (error) {
-                    console.error('Error loading gallery:', error);
-                    document.getElementById('galleryLoading').innerHTML = '<p>Error loading gallery. Please try again later.</p>';
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading gallery:', error);
+                document.getElementById('galleryLoading').innerHTML = '<p>Error loading gallery. Please try again later.</p>';
+            }
+        }
+
+        // Load Rates
+        async function loadRates() {
+            try {
+                const response = await fetch(`${API_BASE}/api/rates`);
+                const rates = await response.json();
+                
+                const ratesGrid = document.getElementById('ratesGrid');
+                const ratesLoading = document.getElementById('ratesLoading');
+                const ratesEmpty = document.getElementById('ratesEmpty');
+                
+                ratesLoading.style.display = 'none';
+                
+                if (rates.length === 0) {
+                    ratesEmpty.style.display = 'block';
+                    ratesGrid.innerHTML = '';
+                    return;
                 }
+                
+                ratesEmpty.style.display = 'none';
+                ratesGrid.innerHTML = rates.map((rate, index) => {
+                    const isFeatured = index === 0; // Make first rate featured
+                    return `
+                        <div class="rate-card ${isFeatured ? 'featured-rate' : ''}">
+                            <div class="rate-title">${rate.service_type}</div>
+                            <div class="rate-price">${parseFloat(rate.rate_per_unit).toFixed(2)}</div>
+                            <div class="rate-unit">${rate.unit_type.replace('_', ' ')}</div>
+                            ${rate.description ? `<div class="rate-description">${rate.description}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading rates:', error);
+                document.getElementById('ratesLoading').innerHTML = '<p>Error loading rates. Please try again later.</p>';
+            }
+        }
+
+        // Enhanced Modal with Image Carousel
+        window.openModal = function(pet) {
+            const modal = document.getElementById('imageModal');
+            const modalImageContainer = document.getElementById('modalImageContainer');
+            const modalPetName = document.getElementById('modalPetName');
+            const modalPetDate = document.getElementById('modalPetDate');
+            const modalPetStory = document.getElementById('modalPetStory');
+            const modalBadge = document.getElementById('modalBadge');
+
+            const images = pet.images || [];
+            currentImages = images;
+            currentImageIndex = 0;
+
+            // Set modal content
+            if (images.length > 1) {
+                // Multiple images - create carousel
+                modalImageContainer.innerHTML = `
+                    <div class="image-carousel">
+                        <div class="carousel-container">
+                            ${images.map((img, index) => `
+                                <img src="${API_BASE}${img.url}" 
+                                     alt="${pet.pet_name}" 
+                                     class="carousel-image ${index === 0 ? 'active' : ''}"
+                                     data-index="${index}">
+                            `).join('')}
+                        </div>
+                        <button class="carousel-prev" onclick="prevImage()">&lt;</button>
+                        <button class="carousel-next" onclick="nextImage()">&gt;</button>
+                        <div class="carousel-dots">
+                            ${images.map((_, index) => `
+                                <span class="dot ${index === 0 ? 'active' : ''}" 
+                                      onclick="currentImage(${index})"></span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (images.length === 1) {
+                // Single image
+                modalImageContainer.innerHTML = `
+                    <img src="${API_BASE}${images[0].url}" alt="${pet.pet_name}" class="single-image">
+                `;
+            } else {
+                // No image
+                modalImageContainer.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; font-size: 4rem; color: #667eea;">🐾</div>
+                `;
             }
 
-            // Admin authentication
-            document.getElementById('authForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
+            modalPetName.textContent = pet.pet_name;
+            modalPetDate.textContent = pet.service_date || '';
+            modalPetDate.style.display = pet.service_date ? 'block' : 'none';
+            modalPetStory.textContent = pet.story_description || '';
+            modalPetStory.style.display = pet.story_description ? 'block' : 'none';
+            
+            modalBadge.style.display = pet.is_dorothy_pet ? 'block' : 'none';
+
+            // Show modal
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        };
+
+        // Carousel navigation functions
+        window.nextImage = function() {
+            if (currentImages.length <= 1) return;
+            currentImageIndex = (currentImageIndex + 1) % currentImages.length;
+            updateCarousel();
+        };
+
+        window.prevImage = function() {
+            if (currentImages.length <= 1) return;
+            currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
+            updateCarousel();
+        };
+
+        window.currentImage = function(index) {
+            currentImageIndex = index;
+            updateCarousel();
+        };
+
+        function updateCarousel() {
+            const images = document.querySelectorAll('.carousel-image');
+            const dots = document.querySelectorAll('.dot');
+            
+            images.forEach((img, index) => {
+                img.classList.toggle('active', index === currentImageIndex);
+            });
+            
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentImageIndex);
+            });
+        }
+
+        // Close modal function
+        window.closeModal = function() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        };
+
+        // Modal event listeners
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        document.querySelector('.close').addEventListener('click', closeModal);
+
+        // Keyboard support
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            } else if (e.key === 'ArrowLeft') {
+                prevImage();
+            } else if (e.key === 'ArrowRight') {
+                nextImage();
+            }
+        });
+
+        // Admin functionality
+        function checkAdminAuth() {
+            if (adminToken) {
+                validateToken();
+            } else {
+                showAdminAuth();
+            }
+        }
+
+        function showAdminAuth() {
+            document.getElementById('adminAuth').style.display = 'block';
+            document.getElementById('adminPanel').style.display = 'none';
+        }
+
+        function showAdminPanel() {
+            document.getElementById('adminAuth').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            loadAdminGallery();
+            loadAdminRates();
+        }
+
+        async function validateToken() {
+            try {
+                const response = await makeAuthenticatedRequest(`${API_BASE}/api/admin/validate`);
+                if (response.ok) {
+                    showAdminPanel();
+                } else {
+                    localStorage.removeItem('adminToken');
+                    adminToken = null;
+                    showAdminAuth();
+                }
+            } catch (error) {
+                localStorage.removeItem('adminToken');
+                adminToken = null;
+                showAdminAuth();
+            }
+        }
+
+        // Admin authentication
+        document.getElementById('authForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+            const errorDiv = document.getElementById('authError');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/auth`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
                 
-                const username = document.getElementById('adminUsername').value;
-                const password = document.getElementById('adminPassword').value;
+                const data = await response.json();
                 
-                try {
-                    const response = await fetch('https://dotsoflove-production.up.railway.app/api/admin/auth', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password })
-                    });
-                    
-                    if (response.ok) {
-                        isAdminAuthenticated = true;
-                        document.getElementById('adminAuth').style.display = 'none';
-                        document.getElementById('adminPanel').style.display = 'block';
-                        loadAdminGallery();
-                    } else {
-                        alert('Invalid credentials. Please try again.');
-                    }
-                } catch (error) {
-                    console.error('Auth error:', error);
-                    alert('Login failed. Please try again.');
+                if (response.ok) {
+                    adminToken = data.token;
+                    localStorage.setItem('adminToken', adminToken);
+                    showAdminPanel();
+                    errorDiv.style.display = 'none';
+                } else {
+                    errorDiv.textContent = data.error || 'Invalid credentials';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Auth error:', error);
+                errorDiv.textContent = 'Login failed. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        });
+
+        // Authenticated request helper
+        function makeAuthenticatedRequest(url, options = {}) {
+            return fetch(url, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${adminToken}`
                 }
             });
+        }
 
-            // Add pet form submission
-            document.getElementById('addPetForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
+        // Admin tab switching
+        window.switchAdminTab = function(tab) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+            
+            document.querySelector(`[onclick="switchAdminTab('${tab}')"]`).classList.add('active');
+            document.getElementById(`${tab}Tab`).classList.add('active');
+            
+            if (tab === 'gallery') {
+                loadAdminGallery();
+            } else if (tab === 'rates') {
+                loadAdminRates();
+            }
+        };
+
+        // File preview for multiple uploads
+        document.getElementById('petImages').addEventListener('change', function() {
+            const preview = document.getElementById('filePreview');
+            preview.innerHTML = '';
+            
+            if (this.files.length > 0) {
+                preview.innerHTML = `<p style="color: #667eea; font-weight: bold;">${this.files.length} file(s) selected:</p>`;
+                Array.from(this.files).forEach(file => {
+                    preview.innerHTML += `<p style="font-size: 0.9rem; color: #666;">• ${file.name}</p>`;
+                });
+            }
+        });
+
+        // Add pet form submission
+        document.getElementById('addPetForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const successDiv = document.getElementById('addPetSuccess');
+            const errorDiv = document.getElementById('addPetError');
+            
+            try {
+                const response = await makeAuthenticatedRequest(`${API_BASE}/api/admin/gallery`, {
+                    method: 'POST',
+                    body: formData
+                });
                 
-                const formData = new FormData(this);
+                const data = await response.json();
                 
-                try {
-                    const response = await fetch('https://dotsoflove-production.up.railway.app/api/admin/gallery', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (response.ok) {
-                        alert('Pet added to gallery successfully!');
-                        this.reset();
-                        loadAdminGallery();
-                        loadGallery(); // Refresh public gallery
-                    } else {
-                        const error = await response.json();
-                        alert('Error: ' + error.error);
-                    }
-                } catch (error) {
-                    console.error('Error adding pet:', error);
-                    alert('Failed to add pet. Please try again.');
+                if (response.ok) {
+                    successDiv.textContent = 'Pet added to gallery successfully!';
+                    successDiv.style.display = 'block';
+                    errorDiv.style.display = 'none';
+                    this.reset();
+                    document.getElementById('filePreview').innerHTML = '';
+                    loadAdminGallery();
+                    loadGallery(); // Refresh public gallery
+                } else {
+                    errorDiv.textContent = data.error || 'Failed to add pet';
+                    errorDiv.style.display = 'block';
+                    successDiv.style.display = 'none';
                 }
-            });
+            } catch (error) {
+                console.error('Error adding pet:', error);
+                errorDiv.textContent = 'Failed to add pet. Please try again.';
+                errorDiv.style.display = 'block';
+                successDiv.style.display = 'none';
+            }
+        });
 
-            // Load admin gallery
-            async function loadAdminGallery() {
-                try {
-                    const response = await fetch('https://dotsoflove-production.up.railway.app/api/gallery');
-                    const pets = await response.json();
+        // Load admin gallery
+        async function loadAdminGallery() {
+            try {
+                const response = await fetch(`${API_BASE}/api/gallery`);
+                const pets = await response.json();
+                
+                const adminGrid = document.getElementById('adminGalleryGrid');
+                const loadingDiv = document.getElementById('adminGalleryLoading');
+                
+                loadingDiv.style.display = 'none';
+                
+                adminGrid.innerHTML = pets.map(pet => {
+                    const images = pet.images || [];
+                    const primaryImage = images.find(img => img.isPrimary) || images[0];
                     
-                    const adminGrid = document.getElementById('adminGalleryGrid');
-                    adminGrid.innerHTML = pets.map(pet => `
+                    return `
                         <div class="admin-gallery-item">
-                            <button class="delete-btn" onclick="deletePet(${pet.id})">&times;</button>
-                            ${pet.image_url ? 
-                                `<img src="https://dotsoflove-production.up.railway.app${pet.image_url}" alt="${pet.pet_name}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem;">` :
+                            <div class="admin-actions">
+                                <button class="edit-btn" onclick="editPet(${pet.id})" title="Edit Pet">✏️</button>
+                                <button class="delete-btn" onclick="deletePet(${pet.id})" title="Delete Pet">&times;</button>
+                            </div>
+                            ${primaryImage ? 
+                                `<img src="${API_BASE}${primaryImage.url}" alt="${pet.pet_name}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem;">` :
                                 `<div style="width: 100%; height: 150px; background: #f0f0f0; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🐾</div>`
                             }
                             <div style="font-weight: bold; color: #667eea;">${pet.pet_name}</div>
                             ${pet.service_date ? `<div style="font-size: 0.9rem; color: #666;">${pet.service_date}</div>` : ''}
                             ${pet.is_dorothy_pet ? '<div style="background: #ffd700; color: #333; padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.8rem; margin-top: 0.5rem; display: inline-block;">Dorothy\'s Pet</div>' : ''}
+                            ${images.length > 1 ? `<div style="margin-top: 0.5rem; font-size: 0.8rem; color: #667eea;">${images.length} photos</div>` : ''}
                         </div>
-                    `).join('');
-                } catch (error) {
-                    console.error('Error loading admin gallery:', error);
-                }
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading admin gallery:', error);
+                document.getElementById('adminGalleryLoading').innerHTML = '<p>Error loading gallery.</p>';
             }
+        }
 
-            // Make deletePet function global
-            window.deletePet = async function(petId) {
-                if (!confirm('Are you sure you want to delete this pet from the gallery?')) return;
+        // Load admin rates
+        async function loadAdminRates() {
+            try {
+                const response = await makeAuthenticatedRequest(`${API_BASE}/api/admin/rates`);
+                const rates = await response.json();
                 
+                const adminRatesGrid = document.getElementById('adminRatesGrid');
+                const loadingDiv = document.getElementById('adminRatesLoading');
+                
+                loadingDiv.style.display = 'none';
+                
+                adminRatesGrid.innerHTML = `
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden;">
+                            <thead style="background: #667eea; color: white;">
+                                <tr>
+                                    <th style="padding: 1rem; text-align: left;">Service</th>
+                                    <th style="padding: 1rem; text-align: left;">Rate</th>
+                                    <th style="padding: 1rem; text-align: left;">Unit</th>
+                                    <th style="padding: 1rem; text-align: left;">Status</th>
+                                    <th style="padding: 1rem; text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rates.map(rate => `
+                                    <tr style="border-bottom: 1px solid #eee;">
+                                        <td style="padding: 1rem;">${rate.service_type}</td>
+                                        <td style="padding: 1rem; font-weight: bold;">${parseFloat(rate.rate_per_unit).toFixed(2)}</td>
+                                        <td style="padding: 1rem;">${rate.unit_type.replace('_', ' ')}</td>
+                                        <td style="padding: 1rem;">
+                                            <span style="padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.8rem; background: ${rate.is_active ? '#d4edda' : '#f8d7da'}; color: ${rate.is_active ? '#155724' : '#721c24'};">
+                                                ${rate.is_active ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 1rem; text-align: center;">
+                                            <button onclick="editRate(${rate.id})" class="btn btn-success" style="padding: 0.3rem 0.8rem; margin-right: 0.5rem; font-size: 0.8rem;">Edit</button>
+                                            <button onclick="deleteRate(${rate.id})" class="btn btn-danger" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">Delete</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading admin rates:', error);
+                document.getElementById('adminRatesLoading').innerHTML = '<p>Error loading rates.</p>';
+            }
+        }
+
+        // Rate form submission
+        document.getElementById('rateForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            data.isActive = document.getElementById('isActive').checked;
+            
+            const rateId = document.getElementById('rateId').value;
+            const isEdit = !!rateId;
+            
+            const successDiv = document.getElementById('rateSuccess');
+            const errorDiv = document.getElementById('rateError');
+            
+            try {
+                const url = isEdit ? `${API_BASE}/api/admin/rates/${rateId}` : `${API_BASE}/api/admin/rates`;
+                const method = isEdit ? 'PUT' : 'POST';
+                
+                const response = await makeAuthenticatedRequest(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    successDiv.textContent = `Rate ${isEdit ? 'updated' : 'created'} successfully!`;
+                    successDiv.style.display = 'block';
+                    errorDiv.style.display = 'none';
+                    resetRateForm();
+                    loadAdminRates();
+                    loadRates(); // Refresh public rates
+                } else {
+                    errorDiv.textContent = result.error || `Failed to ${isEdit ? 'update' : 'create'} rate`;
+                    errorDiv.style.display = 'block';
+                    successDiv.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error with rate:', error);
+                errorDiv.textContent = `Failed to ${isEdit ? 'update' : 'create'} rate. Please try again.`;
+                errorDiv.style.display = 'block';
+                successDiv.style.display = 'none';
+            }
+        });
+
+        // Pet management functions
+        window.editPet = async function(petId) {
+            // For now, just show an alert. You can implement a full edit modal later
+            const newStory = prompt('Edit pet story (leave empty to keep current):');
+            if (newStory !== null) {
                 try {
-                    const response = await fetch(`https://dotsoflove-production.up.railway.app/api/admin/gallery/${petId}`, {
-                        method: 'DELETE'
+                    const response = await makeAuthenticatedRequest(`${API_BASE}/api/admin/gallery/${petId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            petName: 'Current Name', // You'd get this from the form
+                            storyDescription: newStory 
+                        })
                     });
                     
                     if (response.ok) {
                         loadAdminGallery();
-                        loadGallery(); // Refresh public gallery
-                    } else {
-                        alert('Failed to delete pet. Please try again.');
+                        loadGallery();
                     }
                 } catch (error) {
-                    console.error('Error deleting pet:', error);
-                    alert('Failed to delete pet. Please try again.');
+                    console.error('Error editing pet:', error);
                 }
-            };
+            }
+        };
 
-            // Modal functionality
-            window.openModal = function(pet) {
-                const modal = document.getElementById('imageModal');
-                const modalImage = document.getElementById('modalImage');
-                const modalPetName = document.getElementById('modalPetName');
-                const modalPetDate = document.getElementById('modalPetDate');
-                const modalPetStory = document.getElementById('modalPetStory');
-                const modalBadge = document.getElementById('modalBadge');
-
-                // Set modal content
-                if (pet.image_url) {
-                    modalImage.src = `https://dotsoflove-production.up.railway.app${pet.image_url}`;
-                    modalImage.alt = pet.pet_name;
-                    modalImage.style.display = 'block';
-                } else {
-                    modalImage.style.display = 'none';
-                }
-
-                modalPetName.textContent = pet.pet_name;
-                modalPetDate.textContent = pet.service_date || '';
-                modalPetDate.style.display = pet.service_date ? 'block' : 'none';
-                modalPetStory.textContent = pet.story_description || '';
-                modalPetStory.style.display = pet.story_description ? 'block' : 'none';
-                
-                modalBadge.style.display = pet.is_dorothy_pet ? 'block' : 'none';
-
-                // Show modal
-                modal.style.display = 'block';
-                document.body.style.overflow = 'hidden'; // Prevent background scrolling
-            };
-
-            // Close modal function
-            window.closeModal = function() {
-                const modal = document.getElementById('imageModal');
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto'; // Re-enable scrolling
-            };
-
-            // Modal event listeners
-            document.getElementById('imageModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeModal();
-                }
-            });
-
-            document.querySelector('.close').addEventListener('click', closeModal);
-
-            // Keyboard support
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    closeModal();
-                }
-            });
-
-            // Contact form submission
-            document.getElementById('contactForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                // Validate that either email or phone is provided
-                const email = document.getElementById('email').value.trim();
-                const phone = document.getElementById('phone').value.trim();
-                
-                if (!email && !phone) {
-                    alert('Please provide either an email address or phone number so we can contact you.');
-                    return;
-                }
-                
-                // Get form data
-                const formData = new FormData(this);
-                const data = {};
-                formData.forEach((value, key) => {
-                    data[key] = value;
+        window.deletePet = async function(petId) {
+            if (!confirm('Are you sure you want to delete this pet from the gallery? This will also delete all associated images.')) return;
+            
+            try {
+                const response = await makeAuthenticatedRequest(`${API_BASE}/api/admin/gallery/${petId}`, {
+                    method: 'DELETE'
                 });
                 
-                // Show loading state
-                const submitButton = this.querySelector('.btn');
-                const originalText = submitButton.textContent;
-                submitButton.textContent = 'Sending...';
-                submitButton.disabled = true;
-                
-                try {
-                    // Send to backend service
-                    const response = await fetch('https://dotsoflove-production.up.railway.app/api/contact', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(data)
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (response.ok) {
-                        // Show success message
-                        document.getElementById('successMessage').style.display = 'block';
-                        
-                        // Reset form
-                        this.reset();
-                        
-                        // Hide success message after 5 seconds
-                        setTimeout(() => {
-                            document.getElementById('successMessage').style.display = 'none';
-                        }, 5000);
-                    } else {
-                        throw new Error(result.error || 'Failed to submit request');
-                    }
-                    
-                } catch (error) {
-                    console.error('Error submitting form:', error);
-                    alert('There was an error submitting your request. Please try again or call directly.');
-                } finally {
-                    // Reset button state
-                    submitButton.textContent = originalText;
-                    submitButton.disabled = false;
+                if (response.ok) {
+                    loadAdminGallery();
+                    loadGallery(); // Refresh public gallery
+                } else {
+                    alert('Failed to delete pet. Please try again.');
                 }
+            } catch (error) {
+                console.error('Error deleting pet:', error);
+                alert('Failed to delete pet. Please try again.');
+            }
+        };
+
+        // Rate management functions
+        window.editRate = async function(rateId) {
+            try {
+                const response = await makeAuthenticatedRequest(`${API_BASE}/api/admin/rates`);
+                const rates = await response.json();
+                const rate = rates.find(r => r.id === rateId);
+                
+                if (rate) {
+                    document.getElementById('rateId').value = rate.id;
+                    document.getElementById('serviceType').value = rate.service_type;
+                    document.getElementById('ratePerUnit').value = rate.rate_per_unit;
+                    document.getElementById('unitType').value = rate.unit_type;
+                    document.getElementById('description').value = rate.description || '';
+                    document.getElementById('isActive').checked = rate.is_active;
+                    document.getElementById('rateSubmitBtn').textContent = 'Update Rate';
+                }
+            } catch (error) {
+                console.error('Error loading rate for edit:', error);
+            }
+        };
+
+        window.deleteRate = async function(rateId) {
+            if (!confirm('Are you sure you want to delete this rate?')) return;
+            
+            try {
+                const response = await makeAuthenticatedRequest(`${API_BASE}/api/admin/rates/${rateId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadAdminRates();
+                    loadRates(); // Refresh public rates
+                } else {
+                    alert('Failed to delete rate. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error deleting rate:', error);
+                alert('Failed to delete rate. Please try again.');
+            }
+        };
+
+        window.resetRateForm = function() {
+            document.getElementById('rateForm').reset();
+            document.getElementById('rateId').value = '';
+            document.getElementById('rateSubmitBtn').textContent = 'Add Rate';
+            document.getElementById('rateSuccess').style.display = 'none';
+            document.getElementById('rateError').style.display = 'none';
+        };
+
+        // Contact form submission
+        document.getElementById('contactForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Validate that either email or phone is provided
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            
+            if (!email && !phone) {
+                alert('Please provide either an email address or phone number so we can contact you.');
+                return;
+            }
+            
+            // Get form data
+            const formData = new FormData(this);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
             });
+            
+            // Show loading state
+            const submitButton = this.querySelector('.btn');
+            const originalText = submitButton.textContent;
+            submitButton.textContent = 'Sending...';
+            submitButton.disabled = true;
+            
+            try {
+                // Send to backend service
+                const response = await fetch(`${API_BASE}/api/contact`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Show success message
+                    document.getElementById('successMessage').style.display = 'block';
+                    
+                    // Reset form
+                    this.reset();
+                    
+                    // Hide success message after 5 seconds
+                    setTimeout(() => {
+                        document.getElementById('successMessage').style.display = 'none';
+                    }, 5000);
+                } else {
+                    throw new Error(result.error || 'Failed to submit request');
+                }
+                
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                alert('There was an error submitting your request. Please try again or call directly.');
+            } finally {
+                // Reset button state
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            }
         });
     </script>
 </body>

@@ -1,4 +1,4 @@
-// server.js - Pet Sitting Backend Service with Gallery
+// server.js - Pet Sitting Backend Service with Enhanced Gallery and Rates Management
 const express = require('express');
 const sgMail = require('@sendgrid/mail');
 const sqlite3 = require('sqlite3').verbose();
@@ -6,6 +6,8 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
@@ -19,7 +21,7 @@ app.use(cors({
 app.use(express.json());
 app.use('/uploads', express.static('uploads')); // Serve uploaded images
 
-// Set up multer for file uploads
+// Set up multer for file uploads - Enhanced to handle multiple files
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/');
@@ -32,7 +34,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit per file
     fileFilter: (req, file, cb) => {
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
         if (allowedTypes.includes(file.mimetype)) {
@@ -74,28 +76,105 @@ db.serialize(() => {
         )
     `);
 
-    // New gallery pets table
+    // Updated gallery pets table with multiple images support
     db.run(`
         CREATE TABLE IF NOT EXISTS gallery_pets (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             pet_name TEXT NOT NULL,
             story_description TEXT,
             service_date TEXT,
-            image_url TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             is_dorothy_pet BOOLEAN DEFAULT 0
         )
     `);
 
-    // Admin credentials table (simple auth)
+    // New table for pet images (supports multiple images per pet)
+    db.run(`
+        CREATE TABLE IF NOT EXISTS pet_images (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pet_id INTEGER NOT NULL,
+            image_url TEXT NOT NULL,
+            is_primary BOOLEAN DEFAULT 0,
+            display_order INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (pet_id) REFERENCES gallery_pets (id) ON DELETE CASCADE
+        )
+    `);
+
+    // New rates table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS service_rates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            service_type TEXT NOT NULL UNIQUE,
+            rate_per_unit DECIMAL(10,2) NOT NULL,
+            unit_type TEXT NOT NULL, -- 'per_day', 'per_visit', 'per_hour', etc.
+            description TEXT,
+            is_active BOOLEAN DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    // Admin credentials table (enhanced with proper hashing)
     db.run(`
         CREATE TABLE IF NOT EXISTS admin_users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
+            email TEXT,
+            last_login DATETIME,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
+
+    // Insert default rates if none exist
+    db.get('SELECT COUNT(*) as count FROM service_rates', (err, row) => {
+        if (!err && row.count === 0) {
+            const defaultRates = [
+                ['Pet Sitting (Overnight)', 75.00, 'per_night', 'Overnight care in your home'],
+                ['Dog Walking', 25.00, 'per_walk', '30-45 minute walks'],
+                ['Pet Visits', 30.00, 'per_visit', 'Check-ins and care visits'],
+                ['Holiday/Weekend Rate', 85.00, 'per_night', 'Special holiday rates']
+            ];
+            
+            const stmt = db.prepare('INSERT INTO service_rates (service_type, rate_per_unit, unit_type, description) VALUES (?, ?, ?, ?)');
+            defaultRates.forEach(rate => {
+                stmt.run(rate);
+            });
+            stmt.finalize();
+        }
+    });
+
+    // Check if we need to migrate existing gallery data
+    db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='gallery_pets'", (err, row) => {
+        if (!err && row) {
+            // Check if image_url column still exists (old schema)
+            db.all("PRAGMA table_info(gallery_pets)", (err, columns) => {
+                if (!err) {
+                    const hasImageUrl = columns.some(col => col.name === 'image_url');
+                    if (hasImageUrl) {
+                        console.log('Migrating existing gallery data...');
+                        // Migrate existing image_url data to new pet_images table
+                        db.all('SELECT id, image_url FROM gallery_pets WHERE image_url IS NOT NULL', (err, pets) => {
+                            if (!err && pets.length > 0) {
+                                const insertStmt = db.prepare('INSERT INTO pet_images (pet_id, image_url, is_primary, display_order) VALUES (?, ?, 1, 0)');
+                                pets.forEach(pet => {
+                                    insertStmt.run([pet.id, pet.image_url]);
+                                });
+                                insertStmt.finalize();
+                                
+                                // Remove image_url column from gallery_pets
+                                db.run('ALTER TABLE gallery_pets DROP COLUMN image_url', (err) => {
+                                    if (err) console.log('Note: Could not drop image_url column, but migration completed');
+                                });
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    });
 });
 
 // Create uploads directory if it doesn't exist
@@ -103,6 +182,23 @@ const fs = require('fs');
 if (!fs.existsSync('uploads')) {
     fs.mkdirSync('uploads');
 }
+
+// JWT middleware for admin authentication
+const authenticateAdmin = (req, res, next) => {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+        return res.status(401).json({ error: 'Access denied. No token provided.' });
+    }
+    
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default_secret');
+        req.admin = decoded;
+        next();
+    } catch (error) {
+        res.status(400).json({ error: 'Invalid token.' });
+    }
+};
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -150,94 +246,493 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
-// Gallery endpoints
+// ========== ENHANCED GALLERY ENDPOINTS ==========
 
-// Get all gallery pets (public endpoint)
+// Get all gallery pets with their images (public endpoint)
 app.get('/api/gallery', (req, res) => {
-    db.all('SELECT * FROM gallery_pets ORDER BY created_at DESC', (err, rows) => {
+    const query = `
+        SELECT 
+            p.*,
+            GROUP_CONCAT(
+                json_object(
+                    'id', i.id,
+                    'url', i.image_url,
+                    'isPrimary', i.is_primary,
+                    'displayOrder', i.display_order
+                )
+                ORDER BY i.display_order, i.created_at
+            ) as images
+        FROM gallery_pets p
+        LEFT JOIN pet_images i ON p.id = i.pet_id
+        GROUP BY p.id
+        ORDER BY p.created_at DESC
+    `;
+    
+    db.all(query, (err, rows) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ error: 'Failed to retrieve gallery' });
         }
-        res.json(rows);
+        
+        // Parse the JSON images data
+        const processedRows = rows.map(row => ({
+            ...row,
+            images: row.images ? row.images.split(',').map(imgStr => {
+                try {
+                    return JSON.parse(imgStr);
+                } catch (e) {
+                    return null;
+                }
+            }).filter(img => img !== null) : []
+        }));
+        
+        res.json(processedRows);
     });
 });
 
-// Admin: Add new pet to gallery
-app.post('/api/admin/gallery', upload.single('image'), (req, res) => {
+// Get single pet with images
+app.get('/api/gallery/:id', (req, res) => {
+    const petId = req.params.id;
+    
+    const query = `
+        SELECT 
+            p.*,
+            GROUP_CONCAT(
+                json_object(
+                    'id', i.id,
+                    'url', i.image_url,
+                    'isPrimary', i.is_primary,
+                    'displayOrder', i.display_order
+                )
+                ORDER BY i.display_order, i.created_at
+            ) as images
+        FROM gallery_pets p
+        LEFT JOIN pet_images i ON p.id = i.pet_id
+        WHERE p.id = ?
+        GROUP BY p.id
+    `;
+    
+    db.get(query, [petId], (err, row) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Failed to retrieve pet' });
+        }
+        
+        if (!row) {
+            return res.status(404).json({ error: 'Pet not found' });
+        }
+        
+        // Parse the JSON images data
+        const processedRow = {
+            ...row,
+            images: row.images ? row.images.split(',').map(imgStr => {
+                try {
+                    return JSON.parse(imgStr);
+                } catch (e) {
+                    return null;
+                }
+            }).filter(img => img !== null) : []
+        };
+        
+        res.json(processedRow);
+    });
+});
+
+// Admin: Add new pet to gallery with multiple images
+app.post('/api/admin/gallery', authenticateAdmin, upload.array('images', 10), (req, res) => {
     const { petName, storyDescription, serviceDate, isDorothyPet } = req.body;
     
     if (!petName) {
         return res.status(400).json({ error: 'Pet name is required' });
     }
 
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    db.serialize(() => {
+        // Insert pet record
+        const stmt = db.prepare(`
+            INSERT INTO gallery_pets (pet_name, story_description, service_date, is_dorothy_pet)
+            VALUES (?, ?, ?, ?)
+        `);
+        
+        stmt.run([petName, storyDescription || '', serviceDate || '', isDorothyPet === 'true' ? 1 : 0], function(err) {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ error: 'Failed to add pet to gallery' });
+            }
+            
+            const petId = this.lastID;
+            
+            // Insert images if any
+            if (req.files && req.files.length > 0) {
+                const imageStmt = db.prepare(`
+                    INSERT INTO pet_images (pet_id, image_url, is_primary, display_order)
+                    VALUES (?, ?, ?, ?)
+                `);
+                
+                req.files.forEach((file, index) => {
+                    const imageUrl = `/uploads/${file.filename}`;
+                    const isPrimary = index === 0 ? 1 : 0; // First image is primary
+                    imageStmt.run([petId, imageUrl, isPrimary, index]);
+                });
+                
+                imageStmt.finalize();
+            }
+            
+            res.json({ 
+                success: true, 
+                message: 'Pet added to gallery successfully',
+                petId: petId 
+            });
+        });
+        
+        stmt.finalize();
+    });
+});
+
+// Admin: Update existing pet story and details
+app.put('/api/admin/gallery/:id', authenticateAdmin, (req, res) => {
+    const petId = req.params.id;
+    const { petName, storyDescription, serviceDate, isDorothyPet } = req.body;
+    
+    if (!petName) {
+        return res.status(400).json({ error: 'Pet name is required' });
+    }
     
     const stmt = db.prepare(`
-        INSERT INTO gallery_pets (pet_name, story_description, service_date, image_url, is_dorothy_pet)
-        VALUES (?, ?, ?, ?, ?)
+        UPDATE gallery_pets 
+        SET pet_name = ?, story_description = ?, service_date = ?, is_dorothy_pet = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
     `);
     
-    stmt.run([petName, storyDescription || '', serviceDate || '', imageUrl, isDorothyPet === 'true' ? 1 : 0], function(err) {
+    stmt.run([petName, storyDescription || '', serviceDate || '', isDorothyPet === 'true' ? 1 : 0, petId], function(err) {
         if (err) {
             console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to add pet to gallery' });
+            return res.status(500).json({ error: 'Failed to update pet' });
+        }
+        
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Pet not found' });
         }
         
         res.json({ 
             success: true, 
-            message: 'Pet added to gallery successfully',
-            petId: this.lastID 
+            message: 'Pet updated successfully' 
         });
     });
     
     stmt.finalize();
 });
 
-// Admin: Delete pet from gallery
-app.delete('/api/admin/gallery/:id', (req, res) => {
+// Admin: Add images to existing pet
+app.post('/api/admin/gallery/:id/images', authenticateAdmin, upload.array('images', 10), (req, res) => {
     const petId = req.params.id;
     
-    // First get the image URL to delete the file
-    db.get('SELECT image_url FROM gallery_pets WHERE id = ?', [petId], (err, row) => {
+    if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: 'No images provided' });
+    }
+    
+    // Check if pet exists
+    db.get('SELECT id FROM gallery_pets WHERE id = ?', [petId], (err, row) => {
         if (err) {
             console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to find pet' });
+            return res.status(500).json({ error: 'Database error' });
         }
         
-        if (row && row.image_url) {
-            const imagePath = path.join(__dirname, row.image_url);
-            fs.unlink(imagePath, (err) => {
-                if (err) console.log('Could not delete image file:', err);
-            });
+        if (!row) {
+            return res.status(404).json({ error: 'Pet not found' });
         }
         
-        // Delete from database
-        db.run('DELETE FROM gallery_pets WHERE id = ?', [petId], function(err) {
+        // Get current max display order
+        db.get('SELECT MAX(display_order) as maxOrder FROM pet_images WHERE pet_id = ?', [petId], (err, orderRow) => {
             if (err) {
                 console.error('Database error:', err);
-                return res.status(500).json({ error: 'Failed to delete pet' });
+                return res.status(500).json({ error: 'Failed to determine image order' });
             }
             
-            res.json({ success: true, message: 'Pet deleted successfully' });
+            const startOrder = (orderRow.maxOrder || -1) + 1;
+            
+            const imageStmt = db.prepare(`
+                INSERT INTO pet_images (pet_id, image_url, is_primary, display_order)
+                VALUES (?, ?, ?, ?)
+            `);
+            
+            const addedImages = [];
+            req.files.forEach((file, index) => {
+                const imageUrl = `/uploads/${file.filename}`;
+                const displayOrder = startOrder + index;
+                imageStmt.run([petId, imageUrl, 0, displayOrder]); // New images are not primary by default
+                addedImages.push({
+                    url: imageUrl,
+                    displayOrder: displayOrder
+                });
+            });
+            
+            imageStmt.finalize();
+            
+            res.json({ 
+                success: true, 
+                message: `${req.files.length} image(s) added successfully`,
+                addedImages: addedImages 
+            });
         });
     });
 });
 
-// Simple admin authentication
-app.post('/api/admin/auth', (req, res) => {
+// Admin: Update image order and primary status
+app.put('/api/admin/gallery/:petId/images/:imageId', authenticateAdmin, (req, res) => {
+    const { petId, imageId } = req.params;
+    const { isPrimary, displayOrder } = req.body;
+    
+    db.serialize(() => {
+        // If setting as primary, first unset all other primary images for this pet
+        if (isPrimary) {
+            db.run('UPDATE pet_images SET is_primary = 0 WHERE pet_id = ?', [petId]);
+        }
+        
+        // Update the specific image
+        const stmt = db.prepare(`
+            UPDATE pet_images 
+            SET is_primary = ?, display_order = ?
+            WHERE id = ? AND pet_id = ?
+        `);
+        
+        stmt.run([isPrimary ? 1 : 0, displayOrder || 0, imageId, petId], function(err) {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ error: 'Failed to update image' });
+            }
+            
+            if (this.changes === 0) {
+                return res.status(404).json({ error: 'Image not found' });
+            }
+            
+            res.json({ 
+                success: true, 
+                message: 'Image updated successfully' 
+            });
+        });
+        
+        stmt.finalize();
+    });
+});
+
+// Admin: Delete specific image
+app.delete('/api/admin/gallery/:petId/images/:imageId', authenticateAdmin, (req, res) => {
+    const { petId, imageId } = req.params;
+    
+    // First get the image URL to delete the file
+    db.get('SELECT image_url FROM pet_images WHERE id = ? AND pet_id = ?', [imageId, petId], (err, row) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Failed to find image' });
+        }
+        
+        if (!row) {
+            return res.status(404).json({ error: 'Image not found' });
+        }
+        
+        // Delete the physical file
+        const imagePath = path.join(__dirname, row.image_url);
+        fs.unlink(imagePath, (err) => {
+            if (err) console.log('Could not delete image file:', err);
+        });
+        
+        // Delete from database
+        db.run('DELETE FROM pet_images WHERE id = ? AND pet_id = ?', [imageId, petId], function(err) {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ error: 'Failed to delete image' });
+            }
+            
+            res.json({ success: true, message: 'Image deleted successfully' });
+        });
+    });
+});
+
+// Admin: Delete pet from gallery (and all associated images)
+app.delete('/api/admin/gallery/:id', authenticateAdmin, (req, res) => {
+    const petId = req.params.id;
+    
+    // First get all image URLs to delete the files
+    db.all('SELECT image_url FROM pet_images WHERE pet_id = ?', [petId], (err, images) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Failed to find pet images' });
+        }
+        
+        // Delete all image files
+        images.forEach(image => {
+            const imagePath = path.join(__dirname, image.image_url);
+            fs.unlink(imagePath, (err) => {
+                if (err) console.log('Could not delete image file:', err);
+            });
+        });
+        
+        db.serialize(() => {
+            // Delete images from database
+            db.run('DELETE FROM pet_images WHERE pet_id = ?', [petId]);
+            
+            // Delete pet from database
+            db.run('DELETE FROM gallery_pets WHERE id = ?', [petId], function(err) {
+                if (err) {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: 'Failed to delete pet' });
+                }
+                
+                res.json({ success: true, message: 'Pet and all images deleted successfully' });
+            });
+        });
+    });
+});
+
+// ========== RATES MANAGEMENT ENDPOINTS ==========
+
+// Get all service rates (public endpoint)
+app.get('/api/rates', (req, res) => {
+    db.all('SELECT * FROM service_rates WHERE is_active = 1 ORDER BY service_type', (err, rows) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Failed to retrieve rates' });
+        }
+        res.json(rows);
+    });
+});
+
+// Admin: Get all rates (including inactive)
+app.get('/api/admin/rates', authenticateAdmin, (req, res) => {
+    db.all('SELECT * FROM service_rates ORDER BY service_type', (err, rows) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Failed to retrieve rates' });
+        }
+        res.json(rows);
+    });
+});
+
+// Admin: Create new rate
+app.post('/api/admin/rates', authenticateAdmin, (req, res) => {
+    const { serviceType, ratePerUnit, unitType, description, isActive } = req.body;
+    
+    if (!serviceType || !ratePerUnit || !unitType) {
+        return res.status(400).json({ error: 'Service type, rate per unit, and unit type are required' });
+    }
+    
+    const stmt = db.prepare(`
+        INSERT INTO service_rates (service_type, rate_per_unit, unit_type, description, is_active)
+        VALUES (?, ?, ?, ?, ?)
+    `);
+    
+    stmt.run([serviceType, ratePerUnit, unitType, description || '', isActive !== false ? 1 : 0], function(err) {
+        if (err) {
+            if (err.message.includes('UNIQUE constraint failed')) {
+                return res.status(400).json({ error: 'A rate for this service type already exists' });
+            }
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Failed to create rate' });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'Rate created successfully',
+            rateId: this.lastID 
+        });
+    });
+    
+    stmt.finalize();
+});
+
+// Admin: Update rate
+app.put('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
+    const rateId = req.params.id;
+    const { serviceType, ratePerUnit, unitType, description, isActive } = req.body;
+    
+    if (!serviceType || !ratePerUnit || !unitType) {
+        return res.status(400).json({ error: 'Service type, rate per unit, and unit type are required' });
+    }
+    
+    const stmt = db.prepare(`
+        UPDATE service_rates 
+        SET service_type = ?, rate_per_unit = ?, unit_type = ?, description = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+    `);
+    
+    stmt.run([serviceType, ratePerUnit, unitType, description || '', isActive !== false ? 1 : 0, rateId], function(err) {
+        if (err) {
+            if (err.message.includes('UNIQUE constraint failed')) {
+                return res.status(400).json({ error: 'A rate for this service type already exists' });
+            }
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Failed to update rate' });
+        }
+        
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Rate not found' });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'Rate updated successfully' 
+        });
+    });
+    
+    stmt.finalize();
+});
+
+// Admin: Delete rate
+app.delete('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
+    const rateId = req.params.id;
+    
+    db.run('DELETE FROM service_rates WHERE id = ?', [rateId], function(err) {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Failed to delete rate' });
+        }
+        
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Rate not found' });
+        }
+        
+        res.json({ success: true, message: 'Rate deleted successfully' });
+    });
+});
+
+// ========== ENHANCED ADMIN AUTHENTICATION ==========
+
+// Admin login with JWT
+app.post('/api/admin/auth', async (req, res) => {
     const { username, password } = req.body;
     
     // Simple hardcoded auth - in production you'd use proper hashing
     if (username === 'dorothy' && password === process.env.ADMIN_PASSWORD) {
-        res.json({ success: true, message: 'Authentication successful' });
+        const token = jwt.sign(
+            { username: username, id: 1 },
+            process.env.JWT_SECRET || 'default_secret',
+            { expiresIn: '24h' }
+        );
+        
+        // Update last login
+        db.run('UPDATE admin_users SET last_login = CURRENT_TIMESTAMP WHERE username = ?', [username]);
+        
+        res.json({ 
+            success: true, 
+            message: 'Authentication successful',
+            token: token,
+            user: { username: username }
+        });
     } else {
         res.status(401).json({ error: 'Invalid credentials' });
     }
 });
 
+// Admin token validation
+app.get('/api/admin/validate', authenticateAdmin, (req, res) => {
+    res.json({ 
+        success: true, 
+        user: { username: req.admin.username }
+    });
+});
+
 // Get all contacts (admin)
-app.get('/api/contacts', (req, res) => {
+app.get('/api/admin/contacts', authenticateAdmin, (req, res) => {
     db.all('SELECT * FROM contacts ORDER BY created_at DESC', (err, rows) => {
         if (err) {
             console.error('Database error:', err);
@@ -248,7 +743,7 @@ app.get('/api/contacts', (req, res) => {
 });
 
 // Email recipients management
-app.put('/api/email-recipients', (req, res) => {
+app.put('/api/admin/email-recipients', authenticateAdmin, (req, res) => {
     const { recipients } = req.body;
     
     if (!Array.isArray(recipients)) {
@@ -261,7 +756,7 @@ app.put('/api/email-recipients', (req, res) => {
     res.json({ success: true, recipients: EMAIL_RECIPIENTS });
 });
 
-app.get('/api/email-recipients', (req, res) => {
+app.get('/api/admin/email-recipients', authenticateAdmin, (req, res) => {
     res.json({ recipients: EMAIL_RECIPIENTS });
 });
 
