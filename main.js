@@ -68,7 +68,7 @@ function loadInitialContent() {
     loadAboutServices();
 }
 
-// Load services for About page from rates API
+// Load services for About page from rates API (updated)
 async function loadAboutServices() {
     try {
         Utils.showLoading('aboutServicesLoading');
@@ -82,9 +82,16 @@ async function loadAboutServices() {
             return;
         }
 
+        // Sort rates to put featured service first
+        const sortedRates = [...rates].sort((a, b) => {
+            if (a.is_featured && !b.is_featured) return -1;
+            if (!a.is_featured && b.is_featured) return 1;
+            return 0;
+        });
+
         // Create service items from rates data
-        const serviceItems = rates.map((rate, index) => {
-            const isFeatured = index === 0; // First service is featured
+        const serviceItems = sortedRates.map((rate, index) => {
+            const isFeatured = rate.is_featured; // Use database flag instead of index
             const unitDisplay = rate.unit_type.replace('per_', '').replace('_', ' ');
             
             // Map service types to emojis and descriptions
@@ -101,117 +108,7 @@ async function loadAboutServices() {
     }
 }
 
-// Get service configuration (emoji and description)
-function getServiceConfig(serviceType) {
-    const configs = {
-        'Pet Sitting (Overnight)': { 
-            emoji: '🏠', 
-            desc: 'I\'ll stay at your home to provide 24/7 care for your pets in their familiar environment.' 
-        },
-        'Dog Walking': { 
-            emoji: '🚶', 
-            desc: 'Regular walks to keep your dog happy, healthy, and exercised while you\'re at work.' 
-        },
-        'Pet Visits': { 
-            emoji: '🏡', 
-            desc: 'Daily check-ins to feed, play with, and care for your pets in your home.' 
-        },
-        'Holiday/Weekend Rate': { 
-            emoji: '🎉', 
-            desc: 'Special care for your pets during holidays and weekends.' 
-        }
-    };
-    
-    return configs[serviceType] || { 
-        emoji: '🐾', 
-        desc: 'Professional pet care services tailored to your needs.' 
-    };
-}
-
-// Create service item HTML
-function createServiceItem(rate, config, isFeatured, unitDisplay) {
-    return `
-        <div class="service-item ${isFeatured ? 'featured-service' : ''}">
-            <h3>${config.emoji} ${rate.service_type}</h3>
-            <p>${rate.description || config.desc}</p>
-            <strong>Starting at $${parseFloat(rate.rate_per_unit).toFixed(2)}/${unitDisplay}</strong>
-        </div>
-    `;
-}
-
-// Create default services when no rates are available
-function createDefaultServices() {
-    return `
-        <div class="service-item featured-service">
-            <h3>🏠 In-Home Pet Sitting</h3>
-            <p>I'll stay at your home to provide 24/7 care for your pets in their familiar environment.</p>
-            <strong>Contact for pricing</strong>
-        </div>
-        <div class="service-item">
-            <h3>🚶 Daily Dog Walks</h3>
-            <p>Regular walks to keep your dog happy, healthy, and exercised while you're at work.</p>
-            <strong>Contact for pricing</strong>
-        </div>
-        <div class="service-item">
-            <h3>🏡 Pet Visits & Care</h3>
-            <p>Daily check-ins to feed, play with, and care for your pets in your home.</p>
-            <strong>Contact for pricing</strong>
-        </div>
-    `;
-}
-
-// Load Gallery
-async function loadGallery() {
-    try {
-        Utils.showLoading('galleryLoading');
-        const pets = await API.gallery.getAll();
-        
-        const galleryGrid = document.getElementById('galleryGrid');
-        const galleryEmpty = document.getElementById('galleryEmpty');
-        
-        Utils.hideLoading('galleryLoading');
-        
-        if (pets.length === 0) {
-            galleryEmpty.style.display = 'block';
-            galleryGrid.innerHTML = '';
-            return;
-        }
-        
-        galleryEmpty.style.display = 'none';
-        galleryGrid.innerHTML = pets.map(pet => createGalleryItem(pet)).join('');
-        
-    } catch (error) {
-        console.error('Error loading gallery:', error);
-        Utils.showError('galleryLoading', 'Error loading gallery. Please try again later.');
-    }
-}
-
-// Create gallery item HTML
-function createGalleryItem(pet) {
-    const images = pet.images || [];
-    const primaryImage = images.find(img => img.isPrimary) || images[0];
-    const hasMultipleImages = images.length > 1;
-    
-    return `
-        <div class="gallery-item" onclick="openModal(${JSON.stringify(pet).replace(/"/g, '&quot;')})">
-            <div class="gallery-image">
-                ${primaryImage ? 
-                    `<img src="${API_BASE}${primaryImage.url}" alt="${pet.pet_name}">
-                     ${hasMultipleImages ? `<div class="image-count">${images.length} photos</div>` : ''}` :
-                    `🐾`
-                }
-            </div>
-            <div class="gallery-content">
-                ${pet.is_dorothy_pet ? '<div class="dorothy-pet-badge">Dorothy\'s Pet</div>' : ''}
-                <div class="pet-name">${pet.pet_name}</div>
-                ${pet.service_date ? `<div class="pet-date">${pet.service_date}</div>` : ''}
-                ${pet.story_description ? `<div class="pet-story">${pet.story_description}</div>` : ''}
-            </div>
-        </div>
-    `;
-}
-
-// Load Rates
+// Load Rates (updated)
 async function loadRates() {
     try {
         Utils.showLoading('ratesLoading');
@@ -228,8 +125,15 @@ async function loadRates() {
             return;
         }
         
+        // Sort rates to put featured service first
+        const sortedRates = [...rates].sort((a, b) => {
+            if (a.is_featured && !b.is_featured) return -1;
+            if (!a.is_featured && b.is_featured) return 1;
+            return 0;
+        });
+        
         ratesEmpty.style.display = 'none';
-        ratesGrid.innerHTML = rates.map((rate, index) => createRateCard(rate, index)).join('');
+        ratesGrid.innerHTML = sortedRates.map((rate) => createRateCard(rate, rate.is_featured)).join('');
         
     } catch (error) {
         console.error('Error loading rates:', error);
@@ -237,9 +141,8 @@ async function loadRates() {
     }
 }
 
-// Create rate card HTML
-function createRateCard(rate, index) {
-    const isFeatured = index === 0; // Make first rate featured
+// Create rate card HTML (updated)
+function createRateCard(rate, isFeatured) {
     return `
         <div class="rate-card ${isFeatured ? 'featured-rate' : ''}">
             <div class="rate-title">${rate.service_type}</div>
@@ -249,6 +152,7 @@ function createRateCard(rate, index) {
         </div>
     `;
 }
+
 
 // Check admin authentication
 function checkAdminAuth() {
