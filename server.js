@@ -73,12 +73,16 @@ const EMAIL_RECIPIENTS = [
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Create uploads and data directories if they don't exist
+// Create uploads and data directories if they don't exist
 const fs = require('fs');
 if (!fs.existsSync('uploads')) {
     fs.mkdirSync('uploads');
 }
-if (!fs.existsSync('data')) {
-    fs.mkdirSync('data');
+
+// Ensure the data directory exists (handle both dev and production paths)
+const dataDir = process.env.NODE_ENV === 'production' ? '/app/data' : './data';
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
 }
 
 // Initialize SQLite database - Use persistent storage
