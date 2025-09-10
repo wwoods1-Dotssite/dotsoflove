@@ -130,7 +130,57 @@ function createServiceItem(rate, serviceConfig, isFeatured, unitDisplay) {
         </div>
     `;
 }
+// Add these functions to main.js:
 
+// Load Gallery
+async function loadGallery() {
+    try {
+        Utils.showLoading('galleryLoading');
+        const pets = await API.gallery.getAll();
+        
+        const galleryGrid = document.getElementById('galleryGrid');
+        const galleryEmpty = document.getElementById('galleryEmpty');
+        
+        Utils.hideLoading('galleryLoading');
+        
+        if (pets.length === 0) {
+            galleryEmpty.style.display = 'block';
+            galleryGrid.innerHTML = '';
+            return;
+        }
+        
+        galleryEmpty.style.display = 'none';
+        galleryGrid.innerHTML = pets.map(pet => createGalleryItem(pet)).join('');
+        
+    } catch (error) {
+        console.error('Error loading gallery:', error);
+        Utils.showError('galleryLoading', 'Error loading gallery. Please try again later.');
+    }
+}
+
+// Create gallery item HTML
+function createGalleryItem(pet) {
+    const images = pet.images || [];
+    const primaryImage = images.find(img => img.isPrimary) || images[0];
+    
+    return `
+        <div class="gallery-item" onclick="openModal(${JSON.stringify(pet).replace(/"/g, '&quot;')})">
+            <div class="gallery-image">
+                ${primaryImage ? 
+                    `<img src="${API_BASE}${primaryImage.url}" alt="${pet.pet_name}">` :
+                    `🐾`
+                }
+                ${images.length > 1 ? `<div class="image-count">${images.length} photos</div>` : ''}
+            </div>
+            <div class="gallery-content">
+                ${pet.is_dorothy_pet ? '<div class="dorothy-pet-badge">Dorothy\'s Pet</div>' : ''}
+                <div class="pet-name">${pet.pet_name}</div>
+                ${pet.service_date ? `<div class="pet-date">${pet.service_date}</div>` : ''}
+                ${pet.story_description ? `<div class="pet-story">${pet.story_description}</div>` : ''}
+            </div>
+        </div>
+    `;
+}
 // Helper function to create default services (add to main.js)
 function createDefaultServices() {
     return `
