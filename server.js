@@ -13,6 +13,23 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// JWT middleware for admin authentication - MOVED TO TOP
+const authenticateAdmin = (req, res, next) => {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+        return res.status(401).json({ error: 'Access denied. No token provided.' });
+    }
+    
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default_secret');
+        req.admin = decoded;
+        next();
+    } catch (error) {
+        res.status(400).json({ error: 'Invalid token.' });
+    }
+};
+
 // Middleware
 app.use(cors({
     origin: ['https://dotsoflovepetsitting.com', 'https://www.dotsoflovepetsitting.com','https://visionary-queijadas-65e069.netlify.app', 'http://localhost:3000'],
@@ -144,6 +161,30 @@ db.serialize(() => {
         )
     `);
 
+    // Add migration for featured services
+    db.all("PRAGMA table_info(service_rates)", (err, columns) => {
+        if (!err) {
+            const hasFeaturedColumn = columns.some(col => col.name === 'is_featured');
+            if (!hasFeaturedColumn) {
+                console.log('Adding is_featured column to service_rates table...');
+                db.run('ALTER TABLE service_rates ADD COLUMN is_featured BOOLEAN DEFAULT 0', (err) => {
+                    if (err) {
+                        console.error('Error adding is_featured column:', err);
+                    } else {
+                        console.log('Successfully added is_featured column');
+                        // Set the first rate as featured if none are featured
+                        db.get('SELECT COUNT(*) as count FROM service_rates WHERE is_featured = 1', (err, row) => {
+                            if (!err && row.count === 0) {
+                                db.run('UPDATE service_rates SET is_featured = 1 WHERE id = (SELECT id FROM service_rates ORDER BY id LIMIT 1)');
+                                console.log('Set first service as featured by default');
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    });
+
     // Insert default rates if none exist (only on first run)
     db.get('SELECT COUNT(*) as count FROM service_rates', (err, row) => {
         if (!err && row.count === 0) {
@@ -195,174 +236,6 @@ db.serialize(() => {
         }
     });
 });
-
-// Add this to the database initialization section in server.js
-// After the existing table creation, add this migration
-
-// Create tables
-db.serialize(() => {
-    // ... existing table creation code ...
-
-    // Add migration for featured services
-    db.all("PRAGMA table_info(service_rates)", (err, columns) => {
-        if (!err) {
-            const hasFeaturedColumn = columns.some(col => col.name === 'is_featured');
-            if (!hasFeaturedColumn) {
-                console.log('Adding is_featured column to service_rates table...');
-                db.run('ALTER TABLE service_rates ADD COLUMN is_featured BOOLEAN DEFAULT 0', (err) => {
-                    if (err) {
-                        console.error('Error adding is_featured column:', err);
-                    } else {
-                        console.log('Successfully added is_featured column');
-                        // Set the first rate as featured if none are featured
-                        db.get('SELECT COUNT(*) as count FROM service_rates WHERE is_featured = 1', (err, row) => {
-                            if (!err && row.count === 0) {
-                                db.run('UPDATE service_rates SET is_featured = 1 WHERE id = (SELECT id FROM service_rates ORDER BY id LIMIT 1)');
-                                console.log('Set first service as featured by default');
-                            }
-                        });
-                    }
-                });
-            }
-        }
-    });
-
-    // ... rest of existing code ...
-});
-
-// Update the rates endpoints to handle featured status:
-
-// Admin: Create new rate (updated)
-app.post('/api/admin/rates', authenticateAdmin, (req, res) => {
-    const { serviceType, ratePerUnit, unitType, description, isActive, isFeatured } = req.body;
-    
-    if (!serviceType || !ratePerUnit || !unitType) {
-        return res.status(400).json({ error: 'Service type, rate per unit, and unit type are required' });
-    }
-    
-    db.serialize(() => {
-        // If setting as featured, unset all other featured services first
-        if (isFeatured) {
-            db.run('UPDATE service_rates SET is_featured = 0');
-        }
-        
-        const stmt = db.prepare(`
-            INSERT INTO service_rates (service_type, rate_per_unit, unit_type, description, is_active, is_featured)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `);
-        
-        stmt.run([serviceType, ratePerUnit, unitType, description || '', isActive !== false ? 1 : 0, isFeatured ? 1 : 0], function(err) {
-            if (err) {
-                if (err.message.includes('UNIQUE constraint failed')) {
-                    return res.status(400).json({ error: 'A rate for this service type already exists' });
-                }
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Failed to create rate' });
-            }
-            
-            res.json({ 
-                success: true, 
-                message: 'Rate created successfully',
-                rateId: this.lastID 
-            });
-        });
-        
-        stmt.finalize();
-    });
-});
-
-// Admin: Update rate (updated)
-app.put('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
-    const rateId = req.params.id;
-    const { serviceType, ratePerUnit, unitType, description, isActive, isFeatured } = req.body;
-    
-    if (!serviceType || !ratePerUnit || !unitType) {
-        return res.status(400).json({ error: 'Service type, rate per unit, and unit type are required' });
-    }
-    
-    db.serialize(() => {
-        // If setting as featured, unset all other featured services first
-        if (isFeatured) {
-            db.run('UPDATE service_rates SET is_featured = 0');
-        }
-        
-        const stmt = db.prepare(`
-            UPDATE service_rates 
-            SET service_type = ?, rate_per_unit = ?, unit_type = ?, description = ?, is_active = ?, is_featured = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        `);
-        
-        stmt.run([serviceType, ratePerUnit, unitType, description || '', isActive !== false ? 1 : 0, isFeatured ? 1 : 0, rateId], function(err) {
-            if (err) {
-                if (err.message.includes('UNIQUE constraint failed')) {
-                    return res.status(400).json({ error: 'A rate for this service type already exists' });
-                }
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Failed to update rate' });
-            }
-            
-            if (this.changes === 0) {
-                return res.status(404).json({ error: 'Rate not found' });
-            }
-            
-            res.json({ 
-                success: true, 
-                message: 'Rate updated successfully' 
-            });
-        });
-        
-        stmt.finalize();
-    });
-});
-
-// New endpoint: Set featured service
-app.put('/api/admin/rates/:id/featured', authenticateAdmin, (req, res) => {
-    const rateId = req.params.id;
-    
-    db.serialize(() => {
-        // First, unset all featured services
-        db.run('UPDATE service_rates SET is_featured = 0', (err) => {
-            if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Failed to update featured status' });
-            }
-            
-            // Then set this one as featured
-            db.run('UPDATE service_rates SET is_featured = 1 WHERE id = ?', [rateId], function(err) {
-                if (err) {
-                    console.error('Database error:', err);
-                    return res.status(500).json({ error: 'Failed to set featured service' });
-                }
-                
-                if (this.changes === 0) {
-                    return res.status(404).json({ error: 'Rate not found' });
-                }
-                
-                res.json({ 
-                    success: true, 
-                    message: 'Featured service updated successfully' 
-                });
-            });
-        });
-    });
-});
-
-// JWT middleware for admin authentication
-const authenticateAdmin = (req, res, next) => {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-        return res.status(401).json({ error: 'Access denied. No token provided.' });
-    }
-    
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default_secret');
-        req.admin = decoded;
-        next();
-    } catch (error) {
-        res.status(400).json({ error: 'Invalid token.' });
-    }
-};
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -586,132 +459,6 @@ app.put('/api/admin/gallery/:id', authenticateAdmin, (req, res) => {
     stmt.finalize();
 });
 
-// Admin: Add images to existing pet
-app.post('/api/admin/gallery/:id/images', authenticateAdmin, upload.array('images', 10), (req, res) => {
-    const petId = req.params.id;
-    
-    if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ error: 'No images provided' });
-    }
-    
-    // Check if pet exists
-    db.get('SELECT id FROM gallery_pets WHERE id = ?', [petId], (err, row) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Database error' });
-        }
-        
-        if (!row) {
-            return res.status(404).json({ error: 'Pet not found' });
-        }
-        
-        // Get current max display order
-        db.get('SELECT MAX(display_order) as maxOrder FROM pet_images WHERE pet_id = ?', [petId], (err, orderRow) => {
-            if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Failed to determine image order' });
-            }
-            
-            const startOrder = (orderRow.maxOrder || -1) + 1;
-            
-            const imageStmt = db.prepare(`
-                INSERT INTO pet_images (pet_id, image_url, is_primary, display_order)
-                VALUES (?, ?, ?, ?)
-            `);
-            
-            const addedImages = [];
-            req.files.forEach((file, index) => {
-                const imageUrl = `/uploads/${file.filename}`;
-                const displayOrder = startOrder + index;
-                imageStmt.run([petId, imageUrl, 0, displayOrder]); // New images are not primary by default
-                addedImages.push({
-                    url: imageUrl,
-                    displayOrder: displayOrder
-                });
-            });
-            
-            imageStmt.finalize();
-            
-            res.json({ 
-                success: true, 
-                message: `${req.files.length} image(s) added successfully`,
-                addedImages: addedImages 
-            });
-        });
-    });
-});
-
-// Admin: Update image order and primary status
-app.put('/api/admin/gallery/:petId/images/:imageId', authenticateAdmin, (req, res) => {
-    const { petId, imageId } = req.params;
-    const { isPrimary, displayOrder } = req.body;
-    
-    db.serialize(() => {
-        // If setting as primary, first unset all other primary images for this pet
-        if (isPrimary) {
-            db.run('UPDATE pet_images SET is_primary = 0 WHERE pet_id = ?', [petId]);
-        }
-        
-        // Update the specific image
-        const stmt = db.prepare(`
-            UPDATE pet_images 
-            SET is_primary = ?, display_order = ?
-            WHERE id = ? AND pet_id = ?
-        `);
-        
-        stmt.run([isPrimary ? 1 : 0, displayOrder || 0, imageId, petId], function(err) {
-            if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Failed to update image' });
-            }
-            
-            if (this.changes === 0) {
-                return res.status(404).json({ error: 'Image not found' });
-            }
-            
-            res.json({ 
-                success: true, 
-                message: 'Image updated successfully' 
-            });
-        });
-        
-        stmt.finalize();
-    });
-});
-
-// Admin: Delete specific image
-app.delete('/api/admin/gallery/:petId/images/:imageId', authenticateAdmin, (req, res) => {
-    const { petId, imageId } = req.params;
-    
-    // First get the image URL to delete the file
-    db.get('SELECT image_url FROM pet_images WHERE id = ? AND pet_id = ?', [imageId, petId], (err, row) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to find image' });
-        }
-        
-        if (!row) {
-            return res.status(404).json({ error: 'Image not found' });
-        }
-        
-        // Delete the physical file
-        const imagePath = path.join(__dirname, row.image_url);
-        fs.unlink(imagePath, (err) => {
-            if (err) console.log('Could not delete image file:', err);
-        });
-        
-        // Delete from database
-        db.run('DELETE FROM pet_images WHERE id = ? AND pet_id = ?', [imageId, petId], function(err) {
-            if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Failed to delete image' });
-            }
-            
-            res.json({ success: true, message: 'Image deleted successfully' });
-        });
-    });
-});
-
 // Admin: Delete pet from gallery (and all associated images)
 app.delete('/api/admin/gallery/:id', authenticateAdmin, (req, res) => {
     const petId = req.params.id;
@@ -761,6 +508,17 @@ app.get('/api/rates', (req, res) => {
     });
 });
 
+// Admin: Get all rates (including inactive)
+app.get('/api/admin/rates', authenticateAdmin, (req, res) => {
+    db.all('SELECT * FROM service_rates ORDER BY service_type', (err, rows) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Failed to retrieve rates' });
+        }
+        res.json(rows);
+    });
+});
+
 // Admin: Get single rate by ID
 app.get('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
     const rateId = req.params.id;
@@ -779,84 +537,119 @@ app.get('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
     });
 });
 
-// Admin: Get all rates (including inactive)
-app.get('/api/admin/rates', authenticateAdmin, (req, res) => {
-    db.all('SELECT * FROM service_rates ORDER BY service_type', (err, rows) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to retrieve rates' });
-        }
-        res.json(rows);
-    });
-});
-
-// Admin: Create new rate
+// Admin: Create new rate (updated)
 app.post('/api/admin/rates', authenticateAdmin, (req, res) => {
-    const { serviceType, ratePerUnit, unitType, description, isActive } = req.body;
+    const { serviceType, ratePerUnit, unitType, description, isActive, isFeatured } = req.body;
     
     if (!serviceType || !ratePerUnit || !unitType) {
         return res.status(400).json({ error: 'Service type, rate per unit, and unit type are required' });
     }
     
-    const stmt = db.prepare(`
-        INSERT INTO service_rates (service_type, rate_per_unit, unit_type, description, is_active)
-        VALUES (?, ?, ?, ?, ?)
-    `);
-    
-    stmt.run([serviceType, ratePerUnit, unitType, description || '', isActive !== false ? 1 : 0], function(err) {
-        if (err) {
-            if (err.message.includes('UNIQUE constraint failed')) {
-                return res.status(400).json({ error: 'A rate for this service type already exists' });
-            }
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to create rate' });
+    db.serialize(() => {
+        // If setting as featured, unset all other featured services first
+        if (isFeatured) {
+            db.run('UPDATE service_rates SET is_featured = 0');
         }
         
-        res.json({ 
-            success: true, 
-            message: 'Rate created successfully',
-            rateId: this.lastID 
+        const stmt = db.prepare(`
+            INSERT INTO service_rates (service_type, rate_per_unit, unit_type, description, is_active, is_featured)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        
+        stmt.run([serviceType, ratePerUnit, unitType, description || '', isActive !== false ? 1 : 0, isFeatured ? 1 : 0], function(err) {
+            if (err) {
+                if (err.message.includes('UNIQUE constraint failed')) {
+                    return res.status(400).json({ error: 'A rate for this service type already exists' });
+                }
+                console.error('Database error:', err);
+                return res.status(500).json({ error: 'Failed to create rate' });
+            }
+            
+            res.json({ 
+                success: true, 
+                message: 'Rate created successfully',
+                rateId: this.lastID 
+            });
         });
+        
+        stmt.finalize();
     });
-    
-    stmt.finalize();
 });
 
-// Admin: Update rate
+// Admin: Update rate (updated)
 app.put('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
     const rateId = req.params.id;
-    const { serviceType, ratePerUnit, unitType, description, isActive } = req.body;
+    const { serviceType, ratePerUnit, unitType, description, isActive, isFeatured } = req.body;
     
     if (!serviceType || !ratePerUnit || !unitType) {
         return res.status(400).json({ error: 'Service type, rate per unit, and unit type are required' });
     }
     
-    const stmt = db.prepare(`
-        UPDATE service_rates 
-        SET service_type = ?, rate_per_unit = ?, unit_type = ?, description = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-    `);
-    
-    stmt.run([serviceType, ratePerUnit, unitType, description || '', isActive !== false ? 1 : 0, rateId], function(err) {
-        if (err) {
-            if (err.message.includes('UNIQUE constraint failed')) {
-                return res.status(400).json({ error: 'A rate for this service type already exists' });
+    db.serialize(() => {
+        // If setting as featured, unset all other featured services first
+        if (isFeatured) {
+            db.run('UPDATE service_rates SET is_featured = 0');
+        }
+        
+        const stmt = db.prepare(`
+            UPDATE service_rates 
+            SET service_type = ?, rate_per_unit = ?, unit_type = ?, description = ?, is_active = ?, is_featured = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `);
+        
+        stmt.run([serviceType, ratePerUnit, unitType, description || '', isActive !== false ? 1 : 0, isFeatured ? 1 : 0, rateId], function(err) {
+            if (err) {
+                if (err.message.includes('UNIQUE constraint failed')) {
+                    return res.status(400).json({ error: 'A rate for this service type already exists' });
+                }
+                console.error('Database error:', err);
+                return res.status(500).json({ error: 'Failed to update rate' });
             }
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to update rate' });
-        }
+            
+            if (this.changes === 0) {
+                return res.status(404).json({ error: 'Rate not found' });
+            }
+            
+            res.json({ 
+                success: true, 
+                message: 'Rate updated successfully' 
+            });
+        });
         
-        if (this.changes === 0) {
-            return res.status(404).json({ error: 'Rate not found' });
-        }
-        
-        res.json({ 
-            success: true, 
-            message: 'Rate updated successfully' 
+        stmt.finalize();
+    });
+});
+
+// New endpoint: Set featured service
+app.put('/api/admin/rates/:id/featured', authenticateAdmin, (req, res) => {
+    const rateId = req.params.id;
+    
+    db.serialize(() => {
+        // First, unset all featured services
+        db.run('UPDATE service_rates SET is_featured = 0', (err) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ error: 'Failed to update featured status' });
+            }
+            
+            // Then set this one as featured
+            db.run('UPDATE service_rates SET is_featured = 1 WHERE id = ?', [rateId], function(err) {
+                if (err) {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: 'Failed to set featured service' });
+                }
+                
+                if (this.changes === 0) {
+                    return res.status(404).json({ error: 'Rate not found' });
+                }
+                
+                res.json({ 
+                    success: true, 
+                    message: 'Featured service updated successfully' 
+                });
+            });
         });
     });
-    
-    stmt.finalize();
 });
 
 // Admin: Delete rate
@@ -1006,5 +799,3 @@ process.on('SIGINT', () => {
             console.log('Database connection closed.');
         }
         process.exit(0);
-    });
-});
