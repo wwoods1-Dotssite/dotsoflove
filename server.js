@@ -91,6 +91,20 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
+// Add this after database connection for debugging
+console.log('🗃️  Database configuration:');
+console.log('   Path:', dbPath);
+console.log('   Environment:', process.env.NODE_ENV);
+console.log('   Data dir exists:', fs.existsSync(path.dirname(dbPath)));
+console.log('   DB file exists:', fs.existsSync(dbPath));
+
+// List files in data directory if it exists
+const dataDir = path.dirname(dbPath);
+if (fs.existsSync(dataDir)) {
+    const files = fs.readdirSync(dataDir);
+    console.log('📂 Files in data directory:', files);
+}
+
 // Create tables
 db.serialize(() => {
     // Existing contacts table
