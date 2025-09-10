@@ -1,4 +1,4 @@
-// js/admin.js - Admin panel functionality
+// js/admin.js - Admin panel functionality with Featured Services Support
 
 // Initialize admin functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -80,6 +80,8 @@ window.switchAdminTab = function(tab) {
             break;
     }
 };
+
+// ========== GALLERY MANAGEMENT ==========
 
 // Load admin gallery
 window.loadAdminGallery = async function() {
@@ -204,6 +206,8 @@ window.deletePet = async function(petId) {
     }
 };
 
+// ========== RATES MANAGEMENT WITH FEATURED SERVICES ==========
+
 // Load admin rates
 window.loadAdminRates = async function() {
     try {
@@ -213,6 +217,7 @@ window.loadAdminRates = async function() {
         const adminRatesGrid = document.getElementById('adminRatesGrid');
         Utils.hideLoading('adminRatesLoading');
         
+        console.log('Loading admin rates:', rates);
         adminRatesGrid.innerHTML = createAdminRatesTable(rates);
         
     } catch (error) {
@@ -221,8 +226,12 @@ window.loadAdminRates = async function() {
     }
 };
 
-// Update the createAdminRatesTable function
+// Create admin rates table with Featured Services support
 function createAdminRatesTable(rates) {
+    if (!rates || rates.length === 0) {
+        return '<p>No rates found.</p>';
+    }
+    
     return `
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden;">
@@ -237,70 +246,97 @@ function createAdminRatesTable(rates) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${rates.map(rate => `
-                        <tr style="border-bottom: 1px solid #eee; ${rate.is_featured ? 'background: rgba(255, 215, 0, 0.1);' : ''}">
-                            <td style="padding: 1rem;">
-                                ${rate.is_featured ? '⭐ ' : ''}${rate.service_type}
-                            </td>
-                            <td style="padding: 1rem; font-weight: bold;">$${parseFloat(rate.rate_per_unit).toFixed(2)}</td>
-                            <td style="padding: 1rem;">${rate.unit_type.replace('_', ' ')}</td>
-                            <td style="padding: 1rem;">
-                                <span style="padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.8rem; background: ${rate.is_active ? '#d4edda' : '#f8d7da'}; color: ${rate.is_active ? '#155724' : '#721c24'};">
-                                    ${rate.is_active ? 'Active' : 'Inactive'}
-                                </span>
-                            </td>
-                            <td style="padding: 1rem; text-align: center;">
-                                ${rate.is_featured ? 
-                                    '<span style="color: #ffd700; font-size: 1.2rem;">⭐</span>' : 
-                                    `<button onclick="setFeaturedService(${rate.id})" class="btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.7rem;">Set Featured</button>`
-                                }
-                            </td>
-                            <td style="padding: 1rem; text-align: center;">
-                                <button onclick="editRate(${rate.id})" class="btn btn-success" style="padding: 0.3rem 0.8rem; margin-right: 0.5rem; font-size: 0.8rem;">Edit</button>
-                                <button onclick="deleteRate(${rate.id})" class="btn btn-danger" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">Delete</button>
-                            </td>
-                        </tr>
-                    `).join('')}
+                    ${rates.map(rate => {
+                        const isFeatured = Boolean(rate.is_featured);
+                        console.log(`Rate ${rate.service_type}: featured = ${isFeatured}`);
+                        
+                        return `
+                            <tr style="border-bottom: 1px solid #eee; ${isFeatured ? 'background: rgba(255, 215, 0, 0.1); border-left: 4px solid #ffd700;' : ''}">
+                                <td style="padding: 1rem;">
+                                    ${isFeatured ? '⭐ ' : ''}${rate.service_type}
+                                </td>
+                                <td style="padding: 1rem; font-weight: bold;">$${parseFloat(rate.rate_per_unit).toFixed(2)}</td>
+                                <td style="padding: 1rem;">${rate.unit_type.replace('_', ' ')}</td>
+                                <td style="padding: 1rem;">
+                                    <span style="padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.8rem; background: ${rate.is_active ? '#d4edda' : '#f8d7da'}; color: ${rate.is_active ? '#155724' : '#721c24'};">
+                                        ${rate.is_active ? 'Active' : 'Inactive'}
+                                    </span>
+                                </td>
+                                <td style="padding: 1rem; text-align: center;">
+                                    ${isFeatured ? 
+                                        '<span style="background: linear-gradient(45deg, #ffd700, #ffed4e); color: #333; padding: 0.2rem 0.6rem; border-radius: 15px; font-size: 0.7rem; font-weight: bold;">★ FEATURED</span>' : 
+                                        `<button onclick="setFeaturedService(${rate.id})" style="background: #6c757d; color: white; border: none; padding: 0.2rem 0.6rem; border-radius: 15px; font-size: 0.7rem; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">Set Featured</button>`
+                                    }
+                                </td>
+                                <td style="padding: 1rem; text-align: center;">
+                                    <button onclick="editRate(${rate.id})" style="background: #28a745; color: white; border: none; padding: 0.3rem 0.8rem; margin-right: 0.5rem; font-size: 0.8rem; border-radius: 4px; cursor: pointer;">Edit</button>
+                                    <button onclick="deleteRate(${rate.id})" style="background: #dc3545; color: white; border: none; padding: 0.3rem 0.8rem; font-size: 0.8rem; border-radius: 4px; cursor: pointer;">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('')}
                 </tbody>
             </table>
         </div>
     `;
 }
 
-// Delete rate function (add to admin.js)
-window.deleteRate = async function(rateId) {
-    if (!confirm('Are you sure you want to delete this rate? This action cannot be undone.')) {
+// Set Featured Service function
+window.setFeaturedService = async function(rateId) {
+    if (!confirm('Set this service as the featured service? This will remove the featured status from other services.')) {
         return;
     }
     
     try {
-        const response = await API.authRequest(`/api/admin/rates/${rateId}`, {
-            method: 'DELETE'
+        console.log(`🎯 Setting rate ${rateId} as featured...`);
+        
+        const response = await API.authRequest(`/api/admin/rates/${rateId}/featured`, {
+            method: 'PUT'
         });
         
         const result = await response.json();
+        console.log('Set featured result:', result);
         
         if (result.success) {
-            loadAdminRates();
-            if (window.loadRates) loadRates(); // Refresh public rates
-            if (window.loadAboutServices) loadAboutServices(); // Refresh about page services
+            console.log('✅ Featured service updated successfully');
+            
+            // CRITICAL: Refresh ALL the UI components
+            console.log('🔄 Refreshing admin rates table...');
+            await loadAdminRates();
+            
+            console.log('🔄 Refreshing public rates...');
+            if (window.loadRates) await loadRates();
+            
+            console.log('🔄 Refreshing About page services...');
+            if (window.loadAboutServices) await loadAboutServices();
+            
+            // Show success message
+            console.log('🎉 All UI components refreshed!');
+            
         } else {
-            alert('Failed to delete rate. Please try again.');
+            console.error('Failed to set featured service:', result);
+            alert('Failed to set featured service: ' + (result.error || 'Unknown error'));
         }
     } catch (error) {
-        console.error('Error deleting rate:', error);
-        alert('Failed to delete rate. Please try again.');
+        console.error('Error setting featured service:', error);
+        alert('Failed to set featured service. Please try again.');
     }
 };
 
-// Update the handleRateSubmission function
+// Handle rate form submission with Featured Services support
 async function handleRateSubmission(e) {
     e.preventDefault();
     
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     data.isActive = document.getElementById('isActive').checked;
-    data.isFeatured = document.getElementById('isFeatured').checked;
+    
+    // Handle featured checkbox
+    const featuredCheckbox = document.getElementById('isFeatured');
+    if (featuredCheckbox) {
+        data.isFeatured = featuredCheckbox.checked;
+        console.log('Featured checkbox value:', data.isFeatured);
+    }
     
     const rateId = document.getElementById('rateId').value;
     const isEdit = !!rateId;
@@ -331,21 +367,40 @@ async function handleRateSubmission(e) {
     }
 }
 
-// Update the editRate function
+// Edit rate with Featured Services support
 window.editRate = async function(rateId) {
     try {
-        const rates = await API.rates.getAllAdmin();
+        console.log(`📝 Loading rate ${rateId} for editing...`);
+        
+        // Get fresh data from server
+        const response = await API.authRequest(`/api/admin/rates`);
+        const rates = await response.json();
         const rate = rates.find(r => r.id === rateId);
         
         if (rate) {
+            console.log('Rate data for editing:', rate);
+            
             document.getElementById('rateId').value = rate.id;
             document.getElementById('serviceType').value = rate.service_type;
             document.getElementById('ratePerUnit').value = rate.rate_per_unit;
             document.getElementById('unitType').value = rate.unit_type;
             document.getElementById('description').value = rate.description || '';
-            document.getElementById('isActive').checked = rate.is_active;
-            document.getElementById('isFeatured').checked = rate.is_featured;
+            document.getElementById('isActive').checked = Boolean(rate.is_active);
+            
+            // Handle featured checkbox
+            const featuredCheckbox = document.getElementById('isFeatured');
+            if (featuredCheckbox) {
+                featuredCheckbox.checked = Boolean(rate.is_featured);
+                console.log(`Set form - Featured checkbox: ${featuredCheckbox.checked}`);
+            }
+            
             document.getElementById('rateSubmitBtn').textContent = 'Update Rate';
+            
+            // Scroll to form
+            document.getElementById('rateForm').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            console.error('Rate not found:', rateId);
+            alert('Rate not found.');
         }
     } catch (error) {
         console.error('Error loading rate for edit:', error);
@@ -353,15 +408,15 @@ window.editRate = async function(rateId) {
     }
 };
 
-// Add new function to set featured service
-window.setFeaturedService = async function(rateId) {
-    if (!confirm('Set this service as the featured service? This will remove the featured status from other services.')) {
+// Delete rate function
+window.deleteRate = async function(rateId) {
+    if (!confirm('Are you sure you want to delete this rate? This action cannot be undone.')) {
         return;
     }
     
     try {
-        const response = await API.authRequest(`/api/admin/rates/${rateId}/featured`, {
-            method: 'PUT'
+        const response = await API.authRequest(`/api/admin/rates/${rateId}`, {
+            method: 'DELETE'
         });
         
         const result = await response.json();
@@ -371,23 +426,31 @@ window.setFeaturedService = async function(rateId) {
             if (window.loadRates) loadRates(); // Refresh public rates
             if (window.loadAboutServices) loadAboutServices(); // Refresh about page services
         } else {
-            alert('Failed to set featured service. Please try again.');
+            alert('Failed to delete rate. Please try again.');
         }
     } catch (error) {
-        console.error('Error setting featured service:', error);
-        alert('Failed to set featured service. Please try again.');
+        console.error('Error deleting rate:', error);
+        alert('Failed to delete rate. Please try again.');
     }
 };
 
-// Update the resetRateForm function
+// Reset rate form with Featured Services support
 window.resetRateForm = function() {
     document.getElementById('rateForm').reset();
     document.getElementById('rateId').value = '';
-    document.getElementById('isFeatured').checked = false;
+    
+    // Reset featured checkbox
+    const featuredCheckbox = document.getElementById('isFeatured');
+    if (featuredCheckbox) {
+        featuredCheckbox.checked = false;
+    }
+    
     document.getElementById('rateSubmitBtn').textContent = 'Add Rate';
     Utils.hideMessage('rateSuccess');
     Utils.hideMessage('rateError');
 };
+
+// ========== CONTACT MANAGEMENT ==========
 
 // Load admin contacts
 window.loadAdminContacts = async function() {
@@ -461,3 +524,29 @@ function createContactsTable(contacts) {
         </table>
     `;
 }
+
+// ========== DEBUG AND UTILITY FUNCTIONS ==========
+
+// Force refresh all rates (utility function)
+window.forceRefreshRates = async function() {
+    console.log('🔄 Force refreshing all rates...');
+    try {
+        await loadAdminRates();
+        console.log('✅ Admin rates refreshed');
+        
+        if (window.loadRates) {
+            await loadRates();
+            console.log('✅ Public rates refreshed');
+        }
+        
+        if (window.loadAboutServices) {
+            await loadAboutServices();
+            console.log('✅ About services refreshed');
+        }
+        
+        console.log('🎉 All rates refreshed successfully!');
+    } catch (error) {
+        console.error('Error refreshing rates:', error);
+        alert('Error refreshing rates');
+    }
+};
