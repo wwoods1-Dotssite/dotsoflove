@@ -1206,9 +1206,16 @@
 
             <div id="adminPanel" class="admin-panel" style="display: none;">
                 <div class="hero">
-                    <h1>Admin Dashboard</h1>
-                    <p>Manage gallery and rates</p>
-                </div>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1>Admin Dashboard</h1>
+            <p>Manage gallery, rates, and contacts</p>
+        </div>
+        <button onclick="logout()" class="btn btn-danger" style="margin-left: auto;">
+            Logout
+        </button>
+    </div>
+</div>
 
                 <div class="admin-tabs">
                     <button class="admin-tab active" onclick="switchAdminTab('gallery')">Gallery Management</button>
@@ -1340,6 +1347,42 @@
         let adminToken = localStorage.getItem('adminToken');
         let currentImageIndex = 0;
         let currentImages = [];
+
+    // Session timeout management
+let sessionTimeout;
+
+function resetSessionTimeout() {
+    clearTimeout(sessionTimeout);
+    // Auto logout after 30 minutes of inactivity
+    sessionTimeout = setTimeout(() => {
+        alert('Session expired for security. Please log in again.');
+        logout();
+    }, 30 * 60 * 1000); // 30 minutes
+}
+        // Enhanced logout function
+window.logout = function() {
+    // Clear token
+    localStorage.removeItem('adminToken');
+    adminToken = null;
+    
+    // Clear any session timeout
+    clearTimeout(sessionTimeout);
+    
+    // Clear any cached admin data
+    document.getElementById('adminGalleryGrid').innerHTML = '';
+    document.getElementById('adminRatesGrid').innerHTML = '';
+    document.getElementById('contactsList').innerHTML = '';
+    
+    // Show login form
+    showAdminAuth();
+    
+    // Optional: Show confirmation
+    alert('Logged out successfully');
+};
+
+// Reset timeout on any user activity
+document.addEventListener('click', resetSessionTimeout);
+document.addEventListener('keypress', resetSessionTimeout);
 
         // Navigation functionality
         document.addEventListener('DOMContentLoaded', function() {
@@ -1597,6 +1640,7 @@
         function showAdminPanel() {
             document.getElementById('adminAuth').style.display = 'none';
             document.getElementById('adminPanel').style.display = 'block';
+            resetSessionTimeout();
             loadAdminGallery();
             loadAdminRates();
         }
