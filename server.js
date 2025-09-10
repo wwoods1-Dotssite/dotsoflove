@@ -597,6 +597,25 @@ app.get('/api/rates', (req, res) => {
     });
 });
 
+// Admin: Get single rate by ID
+app.get('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
+    const rateId = req.params.id;
+    
+    db.get('SELECT * FROM service_rates WHERE id = ?', [rateId], (err, row) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Failed to retrieve rate' });
+        }
+        
+        if (!row) {
+            return res.status(404).json({ error: 'Rate not found' });
+        }
+        
+        res.json(row);
+    });
+});
+
+
 // Admin: Get all rates (including inactive)
 app.get('/api/admin/rates', authenticateAdmin, (req, res) => {
     db.all('SELECT * FROM service_rates ORDER BY service_type', (err, rows) => {
