@@ -107,7 +107,55 @@ async function loadAboutServices() {
         Utils.showError('aboutServicesLoading', 'Error loading services.');
     }
 }
+// Helper function to get service configuration (add to main.js)
+function getServiceConfig(serviceType) {
+    const configs = {
+        'Pet Sitting (Overnight)': { emoji: '🏠', description: 'Overnight care in your home' },
+        'Dog Walking': { emoji: '🐕', description: 'Regular walks for your dog' },
+        'Pet Visits': { emoji: '🏃', description: 'Check-ins and care visits' },
+        'Holiday/Weekend Rate': { emoji: '🎉', description: 'Special holiday care' },
+        'Pet Playtime': { emoji: '🎾', description: 'Interactive play sessions' }
+    };
+    
+    return configs[serviceType] || { emoji: '🐾', description: 'Professional pet care' };
+}
 
+// Helper function to create service item (add to main.js)
+function createServiceItem(rate, serviceConfig, isFeatured, unitDisplay) {
+    return `
+        <div class="service-item ${isFeatured ? 'featured-service' : ''}">
+            <h3>${serviceConfig.emoji} ${rate.service_type}</h3>
+            <p><strong>$${parseFloat(rate.rate_per_unit).toFixed(2)}</strong> ${unitDisplay}</p>
+            <p>${rate.description || serviceConfig.description}</p>
+        </div>
+    `;
+}
+
+// Helper function to create default services (add to main.js)
+function createDefaultServices() {
+    return `
+        <div class="service-item featured-service">
+            <h3>🏠 Pet Sitting (Overnight)</h3>
+            <p><strong>$75.00</strong> per night</p>
+            <p>Overnight care in your home with 24/7 attention</p>
+        </div>
+        <div class="service-item">
+            <h3>🐕 Dog Walking</h3>
+            <p><strong>$25.00</strong> per walk</p>
+            <p>30-45 minute walks to keep your dog happy and healthy</p>
+        </div>
+        <div class="service-item">
+            <h3>🏃 Pet Visits</h3>
+            <p><strong>$30.00</strong> per visit</p>
+            <p>Check-ins, feeding, and care visits throughout the day</p>
+        </div>
+        <div class="service-item">
+            <h3>🎉 Holiday/Weekend Rate</h3>
+            <p><strong>$85.00</strong> per night</p>
+            <p>Special holiday and weekend care rates</p>
+        </div>
+    `;
+}
 // Load Rates (updated)
 async function loadRates() {
     try {
