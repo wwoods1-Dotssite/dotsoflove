@@ -103,7 +103,7 @@ console.log('   Data dir exists:', fs.existsSync(path.dirname(dbPath)));
 console.log('   DB file exists:', fs.existsSync(dbPath));
 
 // List files in data directory if it exists
-const dataDir = path.dirname(dbPath);
+// const dataDir = path.dirname(dbPath);  duplicate declaration
 if (fs.existsSync(dataDir)) {
     const files = fs.readdirSync(dataDir);
     console.log('📂 Files in data directory:', files);
