@@ -82,7 +82,7 @@ if (!fs.existsSync('data')) {
 }
 
 // Initialize SQLite database - Use persistent storage
-const dbPath = process.env.NODE_ENV === 'production' ? './data/contacts.db' : './contacts.db';
+const dbPath = process.env.NODE_ENV === 'production' ? '/app/data/contacts.db' : './contacts.db';
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error opening database:', err);
