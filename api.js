@@ -98,47 +98,55 @@ const API = {
         }
     },
 
-    // Rates endpoints
-    rates: {
-        async getAll() {
-            return API.request('/api/rates');
-        },
-
-        async getAllAdmin() {
-            const response = await API.authRequest('/api/admin/rates');
-            return response.json();
-        },
-
-        async getById(id) {
-            const response = await API.authRequest(`/api/admin/rates/${id}`);
-            return response.json();
-        },
-
-        async add(data) {
-            const response = await API.authRequest('/api/admin/rates', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            return response.json();
-        },
-
-        async update(id, data) {
-            const response = await API.authRequest(`/api/admin/rates/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            return response.json();
-        },
-
-        async delete(id) {
-            const response = await API.authRequest(`/api/admin/rates/${id}`, {
-                method: 'DELETE'
-            });
-            return response.json();
-        }
+    // Rates endpoints (updated)
+rates: {
+    async getAll() {
+        return API.request('/api/rates');
     },
+
+    async getAllAdmin() {
+        const response = await API.authRequest('/api/admin/rates');
+        return response.json();
+    },
+
+    async getById(id) {
+        const response = await API.authRequest(`/api/admin/rates/${id}`);
+        return response.json();
+    },
+
+    async add(data) {
+        const response = await API.authRequest('/api/admin/rates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        return response.json();
+    },
+
+    async update(id, data) {
+        const response = await API.authRequest(`/api/admin/rates/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        return response.json();
+    },
+
+    async delete(id) {
+        const response = await API.authRequest(`/api/admin/rates/${id}`, {
+            method: 'DELETE'
+        });
+        return response.json();
+    },
+
+    // New method for setting featured service
+    async setFeatured(id) {
+        const response = await API.authRequest(`/api/admin/rates/${id}/featured`, {
+            method: 'PUT'
+        });
+        return response.json();
+    }
+},
 
     // Contact endpoints
     contact: {
