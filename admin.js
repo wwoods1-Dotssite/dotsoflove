@@ -267,6 +267,32 @@ function createAdminRatesTable(rates) {
     `;
 }
 
+// Delete rate function (add to admin.js)
+window.deleteRate = async function(rateId) {
+    if (!confirm('Are you sure you want to delete this rate? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await API.authRequest(`/api/admin/rates/${rateId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            loadAdminRates();
+            if (window.loadRates) loadRates(); // Refresh public rates
+            if (window.loadAboutServices) loadAboutServices(); // Refresh about page services
+        } else {
+            alert('Failed to delete rate. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error deleting rate:', error);
+        alert('Failed to delete rate. Please try again.');
+    }
+};
+
 // Update the handleRateSubmission function
 async function handleRateSubmission(e) {
     e.preventDefault();
