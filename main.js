@@ -68,19 +68,117 @@ function loadInitialContent() {
     loadAboutServices();
 }
 
-// Load services for About page from rates API (updated)
+// REPLACE the loadAboutServices function in main.js with this fixed version:
+
 async function loadAboutServices() {
     try {
+        console.log('🔄 Loading about services...');
         Utils.showLoading('aboutServicesLoading');
         const rates = await API.rates.getAll();
+        
+        console.log('📊 Rates received:', rates);
+        console.log('⭐ Featured rates:', rates.filter(r => r.is_featured));
         
         const servicesGrid = document.getElementById('aboutServicesGrid');
         Utils.hideLoading('aboutServicesLoading');
         
         if (rates.length === 0) {
+            console.log('⚠️ No rates found, using defaults');
             servicesGrid.innerHTML = createDefaultServices();
             return;
         }
+
+        // Sort rates to put featured service first
+        const sortedRates = [...rates].sort((a, b) => {
+            if (a.is_featured && !b.is_featured) return -1;
+            if (!a.is_featured && b.is_featured) return 1;
+            return 0;
+        });
+
+        console.log('📈 Sorted rates (featured first):', sortedRates.map(r => ({ 
+            name: r.service_type, 
+            featured: Boolean(r.is_featured)
+        })));
+
+        // Create service items from rates data
+        const serviceItems = sortedRates.map((rate) => {
+            const isFeatured = Boolean(rate.is_featured);
+            const unitDisplay = rate.unit_type.replace('per_', '').replace('_', ' ');
+            
+            console.log(`🔧 Creating service item for "${rate.service_type}", featured: ${isFeatured}`);
+            
+            const serviceConfig = getServiceConfig(rate.service_type);
+            return createServiceItem(rate, serviceConfig, isFeatured, unitDisplay);
+        });
+
+        servicesGrid.innerHTML = serviceItems.join('');
+        console.log('✅ About services updated successfully');
+        
+        // Double-check the DOM was updated
+        const featuredElements = servicesGrid.querySelectorAll('.featured-service');
+        console.log(`🎯 Featured elements in DOM: ${featuredElements.length}`);
+        
+        if (featuredElements.length > 0) {
+            console.log('🔍 Featured service content:', featuredElements[0].innerHTML.substring(0, 200));
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading services for about page:', error);
+        Utils.showError('aboutServicesLoading', 'Error loading services.');
+    }
+}
+
+// UPDATED: Fix the getServiceConfig function to handle more service types
+function getServiceConfig(serviceType) {
+    // Normalize the service type for comparison
+    const normalizedType = serviceType.toLowerCase();
+    
+    const configs = {
+        'pet sitting (overnight)': { emoji: '🏠', description: 'Overnight care in your home' },
+        'dog walking': { emoji: '🐕', description: 'Regular walks for your dog' },
+        'pet visits': { emoji: '🏃', description: 'Check-ins and care visits' },
+        'holiday/weekend rate': { emoji: '🎉', description: 'Special holiday care' },
+        'pet playtime': { emoji: '🎾', description: 'Interactive play sessions' }
+    };
+    
+    // Try exact match first
+    let config = configs[normalizedType];
+    
+    // If no exact match, try partial matches
+    if (!config) {
+        if (normalizedType.includes('sitting') || normalizedType.includes('overnight')) {
+            config = { emoji: '🏠', description: 'Overnight care in your home' };
+        } else if (normalizedType.includes('walking') || normalizedType.includes('walk')) {
+            config = { emoji: '🐕', description: 'Regular walks for your dog' };
+        } else if (normalizedType.includes('visit')) {
+            config = { emoji: '🏃', description: 'Check-ins and care visits' };
+        } else if (normalizedType.includes('holiday') || normalizedType.includes('weekend')) {
+            config = { emoji: '🎉', description: 'Special holiday care' };
+        } else if (normalizedType.includes('play')) {
+            config = { emoji: '🎾', description: 'Interactive play sessions' };
+        } else {
+            config = { emoji: '🐾', description: 'Professional pet care' };
+        }
+    }
+    
+    console.log(`🏷️ Service "${serviceType}" mapped to:`, config);
+    return config;
+}
+
+// UPDATED: Fix the createServiceItem function 
+function createServiceItem(rate, serviceConfig, isFeatured, unitDisplay) {
+    const serviceItem = `
+        <div class="service-item ${isFeatured ? 'featured-service' : ''}">
+            <h3>${serviceConfig.emoji} ${rate.service_type}</h3>
+            <p><strong>$${parseFloat(rate.rate_per_unit).toFixed(2)}</strong> ${unitDisplay}</p>
+            <p>${rate.description || serviceConfig.description}</p>
+        </div>
+    `;
+    
+    console.log(`📝 Created service item for "${rate.service_type}" (featured: ${isFeatured}):`, serviceItem.substring(0, 100));
+    
+    return serviceItem;
+}
 
         // Sort rates to put featured service first
         const sortedRates = [...rates].sort((a, b) => {
