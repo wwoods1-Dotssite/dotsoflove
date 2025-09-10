@@ -413,3 +413,55 @@ window.loadAboutServices = loadAboutServices;
 window.loadGallery = loadGallery;
 window.loadRates = loadRates;
 window.checkAdminAuth = checkAdminAuth;
+
+/* Add this to main.css - Date Picker Styles */
+
+.date-picker-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.date-input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.date-input-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 0.3rem;
+}
+
+.date-input-group input[type="date"] {
+    padding: 0.8rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    background: white;
+}
+
+.date-input-group input[type="date"]:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Style the calendar icon */
+.date-input-group input[type="date"]::-webkit-calendar-picker-indicator {
+    background: #667eea;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 2px;
+}
+
+/* Mobile responsive for date pickers */
+@media (max-width: 768px) {
+    .date-picker-container {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+}
