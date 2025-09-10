@@ -1,4 +1,4 @@
-// server.js - Pet Sitting Backend Service with PostgreSQL
+// server.js - Pet Sitting Backend Service with PostgreSQL and Date Picker Support
 const express = require('express');
 const sgMail = require('@sendgrid/mail');
 const { Pool } = require('pg');
@@ -85,7 +85,7 @@ const pool = new Pool({
 });
 
 // Database connection debugging
-console.log('🗃️  Database configuration:');
+console.log('Database configuration:');
 console.log('   Type: PostgreSQL');
 console.log('   Environment:', process.env.NODE_ENV);
 console.log('   SSL:', process.env.NODE_ENV === 'production' ? 'enabled' : 'disabled');
@@ -93,9 +93,9 @@ console.log('   SSL:', process.env.NODE_ENV === 'production' ? 'enabled' : 'disa
 // Test database connection
 pool.connect((err, client, release) => {
     if (err) {
-        console.error('❌ Error connecting to PostgreSQL:', err);
+        console.error('Error connecting to PostgreSQL:', err);
     } else {
-        console.log('✅ Successfully connected to PostgreSQL database');
+        console.log('Successfully connected to PostgreSQL database');
         release();
     }
 });
@@ -103,7 +103,7 @@ pool.connect((err, client, release) => {
 // Initialize database tables
 async function initializeTables() {
     try {
-        // Existing contacts table
+        // Existing contacts table with structured date support
         await pool.query(`
             CREATE TABLE IF NOT EXISTS contacts (
                 id SERIAL PRIMARY KEY,
@@ -115,6 +115,8 @@ async function initializeTables() {
                 pet_info TEXT,
                 dates TEXT,
                 message TEXT,
+                start_date DATE,
+                end_date DATE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
@@ -172,6 +174,18 @@ async function initializeTables() {
             )
         `);
 
+        // Add structured date columns to existing contacts table if they don't exist
+        try {
+            await pool.query(`
+                ALTER TABLE contacts 
+                ADD COLUMN IF NOT EXISTS start_date DATE,
+                ADD COLUMN IF NOT EXISTS end_date DATE
+            `);
+            console.log('Added date columns to contacts table');
+        } catch (error) {
+            console.log('Note: Date columns may already exist:', error.message);
+        }
+
         // Insert default rates if none exist
         const ratesResult = await pool.query('SELECT COUNT(*) as count FROM service_rates');
         if (parseInt(ratesResult.rows[0].count) === 0) {
@@ -192,9 +206,9 @@ async function initializeTables() {
             console.log('Default rates initialized successfully');
         }
 
-        console.log('✅ Database tables initialized successfully');
+        console.log('Database tables initialized successfully');
     } catch (error) {
-        console.error('❌ Error initializing database tables:', error);
+        console.error('Error initializing database tables:', error);
     }
 }
 
@@ -206,11 +220,32 @@ app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Pet Sitting Backend is running!' });
 });
 
-// Contact form endpoint
+// Helper function to parse date strings
+function parseDateString(dateString) {
+    if (!dateString) return { startDate: null, endDate: null };
+    
+    // Handle formats like "December 25, 2024" or "December 25, 2024 to December 31, 2024"
+    const dateRegex = /(\w+ \d{1,2}, \d{4})/g;
+    const matches = dateString.match(dateRegex);
+    
+    if (!matches || matches.length === 0) {
+        return { startDate: null, endDate: null };
+    }
+    
+    const startDate = new Date(matches[0]);
+    const endDate = matches.length > 1 ? new Date(matches[1]) : null;
+    
+    return {
+        startDate: isNaN(startDate.getTime()) ? null : startDate.toISOString().split('T')[0],
+        endDate: endDate && !isNaN(endDate.getTime()) ? endDate.toISOString().split('T')[0] : null
+    };
+}
+
+// Contact form endpoint with enhanced date handling
 app.post('/api/contact', async (req, res) => {
     const { name, email, phone, bestTime, service, petInfo, dates, message } = req.body;
     
-    console.log('Received contact form submission:', { name, email, phone });
+    console.log('Received contact form submission:', { name, email, phone, dates });
     
     if (!name || (!email && !phone)) {
         return res.status(400).json({ 
@@ -219,18 +254,29 @@ app.post('/api/contact', async (req, res) => {
     }
     
     try {
+        // Parse dates if provided in the new format
+        let startDate = null;
+        let endDate = null;
+        
+        if (dates) {
+            const parsedDates = parseDateString(dates);
+            startDate = parsedDates.startDate;
+            endDate = parsedDates.endDate;
+        }
+        
         const result = await pool.query(`
-            INSERT INTO contacts (name, email, phone, best_time, service, pet_info, dates, message)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO contacts (name, email, phone, best_time, service, pet_info, dates, message, start_date, end_date)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             RETURNING id
-        `, [name, email, phone, bestTime, service, petInfo, dates, message]);
+        `, [name, email, phone, bestTime, service, petInfo, dates, message, startDate, endDate]);
         
         const contactId = result.rows[0].id;
         console.log('Contact saved to database with ID:', contactId);
         
         sendEmailNotification({
             id: contactId,
-            name, email, phone, bestTime, service, petInfo, dates, message
+            name, email, phone, bestTime, service, petInfo, dates, message,
+            startDate, endDate
         });
         
         res.json({ success: true, message: 'Contact request submitted successfully' });
@@ -241,7 +287,7 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
-// ========== GALLERY ENDPOINTS ==========
+// GALLERY ENDPOINTS
 
 // Get all gallery pets with their images (public endpoint)
 app.get('/api/gallery', async (req, res) => {
@@ -424,7 +470,7 @@ app.delete('/api/admin/gallery/:id', authenticateAdmin, async (req, res) => {
     }
 });
 
-// ========== RATES MANAGEMENT ENDPOINTS ==========
+// RATES MANAGEMENT ENDPOINTS
 
 // Get all service rates (public endpoint)
 app.get('/api/rates', async (req, res) => {
@@ -612,7 +658,7 @@ app.delete('/api/admin/rates/:id', authenticateAdmin, async (req, res) => {
     }
 });
 
-// ========== ADMIN AUTHENTICATION ==========
+// ADMIN AUTHENTICATION
 
 // Admin login with JWT
 app.post('/api/admin/auth', async (req, res) => {
@@ -681,13 +727,30 @@ app.get('/api/admin/email-recipients', authenticateAdmin, (req, res) => {
     res.json({ recipients: EMAIL_RECIPIENTS });
 });
 
-// Email notification function
+// Enhanced email notification with better date formatting
 async function sendEmailNotification(contactData) {
+    const formatDateRange = () => {
+        if (contactData.startDate && contactData.endDate) {
+            const start = new Date(contactData.startDate).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+            const end = new Date(contactData.endDate).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+            return `${start} to ${end}`;
+        } else if (contactData.startDate) {
+            return new Date(contactData.startDate).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+        }
+        return contactData.dates || 'Not specified';
+    };
+    
     const emailHTML = `
         <h2>🐾 New Pet Sitting Request</h2>
         <div style="font-family: Arial, sans-serif; max-width: 600px;">
             <p><strong>Request ID:</strong> #${contactData.id}</p>
-            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+            <p><strong>Date Submitted:</strong> ${new Date().toLocaleDateString()}</p>
             
             <h3>Customer Information:</h3>
             <ul>
@@ -700,7 +763,7 @@ async function sendEmailNotification(contactData) {
             <h3>Service Details:</h3>
             <ul>
                 <li><strong>Service Needed:</strong> ${contactData.service || 'Not specified'}</li>
-                <li><strong>Preferred Dates:</strong> ${contactData.dates || 'Not specified'}</li>
+                <li><strong>📅 Service Dates:</strong> ${formatDateRange()}</li>
             </ul>
             
             <h3>Pet Information:</h3>
@@ -731,9 +794,9 @@ async function sendEmailNotification(contactData) {
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`🐾 Pet Sitting Backend Service running on port ${PORT}`);
-    console.log(`📧 Email recipients: ${EMAIL_RECIPIENTS.join(', ')}`);
-    console.log(`💾 Database: PostgreSQL (${process.env.NODE_ENV})`);
+    console.log(`Pet Sitting Backend Service running on port ${PORT}`);
+    console.log(`Email recipients: ${EMAIL_RECIPIENTS.join(', ')}`);
+    console.log(`Database: PostgreSQL (${process.env.NODE_ENV})`);
 });
 
 // Graceful shutdown
