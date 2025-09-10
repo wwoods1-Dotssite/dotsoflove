@@ -207,8 +207,20 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="dates">Preferred Dates</label>
-                            <textarea id="dates" name="dates" rows="2" placeholder="When do you need pet sitting services?"></textarea>
+                            <label>Service Dates</label>
+                            <div class="date-picker-container">
+                                <div class="date-input-group">
+                                    <label for="startDate">Start Date *</label>
+                                    <input type="date" id="startDate" name="startDate" required>
+                                </div>
+                                <div class="date-input-group">
+                                    <label for="endDate">End Date</label>
+                                    <input type="date" id="endDate" name="endDate">
+                                </div>
+                            </div>
+                            <small style="color: #666; font-size: 0.9em; margin-top: 0.5rem; display: block;">
+                                * Start date is required. Leave end date empty for single-day services.
+                            </small>
                         </div>
 
                         <div class="form-group">
