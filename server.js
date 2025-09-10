@@ -1,7 +1,8 @@
 // server.js - Pet Sitting Backend Service with Enhanced Gallery and Rates Management
 const express = require('express');
 const sgMail = require('@sendgrid/mail');
-const sqlite3 = require('sqlite3').verbose();
+const { Pool } = require('pg');
+// const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
