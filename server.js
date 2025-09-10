@@ -1,20 +1,20 @@
-// server.js - Pet Sitting Backend Service with Enhanced Gallery and Rates Management
+// server.js - Pet Sitting Backend Service with PostgreSQL
 const express = require('express');
 const sgMail = require('@sendgrid/mail');
 const { Pool } = require('pg');
-// const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// JWT middleware for admin authentication - MOVED TO TOP
+// JWT middleware for admin authentication
 const authenticateAdmin = (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
@@ -39,7 +39,7 @@ app.use(cors({
 app.use(express.json());
 app.use('/uploads', express.static('uploads')); // Serve uploaded images
 
-// Set up multer for file uploads - Enhanced to handle multiple files
+// Set up multer for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/');
@@ -73,193 +73,140 @@ const EMAIL_RECIPIENTS = [
 // Set SendGrid API key
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-// Create uploads and data directories if they don't exist
-// Create uploads and data directories if they don't exist
-const fs = require('fs');
+// Create uploads directory if it doesn't exist
 if (!fs.existsSync('uploads')) {
     fs.mkdirSync('uploads');
 }
 
-// Ensure the data directory exists (handle both dev and production paths)
-const dataDir = process.env.NODE_ENV === 'production' ? '/app/data' : './data';
-if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-}
-
-// Initialize SQLite database - Use persistent storage
-const dbPath = process.env.NODE_ENV === 'production' ? '/app/data/contacts.db' : './contacts.db';
-// Add PostgreSQL connection:
+// PostgreSQL connection
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// Add this after database connection for debugging
+// Database connection debugging
 console.log('🗃️  Database configuration:');
-console.log('   Path:', dbPath);
+console.log('   Type: PostgreSQL');
 console.log('   Environment:', process.env.NODE_ENV);
-console.log('   Data dir exists:', fs.existsSync(path.dirname(dbPath)));
-console.log('   DB file exists:', fs.existsSync(dbPath));
+console.log('   SSL:', process.env.NODE_ENV === 'production' ? 'enabled' : 'disabled');
 
-// List files in data directory if it exists
-// const dataDir = path.dirname(dbPath);  duplicate declaration
-if (fs.existsSync(dataDir)) {
-    const files = fs.readdirSync(dataDir);
-    console.log('📂 Files in data directory:', files);
-}
+// Test database connection
+pool.connect((err, client, release) => {
+    if (err) {
+        console.error('❌ Error connecting to PostgreSQL:', err);
+    } else {
+        console.log('✅ Successfully connected to PostgreSQL database');
+        release();
+    }
+});
 
-// Create tables
-db.serialize(() => {
-    // Existing contacts table
-    pool.query(`
-        CREATE TABLE IF NOT EXISTS contacts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            email TEXT,
-            phone TEXT,
-            best_time TEXT,
-            service TEXT,
-            pet_info TEXT,
-            dates TEXT,
-            message TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
+// Initialize database tables
+async function initializeTables() {
+    try {
+        // Existing contacts table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS contacts (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                email TEXT,
+                phone TEXT,
+                best_time TEXT,
+                service TEXT,
+                pet_info TEXT,
+                dates TEXT,
+                message TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
 
-    // Updated gallery pets table with multiple images support
-    pool.query(`
-        CREATE TABLE IF NOT EXISTS gallery_pets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            pet_name TEXT NOT NULL,
-            story_description TEXT,
-            service_date TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            is_dorothy_pet BOOLEAN DEFAULT 0
-        )
-    `);
+        // Gallery pets table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS gallery_pets (
+                id SERIAL PRIMARY KEY,
+                pet_name TEXT NOT NULL,
+                story_description TEXT,
+                service_date TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_dorothy_pet BOOLEAN DEFAULT FALSE
+            )
+        `);
 
-    // New table for pet images (supports multiple images per pet)
-    pool.query(`
-        CREATE TABLE IF NOT EXISTS pet_images (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            pet_id INTEGER NOT NULL,
-            image_url TEXT NOT NULL,
-            is_primary BOOLEAN DEFAULT 0,
-            display_order INTEGER DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (pet_id) REFERENCES gallery_pets (id) ON DELETE CASCADE
-        )
-    `);
+        // Pet images table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS pet_images (
+                id SERIAL PRIMARY KEY,
+                pet_id INTEGER NOT NULL,
+                image_url TEXT NOT NULL,
+                is_primary BOOLEAN DEFAULT FALSE,
+                display_order INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (pet_id) REFERENCES gallery_pets (id) ON DELETE CASCADE
+            )
+        `);
 
-    // New rates table
-    pool.query(`
-        CREATE TABLE IF NOT EXISTS service_rates (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            service_type TEXT NOT NULL UNIQUE,
-            rate_per_unit DECIMAL(10,2) NOT NULL,
-            unit_type TEXT NOT NULL, -- 'per_day', 'per_visit', 'per_hour', etc.
-            description TEXT,
-            is_active BOOLEAN DEFAULT 1,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
+        // Service rates table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS service_rates (
+                id SERIAL PRIMARY KEY,
+                service_type TEXT NOT NULL UNIQUE,
+                rate_per_unit DECIMAL(10,2) NOT NULL,
+                unit_type TEXT NOT NULL,
+                description TEXT,
+                is_active BOOLEAN DEFAULT TRUE,
+                is_featured BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
 
-    // Admin credentials table (enhanced with proper hashing)
-    pool.query(`
-        CREATE TABLE IF NOT EXISTS admin_users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            email TEXT,
-            last_login DATETIME,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
+        // Admin users table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS admin_users (
+                id SERIAL PRIMARY KEY,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                email TEXT,
+                last_login TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
 
-    // Add migration for featured services
-    pool.query("PRAGMA table_info(service_rates)", (err, columns) => {
-        if (!err) {
-            const hasFeaturedColumn = columns.some(col => col.name === 'is_featured');
-            if (!hasFeaturedColumn) {
-                console.log('Adding is_featured column to service_rates table...');
-                pool.query('ALTER TABLE service_rates ADD COLUMN is_featured BOOLEAN DEFAULT 0', (err) => {
-                    if (err) {
-                        console.error('Error adding is_featured column:', err);
-                    } else {
-                        console.log('Successfully added is_featured column');
-                        // Set the first rate as featured if none are featured
-                        pool.query('SELECT COUNT(*) as count FROM service_rates WHERE is_featured = 1', (err, row) => {
-                            if (!err && row.count === 0) {
-                                pool.query('UPDATE service_rates SET is_featured = 1 WHERE id = (SELECT id FROM service_rates ORDER BY id LIMIT 1)');
-                                console.log('Set first service as featured by default');
-                            }
-                        });
-                    }
-                });
-            }
-        }
-    });
-
-    // Insert default rates if none exist (only on first run)
-    pool.query('SELECT COUNT(*) as count FROM service_rates', (err, row) => {
-        if (!err && row.count === 0) {
+        // Insert default rates if none exist
+        const ratesResult = await pool.query('SELECT COUNT(*) as count FROM service_rates');
+        if (parseInt(ratesResult.rows[0].count) === 0) {
             console.log('Initializing default rates...');
             const defaultRates = [
-                ['Pet Sitting (Overnight)', 75.00, 'per_night', 'Overnight care in your home with 24/7 attention'],
-                ['Dog Walking', 25.00, 'per_walk', '30-45 minute walks to keep your dog happy and healthy'],
-                ['Pet Visits', 30.00, 'per_visit', 'Check-ins, feeding, and care visits throughout the day'],
-                ['Holiday/Weekend Rate', 85.00, 'per_night', 'Special holiday and weekend care rates']
+                ['Pet Sitting (Overnight)', 75.00, 'per_night', 'Overnight care in your home with 24/7 attention', true],
+                ['Dog Walking', 25.00, 'per_walk', '30-45 minute walks to keep your dog happy and healthy', false],
+                ['Pet Visits', 30.00, 'per_visit', 'Check-ins, feeding, and care visits throughout the day', false],
+                ['Holiday/Weekend Rate', 85.00, 'per_night', 'Special holiday and weekend care rates', false]
             ];
             
-            const stmt = db.prepare('INSERT INTO service_rates (service_type, rate_per_unit, unit_type, description) VALUES (?, ?, ?, ?)');
-            defaultRates.forEach(rate => {
-                stmt.run(rate);
-            });
-            stmt.finalize();
+            for (const rate of defaultRates) {
+                await pool.query(
+                    'INSERT INTO service_rates (service_type, rate_per_unit, unit_type, description, is_featured) VALUES ($1, $2, $3, $4, $5)',
+                    rate
+                );
+            }
             console.log('Default rates initialized successfully');
         }
-    });
 
-    // Check if we need to migrate existing gallery data
-    pool.query("SELECT name FROM sqlite_master WHERE type='table' AND name='gallery_pets'", (err, row) => {
-        if (!err && row) {
-            // Check if image_url column still exists (old schema)
-            pool.query("PRAGMA table_info(gallery_pets)", (err, columns) => {
-                if (!err) {
-                    const hasImageUrl = columns.some(col => col.name === 'image_url');
-                    if (hasImageUrl) {
-                        console.log('Migrating existing gallery data...');
-                        // Migrate existing image_url data to new pet_images table
-                        pool.query('SELECT id, image_url FROM gallery_pets WHERE image_url IS NOT NULL', (err, pets) => {
-                            if (!err && pets.length > 0) {
-                                const insertStmt = db.prepare('INSERT INTO pet_images (pet_id, image_url, is_primary, display_order) VALUES (?, ?, 1, 0)');
-                                pets.forEach(pet => {
-                                    insertStmt.run([pet.id, pet.image_url]);
-                                });
-                                insertStmt.finalize();
-                                
-                                // Remove image_url column from gallery_pets
-                                pool.query('ALTER TABLE gallery_pets DROP COLUMN image_url', (err) => {
-                                    if (err) console.log('Note: Could not drop image_url column, but migration completed');
-                                });
-                                console.log('Gallery migration completed successfully');
-                            }
-                        });
-                    }
-                }
-            });
-        }
-    });
-});
+        console.log('✅ Database tables initialized successfully');
+    } catch (error) {
+        console.error('❌ Error initializing database tables:', error);
+    }
+}
+
+// Initialize tables on startup
+initializeTables();
 
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Pet Sitting Backend is running!' });
 });
 
-// Existing contact form endpoint
+// Contact form endpoint
 app.post('/api/contact', async (req, res) => {
     const { name, email, phone, bestTime, service, petInfo, dates, message } = req.body;
     
@@ -272,26 +219,20 @@ app.post('/api/contact', async (req, res) => {
     }
     
     try {
-        const stmt = db.prepare(`
+        const result = await pool.query(`
             INSERT INTO contacts (name, email, phone, best_time, service, pet_info, dates, message)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `);
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING id
+        `, [name, email, phone, bestTime, service, petInfo, dates, message]);
         
-        stmt.run([name, email, phone, bestTime, service, petInfo, dates, message], function(err) {
-            if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Failed to save contact information' });
-            }
-            
-            console.log('Contact saved to database with ID:', this.lastID);
-            
-            sendEmailNotification({
-                id: this.lastID,
-                name, email, phone, bestTime, service, petInfo, dates, message
-            });
+        const contactId = result.rows[0].id;
+        console.log('Contact saved to database with ID:', contactId);
+        
+        sendEmailNotification({
+            id: contactId,
+            name, email, phone, bestTime, service, petInfo, dates, message
         });
         
-        stmt.finalize();
         res.json({ success: true, message: 'Contact request submitted successfully' });
         
     } catch (error) {
@@ -300,150 +241,131 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
-// ========== ENHANCED GALLERY ENDPOINTS ==========
+// ========== GALLERY ENDPOINTS ==========
 
 // Get all gallery pets with their images (public endpoint)
-app.get('/api/gallery', (req, res) => {
-    const query = `
-        SELECT 
-            p.*,
-            GROUP_CONCAT(
-                json_object(
-                    'id', i.id,
-                    'url', i.image_url,
-                    'isPrimary', i.is_primary,
-                    'displayOrder', i.display_order
-                )
-                ORDER BY i.display_order, i.created_at
-            ) as images
-        FROM gallery_pets p
-        LEFT JOIN pet_images i ON p.id = i.pet_id
-        GROUP BY p.id
-        ORDER BY p.created_at DESC
-    `;
-    
-    pool.query(query, (err, rows) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to retrieve gallery' });
-        }
+app.get('/api/gallery', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                p.*,
+                COALESCE(
+                    json_agg(
+                        json_build_object(
+                            'id', i.id,
+                            'url', i.image_url,
+                            'isPrimary', i.is_primary,
+                            'displayOrder', i.display_order
+                        ) ORDER BY i.display_order, i.created_at
+                    ) FILTER (WHERE i.id IS NOT NULL),
+                    '[]'::json
+                ) as images
+            FROM gallery_pets p
+            LEFT JOIN pet_images i ON p.id = i.pet_id
+            GROUP BY p.id
+            ORDER BY p.created_at DESC
+        `;
         
-        // Parse the JSON images data
-        const processedRows = rows.map(row => ({
-            ...row,
-            images: row.images ? row.images.split(',').map(imgStr => {
-                try {
-                    return JSON.parse(imgStr);
-                } catch (e) {
-                    return null;
-                }
-            }).filter(img => img !== null) : []
-        }));
-        
-        res.json(processedRows);
-    });
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Failed to retrieve gallery' });
+    }
 });
 
 // Get single pet with images
-app.get('/api/gallery/:id', (req, res) => {
+app.get('/api/gallery/:id', async (req, res) => {
     const petId = req.params.id;
     
-    const query = `
-        SELECT 
-            p.*,
-            GROUP_CONCAT(
-                json_object(
-                    'id', i.id,
-                    'url', i.image_url,
-                    'isPrimary', i.is_primary,
-                    'displayOrder', i.display_order
-                )
-                ORDER BY i.display_order, i.created_at
-            ) as images
-        FROM gallery_pets p
-        LEFT JOIN pet_images i ON p.id = i.pet_id
-        WHERE p.id = ?
-        GROUP BY p.id
-    `;
-    
-    pool.query(query, [petId], (err, row) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to retrieve pet' });
-        }
+    try {
+        const query = `
+            SELECT 
+                p.*,
+                COALESCE(
+                    json_agg(
+                        json_build_object(
+                            'id', i.id,
+                            'url', i.image_url,
+                            'isPrimary', i.is_primary,
+                            'displayOrder', i.display_order
+                        ) ORDER BY i.display_order, i.created_at
+                    ) FILTER (WHERE i.id IS NOT NULL),
+                    '[]'::json
+                ) as images
+            FROM gallery_pets p
+            LEFT JOIN pet_images i ON p.id = i.pet_id
+            WHERE p.id = $1
+            GROUP BY p.id
+        `;
         
-        if (!row) {
+        const result = await pool.query(query, [petId]);
+        
+        if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Pet not found' });
         }
         
-        // Parse the JSON images data
-        const processedRow = {
-            ...row,
-            images: row.images ? row.images.split(',').map(imgStr => {
-                try {
-                    return JSON.parse(imgStr);
-                } catch (e) {
-                    return null;
-                }
-            }).filter(img => img !== null) : []
-        };
-        
-        res.json(processedRow);
-    });
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Failed to retrieve pet' });
+    }
 });
 
 // Admin: Add new pet to gallery with multiple images
-app.post('/api/admin/gallery', authenticateAdmin, upload.array('images', 10), (req, res) => {
+app.post('/api/admin/gallery', authenticateAdmin, upload.array('images', 10), async (req, res) => {
     const { petName, storyDescription, serviceDate, isDorothyPet } = req.body;
     
     if (!petName) {
         return res.status(400).json({ error: 'Pet name is required' });
     }
 
-    db.serialize(() => {
+    const client = await pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+        
         // Insert pet record
-        const stmt = db.prepare(`
+        const petResult = await client.query(`
             INSERT INTO gallery_pets (pet_name, story_description, service_date, is_dorothy_pet)
-            VALUES (?, ?, ?, ?)
-        `);
+            VALUES ($1, $2, $3, $4)
+            RETURNING id
+        `, [petName, storyDescription || '', serviceDate || '', isDorothyPet === 'true']);
         
-        stmt.run([petName, storyDescription || '', serviceDate || '', isDorothyPet === 'true' ? 1 : 0], function(err) {
-            if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Failed to add pet to gallery' });
-            }
-            
-            const petId = this.lastID;
-            
-            // Insert images if any
-            if (req.files && req.files.length > 0) {
-                const imageStmt = db.prepare(`
+        const petId = petResult.rows[0].id;
+        
+        // Insert images if any
+        if (req.files && req.files.length > 0) {
+            for (let index = 0; index < req.files.length; index++) {
+                const file = req.files[index];
+                const imageUrl = `/uploads/${file.filename}`;
+                const isPrimary = index === 0; // First image is primary
+                
+                await client.query(`
                     INSERT INTO pet_images (pet_id, image_url, is_primary, display_order)
-                    VALUES (?, ?, ?, ?)
-                `);
-                
-                req.files.forEach((file, index) => {
-                    const imageUrl = `/uploads/${file.filename}`;
-                    const isPrimary = index === 0 ? 1 : 0; // First image is primary
-                    imageStmt.run([petId, imageUrl, isPrimary, index]);
-                });
-                
-                imageStmt.finalize();
+                    VALUES ($1, $2, $3, $4)
+                `, [petId, imageUrl, isPrimary, index]);
             }
-            
-            res.json({ 
-                success: true, 
-                message: 'Pet added to gallery successfully',
-                petId: petId 
-            });
-        });
+        }
         
-        stmt.finalize();
-    });
+        await client.query('COMMIT');
+        
+        res.json({ 
+            success: true, 
+            message: 'Pet added to gallery successfully',
+            petId: petId 
+        });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Failed to add pet to gallery' });
+    } finally {
+        client.release();
+    }
 });
 
 // Admin: Update existing pet story and details
-app.put('/api/admin/gallery/:id', authenticateAdmin, (req, res) => {
+app.put('/api/admin/gallery/:id', authenticateAdmin, async (req, res) => {
     const petId = req.params.id;
     const { petName, storyDescription, serviceDate, isDorothyPet } = req.body;
     
@@ -451,19 +373,14 @@ app.put('/api/admin/gallery/:id', authenticateAdmin, (req, res) => {
         return res.status(400).json({ error: 'Pet name is required' });
     }
     
-    const stmt = db.prepare(`
-        UPDATE gallery_pets 
-        SET pet_name = ?, story_description = ?, service_date = ?, is_dorothy_pet = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-    `);
-    
-    stmt.run([petName, storyDescription || '', serviceDate || '', isDorothyPet === 'true' ? 1 : 0, petId], function(err) {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to update pet' });
-        }
+    try {
+        const result = await pool.query(`
+            UPDATE gallery_pets 
+            SET pet_name = $1, story_description = $2, service_date = $3, is_dorothy_pet = $4, updated_at = CURRENT_TIMESTAMP
+            WHERE id = $5
+        `, [petName, storyDescription || '', serviceDate || '', isDorothyPet === 'true', petId]);
         
-        if (this.changes === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Pet not found' });
         }
         
@@ -471,222 +388,130 @@ app.put('/api/admin/gallery/:id', authenticateAdmin, (req, res) => {
             success: true, 
             message: 'Pet updated successfully' 
         });
-    });
-    
-    stmt.finalize();
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Failed to update pet' });
+    }
 });
 
 // Admin: Delete pet from gallery (and all associated images)
-app.delete('/api/admin/gallery/:id', authenticateAdmin, (req, res) => {
+app.delete('/api/admin/gallery/:id', authenticateAdmin, async (req, res) => {
     const petId = req.params.id;
     
-    // First get all image URLs to delete the files
-    pool.query('SELECT image_url FROM pet_images WHERE pet_id = ?', [petId], (err, images) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to find pet images' });
-        }
+    try {
+        // First get all image URLs to delete the files
+        const imagesResult = await pool.query('SELECT image_url FROM pet_images WHERE pet_id = $1', [petId]);
         
         // Delete all image files
-        images.forEach(image => {
+        imagesResult.rows.forEach(image => {
             const imagePath = path.join(__dirname, image.image_url);
             fs.unlink(imagePath, (err) => {
                 if (err) console.log('Could not delete image file:', err);
             });
         });
         
-        db.serialize(() => {
-            // Delete images from database
-            pool.query('DELETE FROM pet_images WHERE pet_id = ?', [petId]);
-            
-            // Delete pet from database
-            pool.query('DELETE FROM gallery_pets WHERE id = ?', [petId], function(err) {
-                if (err) {
-                    console.error('Database error:', err);
-                    return res.status(500).json({ error: 'Failed to delete pet' });
-                }
-                
-                res.json({ success: true, message: 'Pet and all images deleted successfully' });
-            });
-        });
-    });
+        // Delete pet and associated images (CASCADE will handle pet_images)
+        const result = await pool.query('DELETE FROM gallery_pets WHERE id = $1', [petId]);
+        
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Pet not found' });
+        }
+        
+        res.json({ success: true, message: 'Pet and all images deleted successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Failed to delete pet' });
+    }
 });
 
 // ========== RATES MANAGEMENT ENDPOINTS ==========
 
 // Get all service rates (public endpoint)
-app.get('/api/rates', (req, res) => {
-    pool.query('SELECT * FROM service_rates WHERE is_active = 1 ORDER BY service_type', (err, rows) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to retrieve rates' });
-        }
-        res.json(rows);
-    });
-});
-
-// Debug: Check database schema and featured services
-app.get('/api/admin/debug/featured', authenticateAdmin, (req, res) => {
-    console.log('Debug endpoint called - checking featured services');
-    
-    pool.query("PRAGMA table_info(service_rates)", (err, columns) => {
-        if (err) {
-            console.error('Error checking schema:', err);
-            return res.status(500).json({ error: 'Database error checking schema' });
-        }
-        
-        const hasFeaturedColumn = columns.some(col => col.name === 'is_featured');
-        
-        if (!hasFeaturedColumn) {
-            return res.json({
-                schema_ok: false,
-                message: 'is_featured column missing',
-                columns: columns.map(col => col.name)
-            });
-        }
-        
-        // Check current featured services
-        pool.query('SELECT id, service_type, is_featured FROM service_rates ORDER BY service_type', (err, rates) => {
-            if (err) {
-                console.error('Error querying rates:', err);
-                return res.status(500).json({ error: 'Error querying rates' });
-            }
-            
-            const featuredCount = rates.filter(r => r.is_featured).length;
-            
-            console.log(`Found ${featuredCount} featured services out of ${rates.length} total`);
-            
-            res.json({
-                schema_ok: true,
-                featured_count: featuredCount,
-                all_rates: rates,
-                featured_rates: rates.filter(r => r.is_featured)
-            });
-        });
-    });
-});
-
-// Fix: Migrate database to add is_featured column if missing
-app.post('/api/admin/migrate/featured', authenticateAdmin, (req, res) => {
-    console.log('Migration endpoint called');
-    
-    pool.query("PRAGMA table_info(service_rates)", (err, columns) => {
-        if (err) {
-            console.error('Migration error:', err);
-            return res.status(500).json({ error: 'Database error' });
-        }
-        
-        const hasFeaturedColumn = columns.some(col => col.name === 'is_featured');
-        if (!hasFeaturedColumn) {
-            console.log('Adding is_featured column to service_rates table...');
-            pool.query('ALTER TABLE service_rates ADD COLUMN is_featured BOOLEAN DEFAULT 0', (err) => {
-                if (err) {
-                    console.error('Error adding is_featured column:', err);
-                    return res.status(500).json({ error: 'Migration failed: ' + err.message });
-                }
-                
-                console.log('Successfully added is_featured column');
-                // Set the first rate as featured if none are featured
-                pool.query('SELECT COUNT(*) as count FROM service_rates WHERE is_featured = 1', (err, row) => {
-                    if (!err && row.count === 0) {
-                        pool.query('UPDATE service_rates SET is_featured = 1 WHERE id = (SELECT id FROM service_rates ORDER BY id LIMIT 1)', (err) => {
-                            if (err) {
-                                console.error('Error setting default featured:', err);
-                            } else {
-                                console.log('Set first service as featured by default');
-                            }
-                            res.json({ 
-                                success: true, 
-                                message: 'Migration completed and default featured service set' 
-                            });
-                        });
-                    } else {
-                        res.json({ 
-                            success: true, 
-                            message: 'Migration completed' 
-                        });
-                    }
-                });
-            });
-        } else {
-            res.json({ 
-                success: true, 
-                message: 'Column already exists - no migration needed' 
-            });
-        }
-    });
+app.get('/api/rates', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM service_rates WHERE is_active = TRUE ORDER BY service_type');
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Failed to retrieve rates' });
+    }
 });
 
 // Admin: Get all rates (including inactive)
-app.get('/api/admin/rates', authenticateAdmin, (req, res) => {
-    pool.query('SELECT * FROM service_rates ORDER BY service_type', (err, rows) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to retrieve rates' });
-        }
-        res.json(rows);
-    });
+app.get('/api/admin/rates', authenticateAdmin, async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM service_rates ORDER BY service_type');
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Failed to retrieve rates' });
+    }
 });
 
 // Admin: Get single rate by ID
-app.get('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
+app.get('/api/admin/rates/:id', authenticateAdmin, async (req, res) => {
     const rateId = req.params.id;
     
-    pool.query('SELECT * FROM service_rates WHERE id = ?', [rateId], (err, row) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to retrieve rate' });
-        }
+    try {
+        const result = await pool.query('SELECT * FROM service_rates WHERE id = $1', [rateId]);
         
-        if (!row) {
+        if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Rate not found' });
         }
         
-        res.json(row);
-    });
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Failed to retrieve rate' });
+    }
 });
 
-// Admin: Create new rate (updated)
-app.post('/api/admin/rates', authenticateAdmin, (req, res) => {
+// Admin: Create new rate
+app.post('/api/admin/rates', authenticateAdmin, async (req, res) => {
     const { serviceType, ratePerUnit, unitType, description, isActive, isFeatured } = req.body;
     
     if (!serviceType || !ratePerUnit || !unitType) {
         return res.status(400).json({ error: 'Service type, rate per unit, and unit type are required' });
     }
     
-    db.serialize(() => {
+    const client = await pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+        
         // If setting as featured, unset all other featured services first
         if (isFeatured) {
-            pool.query('UPDATE service_rates SET is_featured = 0');
+            await client.query('UPDATE service_rates SET is_featured = FALSE');
         }
         
-        const stmt = db.prepare(`
+        const result = await client.query(`
             INSERT INTO service_rates (service_type, rate_per_unit, unit_type, description, is_active, is_featured)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `);
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id
+        `, [serviceType, ratePerUnit, unitType, description || '', isActive !== false, isFeatured || false]);
         
-        stmt.run([serviceType, ratePerUnit, unitType, description || '', isActive !== false ? 1 : 0, isFeatured ? 1 : 0], function(err) {
-            if (err) {
-                if (err.message.includes('UNIQUE constraint failed')) {
-                    return res.status(400).json({ error: 'A rate for this service type already exists' });
-                }
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Failed to create rate' });
-            }
-            
-            res.json({ 
-                success: true, 
-                message: 'Rate created successfully',
-                rateId: this.lastID 
-            });
+        await client.query('COMMIT');
+        
+        res.json({ 
+            success: true, 
+            message: 'Rate created successfully',
+            rateId: result.rows[0].id 
         });
-        
-        stmt.finalize();
-    });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        if (error.constraint === 'service_rates_service_type_key') {
+            res.status(400).json({ error: 'A rate for this service type already exists' });
+        } else {
+            console.error('Database error:', error);
+            res.status(500).json({ error: 'Failed to create rate' });
+        }
+    } finally {
+        client.release();
+    }
 });
 
-// Admin: Update rate (updated)
-app.put('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
+// Admin: Update rate
+app.put('/api/admin/rates/:id', authenticateAdmin, async (req, res) => {
     const rateId = req.params.id;
     const { serviceType, ratePerUnit, unitType, description, isActive, isFeatured } = req.body;
     
@@ -694,92 +519,100 @@ app.put('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
         return res.status(400).json({ error: 'Service type, rate per unit, and unit type are required' });
     }
     
-    db.serialize(() => {
+    const client = await pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+        
         // If setting as featured, unset all other featured services first
         if (isFeatured) {
-            pool.query('UPDATE service_rates SET is_featured = 0');
+            await client.query('UPDATE service_rates SET is_featured = FALSE');
         }
         
-        const stmt = db.prepare(`
+        const result = await client.query(`
             UPDATE service_rates 
-            SET service_type = ?, rate_per_unit = ?, unit_type = ?, description = ?, is_active = ?, is_featured = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        `);
+            SET service_type = $1, rate_per_unit = $2, unit_type = $3, description = $4, is_active = $5, is_featured = $6, updated_at = CURRENT_TIMESTAMP
+            WHERE id = $7
+        `, [serviceType, ratePerUnit, unitType, description || '', isActive !== false, isFeatured || false, rateId]);
         
-        stmt.run([serviceType, ratePerUnit, unitType, description || '', isActive !== false ? 1 : 0, isFeatured ? 1 : 0, rateId], function(err) {
-            if (err) {
-                if (err.message.includes('UNIQUE constraint failed')) {
-                    return res.status(400).json({ error: 'A rate for this service type already exists' });
-                }
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Failed to update rate' });
-            }
-            
-            if (this.changes === 0) {
-                return res.status(404).json({ error: 'Rate not found' });
-            }
-            
-            res.json({ 
-                success: true, 
-                message: 'Rate updated successfully' 
-            });
+        if (result.rowCount === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Rate not found' });
+        }
+        
+        await client.query('COMMIT');
+        
+        res.json({ 
+            success: true, 
+            message: 'Rate updated successfully' 
         });
-        
-        stmt.finalize();
-    });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        if (error.constraint === 'service_rates_service_type_key') {
+            res.status(400).json({ error: 'A rate for this service type already exists' });
+        } else {
+            console.error('Database error:', error);
+            res.status(500).json({ error: 'Failed to update rate' });
+        }
+    } finally {
+        client.release();
+    }
 });
 
-// New endpoint: Set featured service
-app.put('/api/admin/rates/:id/featured', authenticateAdmin, (req, res) => {
+// Admin: Set featured service
+app.put('/api/admin/rates/:id/featured', authenticateAdmin, async (req, res) => {
     const rateId = req.params.id;
     
-    db.serialize(() => {
+    const client = await pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+        
         // First, unset all featured services
-        pool.query('UPDATE service_rates SET is_featured = 0', (err) => {
-            if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Failed to update featured status' });
-            }
-            
-            // Then set this one as featured
-            pool.query('UPDATE service_rates SET is_featured = 1 WHERE id = ?', [rateId], function(err) {
-                if (err) {
-                    console.error('Database error:', err);
-                    return res.status(500).json({ error: 'Failed to set featured service' });
-                }
-                
-                if (this.changes === 0) {
-                    return res.status(404).json({ error: 'Rate not found' });
-                }
-                
-                res.json({ 
-                    success: true, 
-                    message: 'Featured service updated successfully' 
-                });
-            });
+        await client.query('UPDATE service_rates SET is_featured = FALSE');
+        
+        // Then set this one as featured
+        const result = await client.query('UPDATE service_rates SET is_featured = TRUE WHERE id = $1', [rateId]);
+        
+        if (result.rowCount === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Rate not found' });
+        }
+        
+        await client.query('COMMIT');
+        
+        res.json({ 
+            success: true, 
+            message: 'Featured service updated successfully' 
         });
-    });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Failed to set featured service' });
+    } finally {
+        client.release();
+    }
 });
 
 // Admin: Delete rate
-app.delete('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
+app.delete('/api/admin/rates/:id', authenticateAdmin, async (req, res) => {
     const rateId = req.params.id;
     
-    pool.query('DELETE FROM service_rates WHERE id = ?', [rateId], function(err) {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to delete rate' });
-        }
+    try {
+        const result = await pool.query('DELETE FROM service_rates WHERE id = $1', [rateId]);
         
-        if (this.changes === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Rate not found' });
         }
         
         res.json({ success: true, message: 'Rate deleted successfully' });
-    });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Failed to delete rate' });
+    }
 });
 
-// ========== ENHANCED ADMIN AUTHENTICATION ==========
+// ========== ADMIN AUTHENTICATION ==========
 
 // Admin login with JWT
 app.post('/api/admin/auth', async (req, res) => {
@@ -794,7 +627,11 @@ app.post('/api/admin/auth', async (req, res) => {
         );
         
         // Update last login
-        pool.query('UPDATE admin_users SET last_login = CURRENT_TIMESTAMP WHERE username = ?', [username]);
+        try {
+            await pool.query('UPDATE admin_users SET last_login = CURRENT_TIMESTAMP WHERE username = $1', [username]);
+        } catch (error) {
+            console.log('Could not update last login:', error.message);
+        }
         
         res.json({ 
             success: true, 
@@ -816,14 +653,14 @@ app.get('/api/admin/validate', authenticateAdmin, (req, res) => {
 });
 
 // Get all contacts (admin)
-app.get('/api/admin/contacts', authenticateAdmin, (req, res) => {
-    pool.query('SELECT * FROM contacts ORDER BY created_at DESC', (err, rows) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to retrieve contacts' });
-        }
-        res.json(rows);
-    });
+app.get('/api/admin/contacts', authenticateAdmin, async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM contacts ORDER BY created_at DESC');
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Failed to retrieve contacts' });
+    }
 });
 
 // Email recipients management
@@ -896,17 +733,13 @@ async function sendEmailNotification(contactData) {
 app.listen(PORT, () => {
     console.log(`🐾 Pet Sitting Backend Service running on port ${PORT}`);
     console.log(`📧 Email recipients: ${EMAIL_RECIPIENTS.join(', ')}`);
-    console.log(`💾 Database path: ${dbPath}`);
+    console.log(`💾 Database: PostgreSQL (${process.env.NODE_ENV})`);
 });
 
 // Graceful shutdown
-process.on('SIGINT', () => {
-    db.close((err) => {
-        if (err) {
-            console.error('Error closing database:', err);
-        } else {
-            console.log('Database connection closed.');
-        }
-        process.exit(0);
-    });
+process.on('SIGINT', async () => {
+    console.log('Shutting down gracefully...');
+    await pool.end();
+    console.log('Database connection closed.');
+    process.exit(0);
 });
