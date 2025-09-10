@@ -134,7 +134,7 @@ function createServiceItem(rate, config, isFeatured, unitDisplay) {
         <div class="service-item ${isFeatured ? 'featured-service' : ''}">
             <h3>${config.emoji} ${rate.service_type}</h3>
             <p>${rate.description || config.desc}</p>
-            <strong>Starting at ${parseFloat(rate.rate_per_unit).toFixed(2)}/${unitDisplay}</strong>
+            <strong>Starting at $${parseFloat(rate.rate_per_unit).toFixed(2)}/${unitDisplay}</strong>
         </div>
     `;
 }
@@ -243,7 +243,7 @@ function createRateCard(rate, index) {
     return `
         <div class="rate-card ${isFeatured ? 'featured-rate' : ''}">
             <div class="rate-title">${rate.service_type}</div>
-            <div class="rate-price">${parseFloat(rate.rate_per_unit).toFixed(2)}</div>
+            <div class="rate-price">$${parseFloat(rate.rate_per_unit).toFixed(2)}</div>
             <div class="rate-unit">${rate.unit_type.replace('_', ' ')}</div>
             ${rate.description ? `<div class="rate-description">${rate.description}</div>` : ''}
         </div>
