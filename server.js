@@ -196,6 +196,157 @@ db.serialize(() => {
     });
 });
 
+// Add this to the database initialization section in server.js
+// After the existing table creation, add this migration
+
+// Create tables
+db.serialize(() => {
+    // ... existing table creation code ...
+
+    // Add migration for featured services
+    db.all("PRAGMA table_info(service_rates)", (err, columns) => {
+        if (!err) {
+            const hasFeaturedColumn = columns.some(col => col.name === 'is_featured');
+            if (!hasFeaturedColumn) {
+                console.log('Adding is_featured column to service_rates table...');
+                db.run('ALTER TABLE service_rates ADD COLUMN is_featured BOOLEAN DEFAULT 0', (err) => {
+                    if (err) {
+                        console.error('Error adding is_featured column:', err);
+                    } else {
+                        console.log('Successfully added is_featured column');
+                        // Set the first rate as featured if none are featured
+                        db.get('SELECT COUNT(*) as count FROM service_rates WHERE is_featured = 1', (err, row) => {
+                            if (!err && row.count === 0) {
+                                db.run('UPDATE service_rates SET is_featured = 1 WHERE id = (SELECT id FROM service_rates ORDER BY id LIMIT 1)');
+                                console.log('Set first service as featured by default');
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    });
+
+    // ... rest of existing code ...
+});
+
+// Update the rates endpoints to handle featured status:
+
+// Admin: Create new rate (updated)
+app.post('/api/admin/rates', authenticateAdmin, (req, res) => {
+    const { serviceType, ratePerUnit, unitType, description, isActive, isFeatured } = req.body;
+    
+    if (!serviceType || !ratePerUnit || !unitType) {
+        return res.status(400).json({ error: 'Service type, rate per unit, and unit type are required' });
+    }
+    
+    db.serialize(() => {
+        // If setting as featured, unset all other featured services first
+        if (isFeatured) {
+            db.run('UPDATE service_rates SET is_featured = 0');
+        }
+        
+        const stmt = db.prepare(`
+            INSERT INTO service_rates (service_type, rate_per_unit, unit_type, description, is_active, is_featured)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        
+        stmt.run([serviceType, ratePerUnit, unitType, description || '', isActive !== false ? 1 : 0, isFeatured ? 1 : 0], function(err) {
+            if (err) {
+                if (err.message.includes('UNIQUE constraint failed')) {
+                    return res.status(400).json({ error: 'A rate for this service type already exists' });
+                }
+                console.error('Database error:', err);
+                return res.status(500).json({ error: 'Failed to create rate' });
+            }
+            
+            res.json({ 
+                success: true, 
+                message: 'Rate created successfully',
+                rateId: this.lastID 
+            });
+        });
+        
+        stmt.finalize();
+    });
+});
+
+// Admin: Update rate (updated)
+app.put('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
+    const rateId = req.params.id;
+    const { serviceType, ratePerUnit, unitType, description, isActive, isFeatured } = req.body;
+    
+    if (!serviceType || !ratePerUnit || !unitType) {
+        return res.status(400).json({ error: 'Service type, rate per unit, and unit type are required' });
+    }
+    
+    db.serialize(() => {
+        // If setting as featured, unset all other featured services first
+        if (isFeatured) {
+            db.run('UPDATE service_rates SET is_featured = 0');
+        }
+        
+        const stmt = db.prepare(`
+            UPDATE service_rates 
+            SET service_type = ?, rate_per_unit = ?, unit_type = ?, description = ?, is_active = ?, is_featured = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `);
+        
+        stmt.run([serviceType, ratePerUnit, unitType, description || '', isActive !== false ? 1 : 0, isFeatured ? 1 : 0, rateId], function(err) {
+            if (err) {
+                if (err.message.includes('UNIQUE constraint failed')) {
+                    return res.status(400).json({ error: 'A rate for this service type already exists' });
+                }
+                console.error('Database error:', err);
+                return res.status(500).json({ error: 'Failed to update rate' });
+            }
+            
+            if (this.changes === 0) {
+                return res.status(404).json({ error: 'Rate not found' });
+            }
+            
+            res.json({ 
+                success: true, 
+                message: 'Rate updated successfully' 
+            });
+        });
+        
+        stmt.finalize();
+    });
+});
+
+// New endpoint: Set featured service
+app.put('/api/admin/rates/:id/featured', authenticateAdmin, (req, res) => {
+    const rateId = req.params.id;
+    
+    db.serialize(() => {
+        // First, unset all featured services
+        db.run('UPDATE service_rates SET is_featured = 0', (err) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ error: 'Failed to update featured status' });
+            }
+            
+            // Then set this one as featured
+            db.run('UPDATE service_rates SET is_featured = 1 WHERE id = ?', [rateId], function(err) {
+                if (err) {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: 'Failed to set featured service' });
+                }
+                
+                if (this.changes === 0) {
+                    return res.status(404).json({ error: 'Rate not found' });
+                }
+                
+                res.json({ 
+                    success: true, 
+                    message: 'Featured service updated successfully' 
+                });
+            });
+        });
+    });
+});
+
 // JWT middleware for admin authentication
 const authenticateAdmin = (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
