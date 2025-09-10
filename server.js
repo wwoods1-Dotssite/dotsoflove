@@ -508,6 +508,98 @@ app.get('/api/rates', (req, res) => {
     });
 });
 
+// Debug: Check database schema and featured services
+app.get('/api/admin/debug/featured', authenticateAdmin, (req, res) => {
+    console.log('Debug endpoint called - checking featured services');
+    
+    db.all("PRAGMA table_info(service_rates)", (err, columns) => {
+        if (err) {
+            console.error('Error checking schema:', err);
+            return res.status(500).json({ error: 'Database error checking schema' });
+        }
+        
+        const hasFeaturedColumn = columns.some(col => col.name === 'is_featured');
+        
+        if (!hasFeaturedColumn) {
+            return res.json({
+                schema_ok: false,
+                message: 'is_featured column missing',
+                columns: columns.map(col => col.name)
+            });
+        }
+        
+        // Check current featured services
+        db.all('SELECT id, service_type, is_featured FROM service_rates ORDER BY service_type', (err, rates) => {
+            if (err) {
+                console.error('Error querying rates:', err);
+                return res.status(500).json({ error: 'Error querying rates' });
+            }
+            
+            const featuredCount = rates.filter(r => r.is_featured).length;
+            
+            console.log(`Found ${featuredCount} featured services out of ${rates.length} total`);
+            
+            res.json({
+                schema_ok: true,
+                featured_count: featuredCount,
+                all_rates: rates,
+                featured_rates: rates.filter(r => r.is_featured)
+            });
+        });
+    });
+});
+
+// Fix: Migrate database to add is_featured column if missing
+app.post('/api/admin/migrate/featured', authenticateAdmin, (req, res) => {
+    console.log('Migration endpoint called');
+    
+    db.all("PRAGMA table_info(service_rates)", (err, columns) => {
+        if (err) {
+            console.error('Migration error:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        
+        const hasFeaturedColumn = columns.some(col => col.name === 'is_featured');
+        if (!hasFeaturedColumn) {
+            console.log('Adding is_featured column to service_rates table...');
+            db.run('ALTER TABLE service_rates ADD COLUMN is_featured BOOLEAN DEFAULT 0', (err) => {
+                if (err) {
+                    console.error('Error adding is_featured column:', err);
+                    return res.status(500).json({ error: 'Migration failed: ' + err.message });
+                }
+                
+                console.log('Successfully added is_featured column');
+                // Set the first rate as featured if none are featured
+                db.get('SELECT COUNT(*) as count FROM service_rates WHERE is_featured = 1', (err, row) => {
+                    if (!err && row.count === 0) {
+                        db.run('UPDATE service_rates SET is_featured = 1 WHERE id = (SELECT id FROM service_rates ORDER BY id LIMIT 1)', (err) => {
+                            if (err) {
+                                console.error('Error setting default featured:', err);
+                            } else {
+                                console.log('Set first service as featured by default');
+                            }
+                            res.json({ 
+                                success: true, 
+                                message: 'Migration completed and default featured service set' 
+                            });
+                        });
+                    } else {
+                        res.json({ 
+                            success: true, 
+                            message: 'Migration completed' 
+                        });
+                    }
+                });
+            });
+        } else {
+            res.json({ 
+                success: true, 
+                message: 'Column already exists - no migration needed' 
+            });
+        }
+    });
+});
+
 // Admin: Get all rates (including inactive)
 app.get('/api/admin/rates', authenticateAdmin, (req, res) => {
     db.all('SELECT * FROM service_rates ORDER BY service_type', (err, rows) => {
