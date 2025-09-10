@@ -55,8 +55,24 @@ const EMAIL_RECIPIENTS = [
 // Set SendGrid API key
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-// Initialize SQLite database
-const db = new sqlite3.Database('./contacts.db');
+// Create uploads and data directories if they don't exist
+const fs = require('fs');
+if (!fs.existsSync('uploads')) {
+    fs.mkdirSync('uploads');
+}
+if (!fs.existsSync('data')) {
+    fs.mkdirSync('data');
+}
+
+// Initialize SQLite database - Use persistent storage
+const dbPath = process.env.NODE_ENV === 'production' ? './data/contacts.db' : './contacts.db';
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error('Error opening database:', err);
+    } else {
+        console.log(`Connected to SQLite database at ${dbPath}`);
+    }
+});
 
 // Create tables
 db.serialize(() => {
@@ -128,14 +144,15 @@ db.serialize(() => {
         )
     `);
 
-    // Insert default rates if none exist
+    // Insert default rates if none exist (only on first run)
     db.get('SELECT COUNT(*) as count FROM service_rates', (err, row) => {
         if (!err && row.count === 0) {
+            console.log('Initializing default rates...');
             const defaultRates = [
-                ['Pet Sitting (Overnight)', 75.00, 'per_night', 'Overnight care in your home'],
-                ['Dog Walking', 25.00, 'per_walk', '30-45 minute walks'],
-                ['Pet Visits', 30.00, 'per_visit', 'Check-ins and care visits'],
-                ['Holiday/Weekend Rate', 85.00, 'per_night', 'Special holiday rates']
+                ['Pet Sitting (Overnight)', 75.00, 'per_night', 'Overnight care in your home with 24/7 attention'],
+                ['Dog Walking', 25.00, 'per_walk', '30-45 minute walks to keep your dog happy and healthy'],
+                ['Pet Visits', 30.00, 'per_visit', 'Check-ins, feeding, and care visits throughout the day'],
+                ['Holiday/Weekend Rate', 85.00, 'per_night', 'Special holiday and weekend care rates']
             ];
             
             const stmt = db.prepare('INSERT INTO service_rates (service_type, rate_per_unit, unit_type, description) VALUES (?, ?, ?, ?)');
@@ -143,6 +160,7 @@ db.serialize(() => {
                 stmt.run(rate);
             });
             stmt.finalize();
+            console.log('Default rates initialized successfully');
         }
     });
 
@@ -168,6 +186,7 @@ db.serialize(() => {
                                 db.run('ALTER TABLE gallery_pets DROP COLUMN image_url', (err) => {
                                     if (err) console.log('Note: Could not drop image_url column, but migration completed');
                                 });
+                                console.log('Gallery migration completed successfully');
                             }
                         });
                     }
@@ -176,12 +195,6 @@ db.serialize(() => {
         }
     });
 });
-
-// Create uploads directory if it doesn't exist
-const fs = require('fs');
-if (!fs.existsSync('uploads')) {
-    fs.mkdirSync('uploads');
-}
 
 // JWT middleware for admin authentication
 const authenticateAdmin = (req, res, next) => {
@@ -615,7 +628,6 @@ app.get('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
     });
 });
 
-
 // Admin: Get all rates (including inactive)
 app.get('/api/admin/rates', authenticateAdmin, (req, res) => {
     db.all('SELECT * FROM service_rates ORDER BY service_type', (err, rows) => {
@@ -831,6 +843,7 @@ async function sendEmailNotification(contactData) {
 app.listen(PORT, () => {
     console.log(`🐾 Pet Sitting Backend Service running on port ${PORT}`);
     console.log(`📧 Email recipients: ${EMAIL_RECIPIENTS.join(', ')}`);
+    console.log(`💾 Database path: ${dbPath}`);
 });
 
 // Graceful shutdown
