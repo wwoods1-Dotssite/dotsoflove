@@ -1,421 +1,179 @@
-// js/main.js - Core navigation and application logic
+/* css/main.css - Core styles and layout */
 
-// Initialize the application when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    initializeNavigation();
-    loadInitialContent();
-});
-
-// Navigation functionality
-function initializeNavigation() {
-    const navLinks = document.querySelectorAll('.nav-link');
-    const pages = document.querySelectorAll('.page');
-
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Remove active class from all links and pages
-            navLinks.forEach(l => l.classList.remove('active'));
-            pages.forEach(p => p.classList.remove('active'));
-            
-            // Add active class to clicked link
-            this.classList.add('active');
-            
-            // Show corresponding page
-            const targetPage = this.getAttribute('href').substring(1);
-            const pageElement = document.getElementById(targetPage);
-            
-            if (pageElement) {
-                pageElement.classList.add('active');
-                
-                // Load page-specific content
-                loadPageContent(targetPage);
-            }
-        });
-    });
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-// Load content based on the active page
-function loadPageContent(pageName) {
-    switch(pageName) {
-        case 'about':
-            loadAboutServices();
-            break;
-        case 'gallery':
-            loadGallery();
-            break;
-        case 'rates':
-            loadRates();
-            break;
-        case 'admin':
-            checkAdminAuth();
-            break;
-        case 'testimonials':
-        case 'contact':
-            // These pages are static, no loading needed
-            break;
-        default:
-            console.warn(`Unknown page: ${pageName}`);
-    }
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
 }
 
-// Load initial content when app starts
-function loadInitialContent() {
-    // Load gallery and rates on startup for caching
-    loadGallery();
-    loadRates();
-    loadAboutServices();
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
 }
 
-// REPLACE the loadAboutServices function in main.js with this fixed version:
-
-async function loadAboutServices() {
-    try {
-        console.log('🔄 Loading about services...');
-        Utils.showLoading('aboutServicesLoading');
-        const rates = await API.rates.getAll();
-        
-        console.log('📊 Rates received:', rates);
-        console.log('⭐ Featured rates:', rates.filter(r => r.is_featured));
-        
-        const servicesGrid = document.getElementById('aboutServicesGrid');
-        Utils.hideLoading('aboutServicesLoading');
-        
-        if (rates.length === 0) {
-            console.log('⚠️ No rates found, using defaults');
-            servicesGrid.innerHTML = createDefaultServices();
-            return;
-        }
-
-        // Sort rates to put featured service first
-        const sortedRates = [...rates].sort((a, b) => {
-            if (a.is_featured && !b.is_featured) return -1;
-            if (!a.is_featured && b.is_featured) return 1;
-            return 0;
-        });
-
-        console.log('📈 Sorted rates (featured first):', sortedRates.map(r => ({ 
-            name: r.service_type, 
-            featured: Boolean(r.is_featured)
-        })));
-
-        // Create service items from rates data
-        const serviceItems = sortedRates.map((rate) => {
-            const isFeatured = Boolean(rate.is_featured);
-            const unitDisplay = rate.unit_type.replace('per_', '').replace('_', ' ');
-            
-            console.log(`🔧 Creating service item for "${rate.service_type}", featured: ${isFeatured}`);
-            
-            const serviceConfig = getServiceConfig(rate.service_type);
-            return createServiceItem(rate, serviceConfig, isFeatured, unitDisplay);
-        });
-
-        servicesGrid.innerHTML = serviceItems.join('');
-        console.log('✅ About services updated successfully');
-        
-        // Double-check the DOM was updated
-        const featuredElements = servicesGrid.querySelectorAll('.featured-service');
-        console.log(`🎯 Featured elements in DOM: ${featuredElements.length}`);
-        
-        if (featuredElements.length > 0) {
-            console.log('🔍 Featured service content:', featuredElements[0].innerHTML.substring(0, 200));
-        }
-        
-    } catch (error) {
-        console.error('❌ Error loading services for about page:', error);
-        Utils.showError('aboutServicesLoading', 'Error loading services.');
-    }
+/* Header and Navigation */
+header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 1rem 0;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-// UPDATED: Fix the getServiceConfig function to handle more service types
-function getServiceConfig(serviceType) {
-    // Normalize the service type for comparison
-    const normalizedType = serviceType.toLowerCase();
-    
-    const configs = {
-        'pet sitting (overnight)': { emoji: '🏠', description: 'Overnight care in your home' },
-        'dog walking': { emoji: '🐕', description: 'Regular walks for your dog' },
-        'pet visits': { emoji: '🏃', description: 'Check-ins and care visits' },
-        'holiday/weekend rate': { emoji: '🎉', description: 'Special holiday care' },
-        'pet playtime': { emoji: '🎾', description: 'Interactive play sessions' }
-    };
-    
-    // Try exact match first
-    let config = configs[normalizedType];
-    
-    // If no exact match, try partial matches
-    if (!config) {
-        if (normalizedType.includes('sitting') || normalizedType.includes('overnight')) {
-            config = { emoji: '🏠', description: 'Overnight care in your home' };
-        } else if (normalizedType.includes('walking') || normalizedType.includes('walk')) {
-            config = { emoji: '🐕', description: 'Regular walks for your dog' };
-        } else if (normalizedType.includes('visit')) {
-            config = { emoji: '🏃', description: 'Check-ins and care visits' };
-        } else if (normalizedType.includes('holiday') || normalizedType.includes('weekend')) {
-            config = { emoji: '🎉', description: 'Special holiday care' };
-        } else if (normalizedType.includes('play')) {
-            config = { emoji: '🎾', description: 'Interactive play sessions' };
-        } else {
-            config = { emoji: '🐾', description: 'Professional pet care' };
-        }
-    }
-    
-    console.log(`🏷️ Service "${serviceType}" mapped to:`, config);
-    return config;
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-// UPDATED: Fix the createServiceItem function 
-function createServiceItem(rate, serviceConfig, isFeatured, unitDisplay) {
-    const serviceItem = `
-        <div class="service-item ${isFeatured ? 'featured-service' : ''}">
-            <h3>${serviceConfig.emoji} ${rate.service_type}</h3>
-            <p><strong>$${parseFloat(rate.rate_per_unit).toFixed(2)}</strong> ${unitDisplay}</p>
-            <p>${rate.description || serviceConfig.description}</p>
-        </div>
-    `;
-    
-    console.log(`📝 Created service item for "${rate.service_type}" (featured: ${isFeatured}):`, serviceItem.substring(0, 100));
-    
-    return serviceItem;
+.logo {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #667eea;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-        // Sort rates to put featured service first
-        const sortedRates = [...rates].sort((a, b) => {
-            if (a.is_featured && !b.is_featured) return -1;
-            if (!a.is_featured && b.is_featured) return 1;
-            return 0;
-        });
-
-        // Create service items from rates data
-        const serviceItems = sortedRates.map((rate, index) => {
-            const isFeatured = rate.is_featured; // Use database flag instead of index
-            const unitDisplay = rate.unit_type.replace('per_', '').replace('_', ' ');
-            
-            // Map service types to emojis and descriptions
-            const serviceConfig = getServiceConfig(rate.service_type);
-            
-            return createServiceItem(rate, serviceConfig, isFeatured, unitDisplay);
-        });
-
-        servicesGrid.innerHTML = serviceItems.join('');
-        
-    } catch (error) {
-        console.error('Error loading services for about page:', error);
-        Utils.showError('aboutServicesLoading', 'Error loading services.');
-    }
-}
-// Helper function to get service configuration (add to main.js)
-function getServiceConfig(serviceType) {
-    const configs = {
-        'Pet Sitting (Overnight)': { emoji: '🏠', description: 'Overnight care in your home' },
-        'Dog Walking': { emoji: '🐕', description: 'Regular walks for your dog' },
-        'Pet Visits': { emoji: '🏃', description: 'Check-ins and care visits' },
-        'Holiday/Weekend Rate': { emoji: '🎉', description: 'Special holiday care' },
-        'Pet Playtime': { emoji: '🎾', description: 'Interactive play sessions' }
-    };
-    
-    return configs[serviceType] || { emoji: '🐾', description: 'Professional pet care' };
+.logo::before {
+    content: '🐾';
+    font-size: 2rem;
 }
 
-// Helper function to create service item (add to main.js)
-function createServiceItem(rate, serviceConfig, isFeatured, unitDisplay) {
-    return `
-        <div class="service-item ${isFeatured ? 'featured-service' : ''}">
-            <h3>${serviceConfig.emoji} ${rate.service_type}</h3>
-            <p><strong>$${parseFloat(rate.rate_per_unit).toFixed(2)}</strong> ${unitDisplay}</p>
-            <p>${rate.description || serviceConfig.description}</p>
-        </div>
-    `;
-}
-// Add these functions to main.js:
-
-// Load Gallery
-async function loadGallery() {
-    try {
-        Utils.showLoading('galleryLoading');
-        const pets = await API.gallery.getAll();
-        
-        const galleryGrid = document.getElementById('galleryGrid');
-        const galleryEmpty = document.getElementById('galleryEmpty');
-        
-        Utils.hideLoading('galleryLoading');
-        
-        if (pets.length === 0) {
-            galleryEmpty.style.display = 'block';
-            galleryGrid.innerHTML = '';
-            return;
-        }
-        
-        galleryEmpty.style.display = 'none';
-        galleryGrid.innerHTML = pets.map(pet => createGalleryItem(pet)).join('');
-        
-    } catch (error) {
-        console.error('Error loading gallery:', error);
-        Utils.showError('galleryLoading', 'Error loading gallery. Please try again later.');
-    }
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
 }
 
-// Create gallery item HTML
-function createGalleryItem(pet) {
-    const images = pet.images || [];
-    const primaryImage = images.find(img => img.isPrimary) || images[0];
-    
-    return `
-        <div class="gallery-item" onclick="openModal(${JSON.stringify(pet).replace(/"/g, '&quot;')})">
-            <div class="gallery-image">
-                ${primaryImage ? 
-                    `<img src="${API_BASE}${primaryImage.url}" alt="${pet.pet_name}">` :
-                    `🐾`
-                }
-                ${images.length > 1 ? `<div class="image-count">${images.length} photos</div>` : ''}
-            </div>
-            <div class="gallery-content">
-                ${pet.is_dorothy_pet ? '<div class="dorothy-pet-badge">Dorothy\'s Pet</div>' : ''}
-                <div class="pet-name">${pet.pet_name}</div>
-                ${pet.service_date ? `<div class="pet-date">${pet.service_date}</div>` : ''}
-                ${pet.story_description ? `<div class="pet-story">${pet.story_description}</div>` : ''}
-            </div>
-        </div>
-    `;
-}
-// Helper function to create default services (add to main.js)
-function createDefaultServices() {
-    return `
-        <div class="service-item featured-service">
-            <h3>🏠 Pet Sitting (Overnight)</h3>
-            <p><strong>$75.00</strong> per night</p>
-            <p>Overnight care in your home with 24/7 attention</p>
-        </div>
-        <div class="service-item">
-            <h3>🐕 Dog Walking</h3>
-            <p><strong>$25.00</strong> per walk</p>
-            <p>30-45 minute walks to keep your dog happy and healthy</p>
-        </div>
-        <div class="service-item">
-            <h3>🏃 Pet Visits</h3>
-            <p><strong>$30.00</strong> per visit</p>
-            <p>Check-ins, feeding, and care visits throughout the day</p>
-        </div>
-        <div class="service-item">
-            <h3>🎉 Holiday/Weekend Rate</h3>
-            <p><strong>$85.00</strong> per night</p>
-            <p>Special holiday and weekend care rates</p>
-        </div>
-    `;
-}
-// Load Rates (updated)
-async function loadRates() {
-    try {
-        Utils.showLoading('ratesLoading');
-        const rates = await API.rates.getAll();
-        
-        const ratesGrid = document.getElementById('ratesGrid');
-        const ratesEmpty = document.getElementById('ratesEmpty');
-        
-        Utils.hideLoading('ratesLoading');
-        
-        if (rates.length === 0) {
-            ratesEmpty.style.display = 'block';
-            ratesGrid.innerHTML = '';
-            return;
-        }
-        
-        // Sort rates to put featured service first
-        const sortedRates = [...rates].sort((a, b) => {
-            if (a.is_featured && !b.is_featured) return -1;
-            if (!a.is_featured && b.is_featured) return 1;
-            return 0;
-        });
-        
-        ratesEmpty.style.display = 'none';
-        ratesGrid.innerHTML = sortedRates.map((rate) => createRateCard(rate, rate.is_featured)).join('');
-        
-    } catch (error) {
-        console.error('Error loading rates:', error);
-        Utils.showError('ratesLoading', 'Error loading rates. Please try again later.');
-    }
+.nav-links a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    transition: all 0.3s ease;
 }
 
-// Create rate card HTML (updated)
-function createRateCard(rate, isFeatured) {
-    return `
-        <div class="rate-card ${isFeatured ? 'featured-rate' : ''}">
-            <div class="rate-title">${rate.service_type}</div>
-            <div class="rate-price">$${parseFloat(rate.rate_per_unit).toFixed(2)}</div>
-            <div class="rate-unit">${rate.unit_type.replace('_', ' ')}</div>
-            ${rate.description ? `<div class="rate-description">${rate.description}</div>` : ''}
-        </div>
-    `;
+.nav-links a:hover, .nav-links a.active {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
 }
 
-
-// Check admin authentication
-function checkAdminAuth() {
-    if (adminToken) {
-        validateAdminToken();
-    } else {
-        showAdminAuth();
-    }
+.admin-link {
+    background: linear-gradient(45deg, #667eea, #764ba2) !important;
+    color: white !important;
 }
 
-// Validate admin token
-async function validateAdminToken() {
-    try {
-        const isValid = await API.auth.validate();
-        if (isValid) {
-            showAdminPanel();
-        } else {
-            API.auth.logout();
-            showAdminAuth();
-        }
-    } catch (error) {
-        API.auth.logout();
-        showAdminAuth();
-    }
+/* Page Layout */
+.page {
+    display: none;
+    padding: 2rem 0;
+    min-height: calc(100vh - 80px);
 }
 
-// Show admin authentication form
-function showAdminAuth() {
-    document.getElementById('adminAuth').style.display = 'block';
-    document.getElementById('adminPanel').style.display = 'none';
+.page.active {
+    display: block;
 }
 
-// Show admin panel
-function showAdminPanel() {
-    document.getElementById('adminAuth').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'block';
-    resetSessionTimeout();
-    
-    // Load admin content
-    if (window.loadAdminGallery) loadAdminGallery();
-    if (window.loadAdminRates) loadAdminRates();
-    if (window.loadAdminContacts) loadAdminContacts();
+/* Hero Section */
+.hero {
+    text-align: center;
+    padding: 4rem 0;
+    color: white;
 }
 
-// Global logout function
-window.logout = function() {
-    API.auth.logout();
-    
-    // Clear any cached admin data
-    const adminElements = ['adminGalleryGrid', 'adminRatesGrid', 'contactsTable'];
-    adminElements.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.innerHTML = '';
-    });
-    
-    showAdminAuth();
-    alert('Logged out successfully');
-};
+.hero h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
 
-// Global functions for accessing from HTML
-window.loadAboutServices = loadAboutServices;
-window.loadGallery = loadGallery;
-window.loadRates = loadRates;
-window.checkAdminAuth = checkAdminAuth;
+.hero p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
 
-/* Add this to main.css - Date Picker Styles */
+/* Card Components */
+.card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
 
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* Profile Section */
+.profile-section {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    align-items: center;
+}
+
+.profile-image {
+    width: 100%;
+    height: 300px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+/* Date Picker Styles */
 .date-picker-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -458,8 +216,124 @@ window.checkAdminAuth = checkAdminAuth;
     padding: 2px;
 }
 
-/* Mobile responsive for date pickers */
+/* Button Styles */
+.btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-block;
+    text-decoration: none;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #6c757d;
+}
+
+.btn-success {
+    background: #28a745;
+}
+
+.btn-danger {
+    background: #dc3545;
+}
+
+/* Message Styles */
+.success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+    display: none;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+    display: none;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+/* Testimonials */
+.testimonials {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.testimonial {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 1.5rem;
+    border-radius: 15px;
+    border-left: 5px solid #667eea;
+}
+
+.testimonial-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.customer-name {
+    font-weight: bold;
+    color: #667eea;
+}
+
+.rating {
+    color: #ffd700;
+    font-size: 1.2rem;
+}
+
+.contact-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
+    .nav-links {
+        gap: 0.5rem;
+    }
+
+    .nav-links a {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.9rem;
+    }
+
+    .hero h1 {
+        font-size: 2rem;
+    }
+
+    .profile-section {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .profile-image {
+        height: 200px;
+        font-size: 3rem;
+    }
+
+    /* Mobile responsive for date pickers */
     .date-picker-container {
         grid-template-columns: 1fr;
         gap: 0.8rem;
