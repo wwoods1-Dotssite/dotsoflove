@@ -88,12 +88,10 @@ if (!fs.existsSync(dataDir)) {
 
 // Initialize SQLite database - Use persistent storage
 const dbPath = process.env.NODE_ENV === 'production' ? '/app/data/contacts.db' : './contacts.db';
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Error opening database:', err);
-    } else {
-        console.log(`Connected to SQLite database at ${dbPath}`);
-    }
+// Add PostgreSQL connection:
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // Add this after database connection for debugging
@@ -113,7 +111,7 @@ if (fs.existsSync(dataDir)) {
 // Create tables
 db.serialize(() => {
     // Existing contacts table
-    db.run(`
+    pool.query(`
         CREATE TABLE IF NOT EXISTS contacts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -129,7 +127,7 @@ db.serialize(() => {
     `);
 
     // Updated gallery pets table with multiple images support
-    db.run(`
+    pool.query(`
         CREATE TABLE IF NOT EXISTS gallery_pets (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             pet_name TEXT NOT NULL,
@@ -142,7 +140,7 @@ db.serialize(() => {
     `);
 
     // New table for pet images (supports multiple images per pet)
-    db.run(`
+    pool.query(`
         CREATE TABLE IF NOT EXISTS pet_images (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             pet_id INTEGER NOT NULL,
@@ -155,7 +153,7 @@ db.serialize(() => {
     `);
 
     // New rates table
-    db.run(`
+    pool.query(`
         CREATE TABLE IF NOT EXISTS service_rates (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             service_type TEXT NOT NULL UNIQUE,
@@ -169,7 +167,7 @@ db.serialize(() => {
     `);
 
     // Admin credentials table (enhanced with proper hashing)
-    db.run(`
+    pool.query(`
         CREATE TABLE IF NOT EXISTS admin_users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
@@ -181,20 +179,20 @@ db.serialize(() => {
     `);
 
     // Add migration for featured services
-    db.all("PRAGMA table_info(service_rates)", (err, columns) => {
+    pool.query("PRAGMA table_info(service_rates)", (err, columns) => {
         if (!err) {
             const hasFeaturedColumn = columns.some(col => col.name === 'is_featured');
             if (!hasFeaturedColumn) {
                 console.log('Adding is_featured column to service_rates table...');
-                db.run('ALTER TABLE service_rates ADD COLUMN is_featured BOOLEAN DEFAULT 0', (err) => {
+                pool.query('ALTER TABLE service_rates ADD COLUMN is_featured BOOLEAN DEFAULT 0', (err) => {
                     if (err) {
                         console.error('Error adding is_featured column:', err);
                     } else {
                         console.log('Successfully added is_featured column');
                         // Set the first rate as featured if none are featured
-                        db.get('SELECT COUNT(*) as count FROM service_rates WHERE is_featured = 1', (err, row) => {
+                        pool.query('SELECT COUNT(*) as count FROM service_rates WHERE is_featured = 1', (err, row) => {
                             if (!err && row.count === 0) {
-                                db.run('UPDATE service_rates SET is_featured = 1 WHERE id = (SELECT id FROM service_rates ORDER BY id LIMIT 1)');
+                                pool.query('UPDATE service_rates SET is_featured = 1 WHERE id = (SELECT id FROM service_rates ORDER BY id LIMIT 1)');
                                 console.log('Set first service as featured by default');
                             }
                         });
@@ -205,7 +203,7 @@ db.serialize(() => {
     });
 
     // Insert default rates if none exist (only on first run)
-    db.get('SELECT COUNT(*) as count FROM service_rates', (err, row) => {
+    pool.query('SELECT COUNT(*) as count FROM service_rates', (err, row) => {
         if (!err && row.count === 0) {
             console.log('Initializing default rates...');
             const defaultRates = [
@@ -225,16 +223,16 @@ db.serialize(() => {
     });
 
     // Check if we need to migrate existing gallery data
-    db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='gallery_pets'", (err, row) => {
+    pool.query("SELECT name FROM sqlite_master WHERE type='table' AND name='gallery_pets'", (err, row) => {
         if (!err && row) {
             // Check if image_url column still exists (old schema)
-            db.all("PRAGMA table_info(gallery_pets)", (err, columns) => {
+            pool.query("PRAGMA table_info(gallery_pets)", (err, columns) => {
                 if (!err) {
                     const hasImageUrl = columns.some(col => col.name === 'image_url');
                     if (hasImageUrl) {
                         console.log('Migrating existing gallery data...');
                         // Migrate existing image_url data to new pet_images table
-                        db.all('SELECT id, image_url FROM gallery_pets WHERE image_url IS NOT NULL', (err, pets) => {
+                        pool.query('SELECT id, image_url FROM gallery_pets WHERE image_url IS NOT NULL', (err, pets) => {
                             if (!err && pets.length > 0) {
                                 const insertStmt = db.prepare('INSERT INTO pet_images (pet_id, image_url, is_primary, display_order) VALUES (?, ?, 1, 0)');
                                 pets.forEach(pet => {
@@ -243,7 +241,7 @@ db.serialize(() => {
                                 insertStmt.finalize();
                                 
                                 // Remove image_url column from gallery_pets
-                                db.run('ALTER TABLE gallery_pets DROP COLUMN image_url', (err) => {
+                                pool.query('ALTER TABLE gallery_pets DROP COLUMN image_url', (err) => {
                                     if (err) console.log('Note: Could not drop image_url column, but migration completed');
                                 });
                                 console.log('Gallery migration completed successfully');
@@ -324,7 +322,7 @@ app.get('/api/gallery', (req, res) => {
         ORDER BY p.created_at DESC
     `;
     
-    db.all(query, (err, rows) => {
+    pool.query(query, (err, rows) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ error: 'Failed to retrieve gallery' });
@@ -368,7 +366,7 @@ app.get('/api/gallery/:id', (req, res) => {
         GROUP BY p.id
     `;
     
-    db.get(query, [petId], (err, row) => {
+    pool.query(query, [petId], (err, row) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ error: 'Failed to retrieve pet' });
@@ -483,7 +481,7 @@ app.delete('/api/admin/gallery/:id', authenticateAdmin, (req, res) => {
     const petId = req.params.id;
     
     // First get all image URLs to delete the files
-    db.all('SELECT image_url FROM pet_images WHERE pet_id = ?', [petId], (err, images) => {
+    pool.query('SELECT image_url FROM pet_images WHERE pet_id = ?', [petId], (err, images) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ error: 'Failed to find pet images' });
@@ -499,10 +497,10 @@ app.delete('/api/admin/gallery/:id', authenticateAdmin, (req, res) => {
         
         db.serialize(() => {
             // Delete images from database
-            db.run('DELETE FROM pet_images WHERE pet_id = ?', [petId]);
+            pool.query('DELETE FROM pet_images WHERE pet_id = ?', [petId]);
             
             // Delete pet from database
-            db.run('DELETE FROM gallery_pets WHERE id = ?', [petId], function(err) {
+            pool.query('DELETE FROM gallery_pets WHERE id = ?', [petId], function(err) {
                 if (err) {
                     console.error('Database error:', err);
                     return res.status(500).json({ error: 'Failed to delete pet' });
@@ -518,7 +516,7 @@ app.delete('/api/admin/gallery/:id', authenticateAdmin, (req, res) => {
 
 // Get all service rates (public endpoint)
 app.get('/api/rates', (req, res) => {
-    db.all('SELECT * FROM service_rates WHERE is_active = 1 ORDER BY service_type', (err, rows) => {
+    pool.query('SELECT * FROM service_rates WHERE is_active = 1 ORDER BY service_type', (err, rows) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ error: 'Failed to retrieve rates' });
@@ -531,7 +529,7 @@ app.get('/api/rates', (req, res) => {
 app.get('/api/admin/debug/featured', authenticateAdmin, (req, res) => {
     console.log('Debug endpoint called - checking featured services');
     
-    db.all("PRAGMA table_info(service_rates)", (err, columns) => {
+    pool.query("PRAGMA table_info(service_rates)", (err, columns) => {
         if (err) {
             console.error('Error checking schema:', err);
             return res.status(500).json({ error: 'Database error checking schema' });
@@ -548,7 +546,7 @@ app.get('/api/admin/debug/featured', authenticateAdmin, (req, res) => {
         }
         
         // Check current featured services
-        db.all('SELECT id, service_type, is_featured FROM service_rates ORDER BY service_type', (err, rates) => {
+        pool.query('SELECT id, service_type, is_featured FROM service_rates ORDER BY service_type', (err, rates) => {
             if (err) {
                 console.error('Error querying rates:', err);
                 return res.status(500).json({ error: 'Error querying rates' });
@@ -572,7 +570,7 @@ app.get('/api/admin/debug/featured', authenticateAdmin, (req, res) => {
 app.post('/api/admin/migrate/featured', authenticateAdmin, (req, res) => {
     console.log('Migration endpoint called');
     
-    db.all("PRAGMA table_info(service_rates)", (err, columns) => {
+    pool.query("PRAGMA table_info(service_rates)", (err, columns) => {
         if (err) {
             console.error('Migration error:', err);
             return res.status(500).json({ error: 'Database error' });
@@ -581,7 +579,7 @@ app.post('/api/admin/migrate/featured', authenticateAdmin, (req, res) => {
         const hasFeaturedColumn = columns.some(col => col.name === 'is_featured');
         if (!hasFeaturedColumn) {
             console.log('Adding is_featured column to service_rates table...');
-            db.run('ALTER TABLE service_rates ADD COLUMN is_featured BOOLEAN DEFAULT 0', (err) => {
+            pool.query('ALTER TABLE service_rates ADD COLUMN is_featured BOOLEAN DEFAULT 0', (err) => {
                 if (err) {
                     console.error('Error adding is_featured column:', err);
                     return res.status(500).json({ error: 'Migration failed: ' + err.message });
@@ -589,9 +587,9 @@ app.post('/api/admin/migrate/featured', authenticateAdmin, (req, res) => {
                 
                 console.log('Successfully added is_featured column');
                 // Set the first rate as featured if none are featured
-                db.get('SELECT COUNT(*) as count FROM service_rates WHERE is_featured = 1', (err, row) => {
+                pool.query('SELECT COUNT(*) as count FROM service_rates WHERE is_featured = 1', (err, row) => {
                     if (!err && row.count === 0) {
-                        db.run('UPDATE service_rates SET is_featured = 1 WHERE id = (SELECT id FROM service_rates ORDER BY id LIMIT 1)', (err) => {
+                        pool.query('UPDATE service_rates SET is_featured = 1 WHERE id = (SELECT id FROM service_rates ORDER BY id LIMIT 1)', (err) => {
                             if (err) {
                                 console.error('Error setting default featured:', err);
                             } else {
@@ -621,7 +619,7 @@ app.post('/api/admin/migrate/featured', authenticateAdmin, (req, res) => {
 
 // Admin: Get all rates (including inactive)
 app.get('/api/admin/rates', authenticateAdmin, (req, res) => {
-    db.all('SELECT * FROM service_rates ORDER BY service_type', (err, rows) => {
+    pool.query('SELECT * FROM service_rates ORDER BY service_type', (err, rows) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ error: 'Failed to retrieve rates' });
@@ -634,7 +632,7 @@ app.get('/api/admin/rates', authenticateAdmin, (req, res) => {
 app.get('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
     const rateId = req.params.id;
     
-    db.get('SELECT * FROM service_rates WHERE id = ?', [rateId], (err, row) => {
+    pool.query('SELECT * FROM service_rates WHERE id = ?', [rateId], (err, row) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ error: 'Failed to retrieve rate' });
@@ -659,7 +657,7 @@ app.post('/api/admin/rates', authenticateAdmin, (req, res) => {
     db.serialize(() => {
         // If setting as featured, unset all other featured services first
         if (isFeatured) {
-            db.run('UPDATE service_rates SET is_featured = 0');
+            pool.query('UPDATE service_rates SET is_featured = 0');
         }
         
         const stmt = db.prepare(`
@@ -699,7 +697,7 @@ app.put('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
     db.serialize(() => {
         // If setting as featured, unset all other featured services first
         if (isFeatured) {
-            db.run('UPDATE service_rates SET is_featured = 0');
+            pool.query('UPDATE service_rates SET is_featured = 0');
         }
         
         const stmt = db.prepare(`
@@ -737,14 +735,14 @@ app.put('/api/admin/rates/:id/featured', authenticateAdmin, (req, res) => {
     
     db.serialize(() => {
         // First, unset all featured services
-        db.run('UPDATE service_rates SET is_featured = 0', (err) => {
+        pool.query('UPDATE service_rates SET is_featured = 0', (err) => {
             if (err) {
                 console.error('Database error:', err);
                 return res.status(500).json({ error: 'Failed to update featured status' });
             }
             
             // Then set this one as featured
-            db.run('UPDATE service_rates SET is_featured = 1 WHERE id = ?', [rateId], function(err) {
+            pool.query('UPDATE service_rates SET is_featured = 1 WHERE id = ?', [rateId], function(err) {
                 if (err) {
                     console.error('Database error:', err);
                     return res.status(500).json({ error: 'Failed to set featured service' });
@@ -767,7 +765,7 @@ app.put('/api/admin/rates/:id/featured', authenticateAdmin, (req, res) => {
 app.delete('/api/admin/rates/:id', authenticateAdmin, (req, res) => {
     const rateId = req.params.id;
     
-    db.run('DELETE FROM service_rates WHERE id = ?', [rateId], function(err) {
+    pool.query('DELETE FROM service_rates WHERE id = ?', [rateId], function(err) {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ error: 'Failed to delete rate' });
@@ -796,7 +794,7 @@ app.post('/api/admin/auth', async (req, res) => {
         );
         
         // Update last login
-        db.run('UPDATE admin_users SET last_login = CURRENT_TIMESTAMP WHERE username = ?', [username]);
+        pool.query('UPDATE admin_users SET last_login = CURRENT_TIMESTAMP WHERE username = ?', [username]);
         
         res.json({ 
             success: true, 
@@ -819,7 +817,7 @@ app.get('/api/admin/validate', authenticateAdmin, (req, res) => {
 
 // Get all contacts (admin)
 app.get('/api/admin/contacts', authenticateAdmin, (req, res) => {
-    db.all('SELECT * FROM contacts ORDER BY created_at DESC', (err, rows) => {
+    pool.query('SELECT * FROM contacts ORDER BY created_at DESC', (err, rows) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ error: 'Failed to retrieve contacts' });
