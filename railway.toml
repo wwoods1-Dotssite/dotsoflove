@@ -6,3 +6,4 @@ startCommand = "npm start"
 
 [volumes]
 data = "/app/data"
+uploads = "/app/uploads"
