@@ -4,6 +4,3 @@ buildCommand = "npm install"
 [deploy]
 startCommand = "npm start"
 
-[volumes]
-data = "/app/data"
-uploads = "/app/uploads"
