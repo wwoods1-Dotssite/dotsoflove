@@ -221,7 +221,7 @@ window.loadAdminRates = async function() {
     }
 };
 
-// Create admin rates table
+// Update the createAdminRatesTable function
 function createAdminRatesTable(rates) {
     return `
         <div style="overflow-x: auto;">
@@ -232,19 +232,28 @@ function createAdminRatesTable(rates) {
                         <th style="padding: 1rem; text-align: left;">Rate</th>
                         <th style="padding: 1rem; text-align: left;">Unit</th>
                         <th style="padding: 1rem; text-align: left;">Status</th>
+                        <th style="padding: 1rem; text-align: center;">Featured</th>
                         <th style="padding: 1rem; text-align: center;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${rates.map(rate => `
-                        <tr style="border-bottom: 1px solid #eee;">
-                            <td style="padding: 1rem;">${rate.service_type}</td>
+                        <tr style="border-bottom: 1px solid #eee; ${rate.is_featured ? 'background: rgba(255, 215, 0, 0.1);' : ''}">
+                            <td style="padding: 1rem;">
+                                ${rate.is_featured ? '⭐ ' : ''}${rate.service_type}
+                            </td>
                             <td style="padding: 1rem; font-weight: bold;">$${parseFloat(rate.rate_per_unit).toFixed(2)}</td>
                             <td style="padding: 1rem;">${rate.unit_type.replace('_', ' ')}</td>
                             <td style="padding: 1rem;">
                                 <span style="padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.8rem; background: ${rate.is_active ? '#d4edda' : '#f8d7da'}; color: ${rate.is_active ? '#155724' : '#721c24'};">
                                     ${rate.is_active ? 'Active' : 'Inactive'}
                                 </span>
+                            </td>
+                            <td style="padding: 1rem; text-align: center;">
+                                ${rate.is_featured ? 
+                                    '<span style="color: #ffd700; font-size: 1.2rem;">⭐</span>' : 
+                                    `<button onclick="setFeaturedService(${rate.id})" class="btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.7rem;">Set Featured</button>`
+                                }
                             </td>
                             <td style="padding: 1rem; text-align: center;">
                                 <button onclick="editRate(${rate.id})" class="btn btn-success" style="padding: 0.3rem 0.8rem; margin-right: 0.5rem; font-size: 0.8rem;">Edit</button>
@@ -258,13 +267,14 @@ function createAdminRatesTable(rates) {
     `;
 }
 
-// Handle rate form submission
+// Update the handleRateSubmission function
 async function handleRateSubmission(e) {
     e.preventDefault();
     
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     data.isActive = document.getElementById('isActive').checked;
+    data.isFeatured = document.getElementById('isFeatured').checked;
     
     const rateId = document.getElementById('rateId').value;
     const isEdit = !!rateId;
@@ -295,7 +305,7 @@ async function handleRateSubmission(e) {
     }
 }
 
-// Rate management functions
+// Update the editRate function
 window.editRate = async function(rateId) {
     try {
         const rates = await API.rates.getAllAdmin();
@@ -308,6 +318,7 @@ window.editRate = async function(rateId) {
             document.getElementById('unitType').value = rate.unit_type;
             document.getElementById('description').value = rate.description || '';
             document.getElementById('isActive').checked = rate.is_active;
+            document.getElementById('isFeatured').checked = rate.is_featured;
             document.getElementById('rateSubmitBtn').textContent = 'Update Rate';
         }
     } catch (error) {
@@ -316,28 +327,37 @@ window.editRate = async function(rateId) {
     }
 };
 
-window.deleteRate = async function(rateId) {
-    if (!confirm('Are you sure you want to delete this rate?')) return;
+// Add new function to set featured service
+window.setFeaturedService = async function(rateId) {
+    if (!confirm('Set this service as the featured service? This will remove the featured status from other services.')) {
+        return;
+    }
     
     try {
-        const result = await API.rates.delete(rateId);
+        const response = await API.authRequest(`/api/admin/rates/${rateId}/featured`, {
+            method: 'PUT'
+        });
+        
+        const result = await response.json();
         
         if (result.success) {
             loadAdminRates();
             if (window.loadRates) loadRates(); // Refresh public rates
             if (window.loadAboutServices) loadAboutServices(); // Refresh about page services
         } else {
-            alert('Failed to delete rate. Please try again.');
+            alert('Failed to set featured service. Please try again.');
         }
     } catch (error) {
-        console.error('Error deleting rate:', error);
-        alert('Failed to delete rate. Please try again.');
+        console.error('Error setting featured service:', error);
+        alert('Failed to set featured service. Please try again.');
     }
 };
 
+// Update the resetRateForm function
 window.resetRateForm = function() {
     document.getElementById('rateForm').reset();
     document.getElementById('rateId').value = '';
+    document.getElementById('isFeatured').checked = false;
     document.getElementById('rateSubmitBtn').textContent = 'Add Rate';
     Utils.hideMessage('rateSuccess');
     Utils.hideMessage('rateError');
