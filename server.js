@@ -71,6 +71,18 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Add a catch-all route for the SPA
+app.get('*', (req, res) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Configure multer for memory storage (we'll upload directly to S3)
 const upload = multer({ 
     storage: multer.memoryStorage(),
