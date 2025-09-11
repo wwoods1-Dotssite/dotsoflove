@@ -401,12 +401,12 @@ app.get('/api/gallery/:id', async (req, res) => {
     }
 });
 
-// Admin: Add new pet to gallery with S3 v3 image upload
-// Admin: Add new pet to gallery with proper checkbox handling
+// Admin: Add new pet to gallery with S3 v3 image upload// Admin: Add new pet to gallery with S3 v3 image upload
 app.post('/api/admin/gallery', authenticateAdmin, upload.array('images', 10), async (req, res) => {
     const { petName, storyDescription, serviceDate, isDorothyPet } = req.body;
     
     console.log('Creating pet with checkbox value:', isDorothyPet, typeof isDorothyPet);
+    console.log('Files received:', req.files?.length || 0);
     
     if (!petName) {
         return res.status(400).json({ error: 'Pet name is required' });
@@ -417,7 +417,7 @@ app.post('/api/admin/gallery', authenticateAdmin, upload.array('images', 10), as
     try {
         await client.query('BEGIN');
         
-        // Fix: Handle checkbox values properly - checkboxes send 'on' when checked
+        // Fix: Handle checkbox values properly
         const isDorothyPetBool = isDorothyPet === 'true' || isDorothyPet === true || isDorothyPet === 'on';
         console.log('Converted checkbox value:', isDorothyPetBool);
         
@@ -431,7 +431,38 @@ app.post('/api/admin/gallery', authenticateAdmin, upload.array('images', 10), as
         const petId = petResult.rows[0].id;
         console.log('Created pet with ID:', petId, 'isDorothyPet:', isDorothyPetBool);
         
-        // Skip S3 upload for now and commit
+        // Upload images to S3 and insert records
+        if (req.files && req.files.length > 0) {
+            console.log(`Processing ${req.files.length} images for upload...`);
+            
+            for (let index = 0; index < req.files.length; index++) {
+                const file = req.files[index];
+                const isPrimary = index === 0; // First image is primary
+                
+                try {
+                    // Upload to S3
+                    const s3Url = await uploadToS3(file, 'pets');
+                    
+                    // Extract S3 key for future deletion
+                    const urlParts = s3Url.split('/');
+                    const s3Key = urlParts.slice(-2).join('/');
+                    
+                    // Insert image record
+                    await client.query(`
+                        INSERT INTO pet_images (pet_id, image_url, s3_key, is_primary, display_order)
+                        VALUES ($1, $2, $3, $4, $5)
+                    `, [petId, s3Url, s3Key, isPrimary, index]);
+                    
+                    console.log(`Image ${index + 1} uploaded successfully: ${s3Url}`);
+                } catch (uploadError) {
+                    console.error(`Failed to upload image ${index + 1}:`, uploadError);
+                    // Continue with other images even if one fails
+                }
+            }
+        } else {
+            console.log('No images provided - creating pet without photos');
+        }
+        
         await client.query('COMMIT');
         
         res.json({ 
