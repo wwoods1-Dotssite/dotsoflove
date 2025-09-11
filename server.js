@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 3001;
 
 // Configure AWS S3 v3 Client
 const s3Client = new S3Client({
-    region: process.env.AWS_REGION || 'us-east-1',
+    region: process.env.AWS_REGION || 'us-east-2',
     credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -80,7 +80,7 @@ async function uploadToS3(file, folder = 'pets') {
     
     try {
         const result = await s3Client.send(command);
-        const s3Url = `https://${S3_BUCKET}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${fileName}`;
+        const s3Url = `https://${S3_BUCKET}.s3.${process.env.AWS_REGION || 'us-east-2'}.amazonaws.com/${fileName}`;
         console.log('File uploaded to S3:', s3Url);
         return s3Url;
     } catch (error) {
