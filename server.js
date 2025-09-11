@@ -475,27 +475,43 @@ app.put('/api/admin/gallery/:id', authenticateAdmin, async (req, res) => {
     const petId = req.params.id;
     const { petName, storyDescription, serviceDate, isDorothyPet } = req.body;
     
+    console.log('📝 Updating pet with data:', {
+        petId,
+        petName,
+        storyDescription,
+        serviceDate,
+        isDorothyPet,
+        isDorothyPetType: typeof isDorothyPet
+    });
+    
     if (!petName) {
         return res.status(400).json({ error: 'Pet name is required' });
     }
     
     try {
+        // Convert isDorothyPet to boolean properly
+        const isDorothyPetBool = isDorothyPet === 'true' || isDorothyPet === true;
+        console.log('🔄 Converting isDorothyPet for update:', { original: isDorothyPet, converted: isDorothyPetBool });
+        
         const result = await pool.query(`
             UPDATE gallery_pets 
             SET pet_name = $1, story_description = $2, service_date = $3, is_dorothy_pet = $4, updated_at = CURRENT_TIMESTAMP
             WHERE id = $5
-        `, [petName, storyDescription || '', serviceDate || '', isDorothyPet === 'true', petId]);
+        `, [petName, storyDescription || '', serviceDate || '', isDorothyPetBool, petId]);
         
         if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Pet not found' });
         }
         
+        console.log('✅ Pet updated successfully:', { petId, isDorothyPet: isDorothyPetBool });
+        
         res.json({ 
             success: true, 
-            message: 'Pet updated successfully' 
+            message: 'Pet updated successfully',
+            isDorothyPet: isDorothyPetBool
         });
     } catch (error) {
-        console.error('Database error:', error);
+        console.error('❌ Database error:', error);
         res.status(500).json({ error: 'Failed to update pet' });
     }
 });
