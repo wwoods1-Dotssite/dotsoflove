@@ -39,6 +39,43 @@
         </div>
     </div>
 
+    <!-- Pet Story Edit Modal -->
+    <div id="editStoryModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close" onclick="closeEditStoryModal()">&times;</span>
+            <div style="padding: 2rem;">
+                <h3 style="color: #667eea; margin-bottom: 1rem;">Edit Pet Story</h3>
+                <form id="editStoryForm">
+                    <input type="hidden" id="editPetId">
+                    <div class="form-group">
+                        <label for="editPetName">Pet Name *</label>
+                        <input type="text" id="editPetName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editServiceDate">Service Date</label>
+                        <input type="text" id="editServiceDate" placeholder="e.g., Summer 2024">
+                    </div>
+                    <div class="form-group">
+                        <label for="editStoryDescription">Story Description</label>
+                        <textarea id="editStoryDescription" rows="5"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="editIsDorothyPet" style="margin-right: 0.5rem;">
+                            This is one of Dorothy's own pets
+                        </label>
+                    </div>
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <button type="submit" class="btn">Update Pet</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeEditStoryModal()" style="margin-left: 1rem;">Cancel</button>
+                    </div>
+                    <div class="success-message" id="editStorySuccess"></div>
+                    <div class="error-message" id="editStoryError"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- About Me Page -->
     <div id="about" class="page active">
         <div class="container">
@@ -81,24 +118,45 @@
         </div>
     </div>
 
-    <!-- Gallery Page -->
+    <!-- Updated Gallery Page with Two Sections -->
     <div id="gallery" class="page">
         <div class="container">
             <div class="hero">
                 <h1>Pet Gallery</h1>
-                <p>Meet some of the wonderful pets I've cared for and my own fur family!</p>
+                <p>Meet my fur family and some of the wonderful pets I've cared for!</p>
             </div>
 
+            <!-- Dorothy's Pet Family Section -->
             <div class="card">
-                <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">Our Pet Family</h2>
-                <div class="gallery-grid" id="galleryGrid">
-                    <!-- Gallery items will be loaded here -->
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">🏠 Dorothy's Pet Family</h2>
+                <p style="text-align: center; margin-bottom: 2rem; color: #666;">
+                    Meet my beloved fur babies - the heart and soul of Dot's of Love Pet Sitting!
+                </p>
+                <div class="gallery-grid" id="dorothyPetsGrid">
+                    <!-- Dorothy's pets will be loaded here -->
                 </div>
-                <div id="galleryLoading" class="loading">
-                    <p>Loading gallery...</p>
+                <div id="dorothyPetsLoading" class="loading">
+                    <p>Loading Dorothy's pets...</p>
                 </div>
-                <div id="galleryEmpty" style="text-align: center; padding: 2rem; display: none;">
-                    <p>No pets in the gallery yet. Check back soon!</p>
+                <div id="dorothyPetsEmpty" style="text-align: center; padding: 2rem; display: none;">
+                    <p>Dorothy's pet family photos coming soon!</p>
+                </div>
+            </div>
+
+            <!-- Client Pets Section -->
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">🐾 Happy Clients</h2>
+                <p style="text-align: center; margin-bottom: 2rem; color: #666;">
+                    Some of the wonderful pets I've had the pleasure of caring for over the years
+                </p>
+                <div class="gallery-grid" id="clientPetsGrid">
+                    <!-- Client pets will be loaded here -->
+                </div>
+                <div id="clientPetsLoading" class="loading">
+                    <p>Loading client pets...</p>
+                </div>
+                <div id="clientPetsEmpty" style="text-align: center; padding: 2rem; display: none;">
+                    <p>Client pet photos coming soon!</p>
                 </div>
             </div>
         </div>
@@ -327,13 +385,31 @@
                         </form>
                     </div>
 
+                    <!-- Dorothy's Pets Section -->
                     <div class="card">
-                        <h3 style="color: #667eea; margin-bottom: 1rem;">Current Gallery</h3>
-                        <div class="admin-gallery-grid" id="adminGalleryGrid">
-                            <!-- Admin gallery items will be loaded here -->
+                        <h3 style="color: #667eea; margin-bottom: 1rem;">🏠 Dorothy's Pet Family</h3>
+                        <div class="admin-gallery-grid" id="adminDorothyPetsGrid">
+                            <!-- Dorothy's pets will be loaded here -->
                         </div>
-                        <div id="adminGalleryLoading" class="loading">
-                            <p>Loading gallery...</p>
+                        <div id="adminDorothyPetsLoading" class="loading">
+                            <p>Loading Dorothy's pets...</p>
+                        </div>
+                        <div id="adminDorothyPetsEmpty" style="text-align: center; padding: 2rem; display: none;">
+                            <p>No pets in Dorothy's family yet.</p>
+                        </div>
+                    </div>
+
+                    <!-- Client Pets Section -->
+                    <div class="card">
+                        <h3 style="color: #667eea; margin-bottom: 1rem;">🐾 Client Pets</h3>
+                        <div class="admin-gallery-grid" id="adminClientPetsGrid">
+                            <!-- Client pets will be loaded here -->
+                        </div>
+                        <div id="adminClientPetsLoading" class="loading">
+                            <p>Loading client pets...</p>
+                        </div>
+                        <div id="adminClientPetsEmpty" style="text-align: center; padding: 2rem; display: none;">
+                            <p>No client pets yet.</p>
                         </div>
                     </div>
                 </div>
