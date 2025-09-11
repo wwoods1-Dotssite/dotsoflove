@@ -71,16 +71,16 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Serve static files from the public directory
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files from the root directory
+app.use(express.static(__dirname));
 
-// Add a catch-all route for the SPA
+// Add a catch-all route for the SPA (put this AFTER all your API routes)
 app.get('*', (req, res) => {
     // Don't serve index.html for API routes
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ error: 'API endpoint not found' });
     }
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Configure multer for memory storage (we'll upload directly to S3)
