@@ -923,6 +923,7 @@ async function sendEmailNotification(contactData) {
 }
 
 // Start server
+app.get('*', ...)
 app.listen(PORT, () => {
     console.log(`Pet Sitting Backend Service v2.1-checkbox-fix running on port ${PORT}`);
     console.log(`Email recipients: ${EMAIL_RECIPIENTS.join(', ')}`);
