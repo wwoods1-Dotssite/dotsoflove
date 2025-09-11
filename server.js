@@ -9,14 +9,13 @@ const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
-// AWS SDK v3 imports
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, DeleteObjectCommand, HeadBucketCommand } = require('@aws-sdk/client-s3');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Configure AWS S3 v3 Client
+// Configure AWS S3 v3 Client with validation
 const s3Client = new S3Client({
     region: process.env.AWS_REGION || 'us-east-2',
     credentials: {
@@ -25,7 +24,18 @@ const s3Client = new S3Client({
     },
 });
 
+
 const S3_BUCKET = process.env.S3_BUCKET_NAME || 'dotsoflove-pet-images';
+
+// Test S3 connection on startup
+async function testS3Connection() {
+    try {
+        await s3Client.send(new HeadBucketCommand({ Bucket: S3_BUCKET }));
+        console.log('✅ S3 connection successful');
+    } catch (error) {
+        console.error('❌ S3 connection failed:', error.message);
+    }
+}
 
 // JWT middleware for admin authentication
 const authenticateAdmin = (req, res, next) => {
@@ -54,15 +64,32 @@ app.use(express.json());
 // Configure multer for memory storage (we'll upload directly to S3)
 const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit per file
+    limits: { 
+        fileSize: 5 * 1024 * 1024, // 5MB limit per file
+        files: 10 // Maximum 10 files
+    },
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
         if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error('Only image files are allowed'));
+            cb(new Error(`Invalid file type: ${file.mimetype}. Only images are allowed.`));
         }
     }
+});
+
+// Error handling middleware for multer
+app.use((error, req, res, next) => {
+    if (error instanceof multer.MulterError) {
+        if (error.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ error: 'File too large. Maximum size is 5MB.' });
+        } else if (error.code === 'LIMIT_FILE_COUNT') {
+            return res.status(400).json({ error: 'Too many files. Maximum is 10 files.' });
+        }
+    } else if (error.message.includes('Only images are allowed')) {
+        return res.status(400).json({ error: error.message });
+    }
+    next(error);
 });
 
 // Helper function to upload file to S3 using SDK v3
@@ -75,17 +102,27 @@ async function uploadToS3(file, folder = 'pets') {
         Key: fileName,
         Body: file.buffer,
         ContentType: file.mimetype,
-        // ACL: 'public-read' // Make images publicly accessible
+        // No ACL needed since you have bucket policy in place
     });
     
     try {
         const result = await s3Client.send(command);
         const s3Url = `https://${S3_BUCKET}.s3.${process.env.AWS_REGION || 'us-east-2'}.amazonaws.com/${fileName}`;
-        console.log('File uploaded to S3:', s3Url);
+        console.log('✅ File uploaded to S3:', s3Url);
         return s3Url;
     } catch (error) {
-        console.error('S3 upload error:', error);
-        throw new Error('Failed to upload image to S3');
+        console.error('❌ S3 upload error:', error);
+        
+        // More specific error handling
+        if (error.name === 'CredentialsError') {
+            throw new Error('S3 credentials are invalid or missing');
+        } else if (error.name === 'NoSuchBucket') {
+            throw new Error(`S3 bucket ${S3_BUCKET} does not exist`);
+        } else if (error.name === 'AccessDenied') {
+            throw new Error('Access denied - check S3 bucket permissions');
+        }
+        
+        throw new Error(`Failed to upload image to S3: ${error.message}`);
     }
 }
 
@@ -257,6 +294,7 @@ async function initializeTables() {
 
 // Initialize tables on startup
 initializeTables();
+testS3Connection(); 
 
 // Health check endpoint
 app.get('/health', (req, res) => {
