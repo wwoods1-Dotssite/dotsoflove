@@ -1,10 +1,11 @@
-// js/main.js - Core navigation and application logic
+// js/main.js - Core navigation and application logic with dual gallery support
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeNavigation();
     loadInitialContent();
     setupDateValidation(); // Add date validation support
+    initializeEditStoryModal(); // Initialize the edit story modal
 });
 
 // Navigation functionality
@@ -44,7 +45,7 @@ function loadPageContent(pageName) {
             loadAboutServices();
             break;
         case 'gallery':
-            loadGallery();
+            loadDualGallery();
             break;
         case 'rates':
             loadRates();
@@ -64,7 +65,7 @@ function loadPageContent(pageName) {
 // Load initial content when app starts
 function loadInitialContent() {
     // Load gallery and rates on startup for caching
-    loadGallery();
+    loadDualGallery();
     loadRates();
     loadAboutServices();
 }
@@ -114,14 +115,6 @@ async function loadAboutServices() {
         servicesGrid.innerHTML = serviceItems.join('');
         console.log('✅ About services updated successfully');
         
-        // Double-check the DOM was updated
-        const featuredElements = servicesGrid.querySelectorAll('.featured-service');
-        console.log(`🎯 Featured elements in DOM: ${featuredElements.length}`);
-        
-        if (featuredElements.length > 0) {
-            console.log('🔍 Featured service content:', featuredElements[0].innerHTML.substring(0, 200));
-        }
-        
     } catch (error) {
         console.error('❌ Error loading services for about page:', error);
         Utils.showError('aboutServicesLoading', 'Error loading services.');
@@ -170,7 +163,7 @@ function createServiceItem(rate, serviceConfig, isFeatured, unitDisplay) {
     const serviceItem = `
         <div class="service-item ${isFeatured ? 'featured-service' : ''}">
             <h3>${serviceConfig.emoji} ${rate.service_type}</h3>
-            <p><strong>$${parseFloat(rate.rate_per_unit).toFixed(2)}</strong> ${unitDisplay}</p>
+            <p><strong>${parseFloat(rate.rate_per_unit).toFixed(2)}</strong> ${unitDisplay}</p>
             <p>${rate.description || serviceConfig.description}</p>
         </div>
     `;
@@ -206,29 +199,56 @@ function createDefaultServices() {
     `;
 }
 
-// Load Gallery
-async function loadGallery() {
+// Load Dual Gallery (both Dorothy's pets and client pets)
+async function loadDualGallery() {
     try {
-        Utils.showLoading('galleryLoading');
+        console.log('🔄 Loading dual gallery...');
+        
+        // Show loading for both sections
+        Utils.showLoading('dorothyPetsLoading');
+        Utils.showLoading('clientPetsLoading');
+        
         const pets = await API.gallery.getAll();
         
-        const galleryGrid = document.getElementById('galleryGrid');
-        const galleryEmpty = document.getElementById('galleryEmpty');
+        // Separate pets into Dorothy's pets and client pets
+        const dorothyPets = pets.filter(pet => pet.is_dorothy_pet === true);
+        const clientPets = pets.filter(pet => pet.is_dorothy_pet !== true);
         
-        Utils.hideLoading('galleryLoading');
+        console.log(`📊 Gallery loaded: ${dorothyPets.length} Dorothy's pets, ${clientPets.length} client pets`);
         
-        if (pets.length === 0) {
-            galleryEmpty.style.display = 'block';
-            galleryGrid.innerHTML = '';
-            return;
-        }
+        // Load Dorothy's pets section
+        loadGallerySection('dorothy', dorothyPets);
         
-        galleryEmpty.style.display = 'none';
-        galleryGrid.innerHTML = pets.map(pet => createGalleryItem(pet)).join('');
+        // Load client pets section
+        loadGallerySection('client', clientPets);
         
     } catch (error) {
-        console.error('Error loading gallery:', error);
-        Utils.showError('galleryLoading', 'Error loading gallery. Please try again later.');
+        console.error('❌ Error loading dual gallery:', error);
+        Utils.showError('dorothyPetsLoading', 'Error loading gallery.');
+        Utils.showError('clientPetsLoading', 'Error loading gallery.');
+    }
+}
+
+// Load a specific gallery section
+function loadGallerySection(sectionType, pets) {
+    const gridId = sectionType === 'dorothy' ? 'dorothyPetsGrid' : 'clientPetsGrid';
+    const loadingId = sectionType === 'dorothy' ? 'dorothyPetsLoading' : 'clientPetsLoading';
+    const emptyId = sectionType === 'dorothy' ? 'dorothyPetsEmpty' : 'clientPetsEmpty';
+    
+    const galleryGrid = document.getElementById(gridId);
+    const galleryEmpty = document.getElementById(emptyId);
+    
+    Utils.hideLoading(loadingId);
+    
+    if (pets.length === 0) {
+        if (galleryEmpty) galleryEmpty.style.display = 'block';
+        if (galleryGrid) galleryGrid.innerHTML = '';
+        return;
+    }
+    
+    if (galleryEmpty) galleryEmpty.style.display = 'none';
+    if (galleryGrid) {
+        galleryGrid.innerHTML = pets.map(pet => createGalleryItem(pet)).join('');
     }
 }
 
@@ -294,11 +314,100 @@ function createRateCard(rate, isFeatured) {
     return `
         <div class="rate-card ${isFeatured ? 'featured-rate' : ''}">
             <div class="rate-title">${rate.service_type}</div>
-            <div class="rate-price">$${parseFloat(rate.rate_per_unit).toFixed(2)}</div>
+            <div class="rate-price">${parseFloat(rate.rate_per_unit).toFixed(2)}</div>
             <div class="rate-unit">${rate.unit_type.replace('_', ' ')}</div>
             ${rate.description ? `<div class="rate-description">${rate.description}</div>` : ''}
         </div>
     `;
+}
+
+// ========== EDIT STORY MODAL FUNCTIONALITY ==========
+
+// Initialize edit story modal
+function initializeEditStoryModal() {
+    const editStoryForm = document.getElementById('editStoryForm');
+    if (editStoryForm) {
+        editStoryForm.addEventListener('submit', handleEditStorySubmission);
+    }
+}
+
+// Open edit story modal
+window.openEditStoryModal = function(pet) {
+    console.log('📝 Opening edit modal for pet:', pet);
+    
+    // Populate form with current pet data
+    document.getElementById('editPetId').value = pet.id;
+    document.getElementById('editPetName').value = pet.pet_name || '';
+    document.getElementById('editServiceDate').value = pet.service_date || '';
+    document.getElementById('editStoryDescription').value = pet.story_description || '';
+    document.getElementById('editIsDorothyPet').checked = Boolean(pet.is_dorothy_pet);
+    
+    // Clear any previous messages
+    Utils.hideMessage('editStorySuccess');
+    Utils.hideMessage('editStoryError');
+    
+    // Show modal
+    const modal = document.getElementById('editStoryModal');
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+};
+
+// Close edit story modal
+window.closeEditStoryModal = function() {
+    const modal = document.getElementById('editStoryModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    
+    // Clear form
+    document.getElementById('editStoryForm').reset();
+    Utils.hideMessage('editStorySuccess');
+    Utils.hideMessage('editStoryError');
+};
+
+// Handle edit story form submission
+async function handleEditStorySubmission(e) {
+    e.preventDefault();
+    
+    const petId = document.getElementById('editPetId').value;
+    const petName = document.getElementById('editPetName').value.trim();
+    const serviceDate = document.getElementById('editServiceDate').value.trim();
+    const storyDescription = document.getElementById('editStoryDescription').value.trim();
+    const isDorothyPet = document.getElementById('editIsDorothyPet').checked;
+    
+    if (!petName) {
+        Utils.showError('editStoryError', 'Pet name is required.');
+        return;
+    }
+    
+    try {
+        console.log(`📝 Updating pet ${petId} with new data...`);
+        
+        const result = await API.gallery.update(petId, {
+            petName: petName,
+            serviceDate: serviceDate,
+            storyDescription: storyDescription,
+            isDorothyPet: isDorothyPet
+        });
+        
+        if (result.success) {
+            Utils.showSuccess('editStorySuccess', 'Pet story updated successfully!');
+            Utils.hideMessage('editStoryError');
+            
+            // Refresh the galleries
+            setTimeout(() => {
+                closeEditStoryModal();
+                loadDualGallery(); // Refresh public gallery
+                if (window.loadAdminGallery) loadAdminGallery(); // Refresh admin gallery if open
+            }, 1500);
+            
+        } else {
+            Utils.showError('editStoryError', result.error || 'Failed to update pet story');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error updating pet story:', error);
+        Utils.showError('editStoryError', 'Failed to update pet story. Please try again.');
+    }
 }
 
 // Check admin authentication
@@ -349,7 +458,7 @@ window.logout = function() {
     API.auth.logout();
     
     // Clear any cached admin data
-    const adminElements = ['adminGalleryGrid', 'adminRatesGrid', 'contactsTable'];
+    const adminElements = ['adminDorothyPetsGrid', 'adminClientPetsGrid', 'adminRatesGrid', 'contactsTable'];
     adminElements.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.innerHTML = '';
@@ -420,10 +529,37 @@ function formatDateForDisplay(dateString) {
     });
 }
 
+// Modal event listeners for edit story modal
+document.addEventListener('DOMContentLoaded', function() {
+    const editModal = document.getElementById('editStoryModal');
+    
+    // Close modal when clicking outside
+    if (editModal) {
+        editModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditStoryModal();
+            }
+        });
+    }
+    
+    // Keyboard support for modal
+    document.addEventListener('keydown', function(e) {
+        const editModal = document.getElementById('editStoryModal');
+        if (editModal && editModal.style.display === 'block') {
+            if (e.key === 'Escape') {
+                closeEditStoryModal();
+            }
+        }
+    });
+});
+
 // Global functions for accessing from HTML
 window.loadAboutServices = loadAboutServices;
-window.loadGallery = loadGallery;
+window.loadDualGallery = loadDualGallery;
 window.loadRates = loadRates;
 window.checkAdminAuth = checkAdminAuth;
 window.formatDatesForSubmission = formatDatesForSubmission;
 window.formatDateForDisplay = formatDateForDisplay;
+
+// Legacy function for backward compatibility
+window.loadGallery = loadDualGallery;
