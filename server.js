@@ -13,7 +13,7 @@ const { S3Client, PutObjectCommand, DeleteObjectCommand, HeadBucketCommand } = r
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || process.env.SERVER_PORT || 8080;
 
 // Configure AWS S3 v3 Client with validation
 const s3Client = new S3Client({
@@ -315,8 +315,42 @@ initializeTables();
 testS3Connection(); 
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-    res.json({ status: 'OK', message: 'Pet Sitting Backend is running with S3 v3 storage!' });
+app.get('/health', async (req, res) => {
+    try {
+        // Test database connection
+        const dbTest = await pool.query('SELECT 1 as health_check');
+        
+        res.status(200).json({ 
+            status: 'OK', 
+            message: 'Pet Sitting Backend is healthy!',
+            timestamp: new Date().toISOString(),
+            database: 'connected',
+            s3: 'configured',
+            port: PORT,
+            env: process.env.NODE_ENV || 'development'
+        });
+    } catch (error) {
+        console.error('Health check failed:', error);
+        res.status(503).json({
+            status: 'ERROR',
+            message: 'Service unhealthy',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// Add a simple root route that explicitly serves your index.html:
+app.get('/', (req, res) => {
+    console.log(`📄 Serving index.html for ${req.ip}`);
+    res.sendFile(path.join(__dirname, 'index.html'), (err) => {
+        if (err) {
+            console.error('Error serving index.html:', err);
+            res.status(500).send('Error loading page');
+        } else {
+            console.log('✅ Successfully served index.html');
+        }
+    });
 });
 
 // Helper function to parse date strings
@@ -928,8 +962,9 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Pet Sitting Backend Service v2.1-checkbox-fix running on port ${PORT}`);
+    console.log(`Server binding to 0.0.0.0:${PORT} for Railway compatibility`);
     console.log(`Email recipients: ${EMAIL_RECIPIENTS.join(', ')}`);
     console.log(`Database: PostgreSQL (${process.env.NODE_ENV})`);
     console.log(`S3 Storage: ${S3_BUCKET} (AWS SDK v3)`);
