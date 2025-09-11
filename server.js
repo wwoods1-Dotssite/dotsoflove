@@ -74,15 +74,6 @@ app.use(express.json());
 // Serve static files from the root directory
 app.use(express.static(__dirname));
 
-// Add a catch-all route for the SPA (put this AFTER all your API routes)
-app.get('*', (req, res) => {
-    // Don't serve index.html for API routes
-    if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ error: 'API endpoint not found' });
-    }
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
 // Configure multer for memory storage (we'll upload directly to S3)
 const upload = multer({ 
     storage: multer.memoryStorage(),
@@ -922,8 +913,16 @@ async function sendEmailNotification(contactData) {
     }
 }
 
+
+// Catch-all route for SPA - MUST BE LAST
+app.get('*', (req, res) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 // Start server
-app.get('*', ...)
 app.listen(PORT, () => {
     console.log(`Pet Sitting Backend Service v2.1-checkbox-fix running on port ${PORT}`);
     console.log(`Email recipients: ${EMAIL_RECIPIENTS.join(', ')}`);
