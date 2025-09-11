@@ -854,10 +854,11 @@ async function sendEmailNotification(contactData) {
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`Pet Sitting Backend Service running on port ${PORT}`);
+    console.log(`Pet Sitting Backend Service v2.1-checkbox-fix running on port ${PORT}`);
     console.log(`Email recipients: ${EMAIL_RECIPIENTS.join(', ')}`);
     console.log(`Database: PostgreSQL (${process.env.NODE_ENV})`);
     console.log(`S3 Storage: ${S3_BUCKET} (AWS SDK v3)`);
+    console.log(`Deployment time: ${new Date().toISOString()}`);
 });
 
 // Graceful shutdown
