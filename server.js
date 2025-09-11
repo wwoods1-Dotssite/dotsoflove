@@ -30,6 +30,11 @@ console.log('AWS_ACCESS_KEY_ID:', process.env.AWS_ACCESS_KEY_ID ? `${process.env
 console.log('AWS_SECRET_ACCESS_KEY:', process.env.AWS_SECRET_ACCESS_KEY ? 'SET' : 'MISSING');
 console.log('AWS_REGION:', process.env.AWS_REGION || 'us-east-2 (default)');
 console.log('S3_BUCKET_NAME:', process.env.S3_BUCKET_NAME || 'dotsoflove-pet-images (default)');
+// Add this after your existing console.log statements
+console.log('Server directory contents:', fs.readdirSync(__dirname));
+console.log('Looking for index.html at:', path.join(__dirname, 'index.html'));
+console.log('Index.html exists in root:', fs.existsSync(path.join(__dirname, 'index.html')));
+console.log('Index.html exists in public:', fs.existsSync(path.join(__dirname, 'public', 'index.html')));
 
 const S3_BUCKET = process.env.S3_BUCKET_NAME || 'dotsoflove-pet-images';
 
