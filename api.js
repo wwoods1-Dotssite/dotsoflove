@@ -1,4 +1,4 @@
-// js/api.js - API helper functions and configuration
+// js/api.js - API helper functions and configuration with enhanced update support
 
 // API Configuration
 const API_BASE = 'https://dotsoflove-production.up.railway.app';
@@ -81,13 +81,20 @@ const API = {
             return response.json();
         },
 
+        // Enhanced update method for editing pet stories
         async update(id, data) {
+            console.log(`📡 API: Updating pet ${id} with data:`, data);
+            
             const response = await API.authRequest(`/api/admin/gallery/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-            return response.json();
+            
+            const result = await response.json();
+            console.log(`📡 API: Update response:`, result);
+            
+            return result;
         },
 
         async delete(id) {
@@ -99,54 +106,54 @@ const API = {
     },
 
     // Rates endpoints (updated)
-rates: {
-    async getAll() {
-        return API.request('/api/rates');
-    },
+    rates: {
+        async getAll() {
+            return API.request('/api/rates');
+        },
 
-    async getAllAdmin() {
-        const response = await API.authRequest('/api/admin/rates');
-        return response.json();
-    },
+        async getAllAdmin() {
+            const response = await API.authRequest('/api/admin/rates');
+            return response.json();
+        },
 
-    async getById(id) {
-        const response = await API.authRequest(`/api/admin/rates/${id}`);
-        return response.json();
-    },
+        async getById(id) {
+            const response = await API.authRequest(`/api/admin/rates/${id}`);
+            return response.json();
+        },
 
-    async add(data) {
-        const response = await API.authRequest('/api/admin/rates', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        return response.json();
-    },
+        async add(data) {
+            const response = await API.authRequest('/api/admin/rates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            return response.json();
+        },
 
-    async update(id, data) {
-        const response = await API.authRequest(`/api/admin/rates/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        return response.json();
-    },
+        async update(id, data) {
+            const response = await API.authRequest(`/api/admin/rates/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            return response.json();
+        },
 
-    async delete(id) {
-        const response = await API.authRequest(`/api/admin/rates/${id}`, {
-            method: 'DELETE'
-        });
-        return response.json();
-    },
+        async delete(id) {
+            const response = await API.authRequest(`/api/admin/rates/${id}`, {
+                method: 'DELETE'
+            });
+            return response.json();
+        },
 
-    // New method for setting featured service
-    async setFeatured(id) {
-        const response = await API.authRequest(`/api/admin/rates/${id}/featured`, {
-            method: 'PUT'
-        });
-        return response.json();
-    }
-},
+        // New method for setting featured service
+        async setFeatured(id) {
+            const response = await API.authRequest(`/api/admin/rates/${id}/featured`, {
+                method: 'PUT'
+            });
+            return response.json();
+        }
+    },
 
     // Contact endpoints
     contact: {
