@@ -131,7 +131,7 @@ console.log('   Type: PostgreSQL');
 console.log('   Environment:', process.env.NODE_ENV);
 console.log('   SSL:', process.env.NODE_ENV === 'production' ? 'enabled' : 'disabled');
 console.log('   S3 Bucket:', S3_BUCKET);
-console.log('   AWS Region:', process.env.AWS_REGION || 'us-east-1');
+console.log('   AWS Region:', process.env.AWS_REGION || 'us-east-2');
 
 // Test database connection
 pool.connect((err, client, release) => {
