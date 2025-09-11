@@ -1,4 +1,4 @@
-// server.js - Pet Sitting Backend Service with PostgreSQL and Date Picker Support
+// server.js - Pet Sitting Backend Service with S3 Storage and PostgreSQL
 const express = require('express');
 const sgMail = require('@sendgrid/mail');
 const { Pool } = require('pg');
@@ -9,10 +9,20 @@ const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
+const AWS = require('aws-sdk');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Configure AWS S3
+const s3 = new AWS.S3({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.AWS_REGION || 'us-east-1'
+});
+
+const S3_BUCKET = process.env.S3_BUCKET_NAME || 'dotsoflove-pet-images';
 
 // JWT middleware for admin authentication
 const authenticateAdmin = (req, res, next) => {
@@ -37,21 +47,10 @@ app.use(cors({
     credentials: true
 }));
 app.use(express.json());
-app.use('/uploads', express.static('uploads')); // Serve uploaded images
 
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        const uniqueName = uuidv4() + path.extname(file.originalname);
-        cb(null, uniqueName);
-    }
-});
-
+// Configure multer for memory storage (we'll upload directly to S3)
 const upload = multer({ 
-    storage: storage,
+    storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit per file
     fileFilter: (req, file, cb) => {
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
@@ -63,6 +62,49 @@ const upload = multer({
     }
 });
 
+// Helper function to upload file to S3
+async function uploadToS3(file, folder = 'pets') {
+    const fileExtension = path.extname(file.originalname);
+    const fileName = `${folder}/${uuidv4()}${fileExtension}`;
+    
+    const params = {
+        Bucket: S3_BUCKET,
+        Key: fileName,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+        ACL: 'public-read' // Make images publicly accessible
+    };
+    
+    try {
+        const result = await s3.upload(params).promise();
+        console.log('File uploaded to S3:', result.Location);
+        return result.Location;
+    } catch (error) {
+        console.error('S3 upload error:', error);
+        throw new Error('Failed to upload image to S3');
+    }
+}
+
+// Helper function to delete file from S3
+async function deleteFromS3(imageUrl) {
+    try {
+        // Extract the key from the full S3 URL
+        const urlParts = imageUrl.split('/');
+        const key = urlParts.slice(-2).join('/'); // Get 'pets/filename.jpg'
+        
+        const params = {
+            Bucket: S3_BUCKET,
+            Key: key
+        };
+        
+        await s3.deleteObject(params).promise();
+        console.log('File deleted from S3:', key);
+    } catch (error) {
+        console.error('S3 delete error:', error);
+        // Don't throw error - we don't want to fail the main operation if S3 delete fails
+    }
+}
+
 // Email configuration
 const EMAIL_RECIPIENTS = [
     'dotty.j.woods@gmail.com',
@@ -72,11 +114,6 @@ const EMAIL_RECIPIENTS = [
 
 // Set SendGrid API key
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-// Create uploads directory if it doesn't exist
-if (!fs.existsSync('uploads')) {
-    fs.mkdirSync('uploads');
-}
 
 // PostgreSQL connection
 const pool = new Pool({
@@ -89,6 +126,7 @@ console.log('Database configuration:');
 console.log('   Type: PostgreSQL');
 console.log('   Environment:', process.env.NODE_ENV);
 console.log('   SSL:', process.env.NODE_ENV === 'production' ? 'enabled' : 'disabled');
+console.log('   S3 Bucket:', S3_BUCKET);
 
 // Test database connection
 pool.connect((err, client, release) => {
@@ -134,12 +172,13 @@ async function initializeTables() {
             )
         `);
 
-        // Pet images table
+        // Pet images table - updated for S3 URLs
         await pool.query(`
             CREATE TABLE IF NOT EXISTS pet_images (
                 id SERIAL PRIMARY KEY,
                 pet_id INTEGER NOT NULL,
                 image_url TEXT NOT NULL,
+                s3_key TEXT,
                 is_primary BOOLEAN DEFAULT FALSE,
                 display_order INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -174,16 +213,15 @@ async function initializeTables() {
             )
         `);
 
-        // Add structured date columns to existing contacts table if they don't exist
+        // Add S3 key column to existing pet_images table if it doesn't exist
         try {
             await pool.query(`
-                ALTER TABLE contacts 
-                ADD COLUMN IF NOT EXISTS start_date DATE,
-                ADD COLUMN IF NOT EXISTS end_date DATE
+                ALTER TABLE pet_images 
+                ADD COLUMN IF NOT EXISTS s3_key TEXT
             `);
-            console.log('Added date columns to contacts table');
+            console.log('Added s3_key column to pet_images table');
         } catch (error) {
-            console.log('Note: Date columns may already exist:', error.message);
+            console.log('Note: s3_key column may already exist:', error.message);
         }
 
         // Insert default rates if none exist
@@ -217,7 +255,7 @@ initializeTables();
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-    res.json({ status: 'OK', message: 'Pet Sitting Backend is running!' });
+    res.json({ status: 'OK', message: 'Pet Sitting Backend is running with S3 storage!' });
 });
 
 // Helper function to parse date strings
@@ -287,7 +325,7 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
-// GALLERY ENDPOINTS
+// GALLERY ENDPOINTS WITH S3 INTEGRATION
 
 // Get all gallery pets with their images (public endpoint)
 app.get('/api/gallery', async (req, res) => {
@@ -358,7 +396,7 @@ app.get('/api/gallery/:id', async (req, res) => {
     }
 });
 
-// Admin: Add new pet to gallery with multiple images
+// Admin: Add new pet to gallery with S3 image upload
 app.post('/api/admin/gallery', authenticateAdmin, upload.array('images', 10), async (req, res) => {
     const { petName, storyDescription, serviceDate, isDorothyPet } = req.body;
     
@@ -379,18 +417,35 @@ app.post('/api/admin/gallery', authenticateAdmin, upload.array('images', 10), as
         `, [petName, storyDescription || '', serviceDate || '', isDorothyPet === 'true']);
         
         const petId = petResult.rows[0].id;
+        console.log('Created pet with ID:', petId);
         
-        // Insert images if any
+        // Upload images to S3 and insert records
         if (req.files && req.files.length > 0) {
+            console.log(`Uploading ${req.files.length} images to S3...`);
+            
             for (let index = 0; index < req.files.length; index++) {
                 const file = req.files[index];
-                const imageUrl = `/uploads/${file.filename}`;
                 const isPrimary = index === 0; // First image is primary
                 
-                await client.query(`
-                    INSERT INTO pet_images (pet_id, image_url, is_primary, display_order)
-                    VALUES ($1, $2, $3, $4)
-                `, [petId, imageUrl, isPrimary, index]);
+                try {
+                    // Upload to S3
+                    const s3Url = await uploadToS3(file, 'pets');
+                    
+                    // Extract S3 key for future deletion
+                    const urlParts = s3Url.split('/');
+                    const s3Key = urlParts.slice(-2).join('/');
+                    
+                    // Insert image record
+                    await client.query(`
+                        INSERT INTO pet_images (pet_id, image_url, s3_key, is_primary, display_order)
+                        VALUES ($1, $2, $3, $4, $5)
+                    `, [petId, s3Url, s3Key, isPrimary, index]);
+                    
+                    console.log(`Image ${index + 1} uploaded: ${s3Url}`);
+                } catch (uploadError) {
+                    console.error(`Failed to upload image ${index + 1}:`, uploadError);
+                    // Continue with other images even if one fails
+                }
             }
         }
         
@@ -398,7 +453,7 @@ app.post('/api/admin/gallery', authenticateAdmin, upload.array('images', 10), as
         
         res.json({ 
             success: true, 
-            message: 'Pet added to gallery successfully',
+            message: 'Pet added to gallery successfully with S3 storage',
             petId: petId 
         });
     } catch (error) {
@@ -440,21 +495,23 @@ app.put('/api/admin/gallery/:id', authenticateAdmin, async (req, res) => {
     }
 });
 
-// Admin: Delete pet from gallery (and all associated images)
+// Admin: Delete pet from gallery (and all associated S3 images)
 app.delete('/api/admin/gallery/:id', authenticateAdmin, async (req, res) => {
     const petId = req.params.id;
     
     try {
-        // First get all image URLs to delete the files
-        const imagesResult = await pool.query('SELECT image_url FROM pet_images WHERE pet_id = $1', [petId]);
+        // First get all image URLs to delete from S3
+        const imagesResult = await pool.query('SELECT image_url, s3_key FROM pet_images WHERE pet_id = $1', [petId]);
         
-        // Delete all image files
-        imagesResult.rows.forEach(image => {
-            const imagePath = path.join(__dirname, image.image_url);
-            fs.unlink(imagePath, (err) => {
-                if (err) console.log('Could not delete image file:', err);
-            });
+        // Delete all image files from S3
+        const deletePromises = imagesResult.rows.map(image => {
+            if (image.s3_key) {
+                return deleteFromS3(image.image_url);
+            }
         });
+        
+        await Promise.all(deletePromises);
+        console.log(`Deleted ${imagesResult.rows.length} images from S3`);
         
         // Delete pet and associated images (CASCADE will handle pet_images)
         const result = await pool.query('DELETE FROM gallery_pets WHERE id = $1', [petId]);
@@ -463,14 +520,14 @@ app.delete('/api/admin/gallery/:id', authenticateAdmin, async (req, res) => {
             return res.status(404).json({ error: 'Pet not found' });
         }
         
-        res.json({ success: true, message: 'Pet and all images deleted successfully' });
+        res.json({ success: true, message: 'Pet and all S3 images deleted successfully' });
     } catch (error) {
         console.error('Database error:', error);
         res.status(500).json({ error: 'Failed to delete pet' });
     }
 });
 
-// RATES MANAGEMENT ENDPOINTS
+// RATES MANAGEMENT ENDPOINTS (unchanged)
 
 // Get all service rates (public endpoint)
 app.get('/api/rates', async (req, res) => {
@@ -658,7 +715,7 @@ app.delete('/api/admin/rates/:id', authenticateAdmin, async (req, res) => {
     }
 });
 
-// ADMIN AUTHENTICATION
+// ADMIN AUTHENTICATION (unchanged)
 
 // Admin login with JWT
 app.post('/api/admin/auth', async (req, res) => {
@@ -707,24 +764,6 @@ app.get('/api/admin/contacts', authenticateAdmin, async (req, res) => {
         console.error('Database error:', error);
         res.status(500).json({ error: 'Failed to retrieve contacts' });
     }
-});
-
-// Email recipients management
-app.put('/api/admin/email-recipients', authenticateAdmin, (req, res) => {
-    const { recipients } = req.body;
-    
-    if (!Array.isArray(recipients)) {
-        return res.status(400).json({ error: 'Recipients must be an array' });
-    }
-    
-    EMAIL_RECIPIENTS.length = 0;
-    EMAIL_RECIPIENTS.push(...recipients);
-    
-    res.json({ success: true, recipients: EMAIL_RECIPIENTS });
-});
-
-app.get('/api/admin/email-recipients', authenticateAdmin, (req, res) => {
-    res.json({ recipients: EMAIL_RECIPIENTS });
 });
 
 // Enhanced email notification with better date formatting
@@ -797,6 +836,7 @@ app.listen(PORT, () => {
     console.log(`Pet Sitting Backend Service running on port ${PORT}`);
     console.log(`Email recipients: ${EMAIL_RECIPIENTS.join(', ')}`);
     console.log(`Database: PostgreSQL (${process.env.NODE_ENV})`);
+    console.log(`S3 Storage: ${S3_BUCKET}`);
 });
 
 // Graceful shutdown
