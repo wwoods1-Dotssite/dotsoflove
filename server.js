@@ -75,7 +75,7 @@ async function uploadToS3(file, folder = 'pets') {
         Key: fileName,
         Body: file.buffer,
         ContentType: file.mimetype,
-        ACL: 'public-read' // Make images publicly accessible
+        // ACL: 'public-read' // Make images publicly accessible
     });
     
     try {
