@@ -24,19 +24,29 @@ const s3Client = new S3Client({
     },
 });
 
+// DEBUG: Log environment variables (remove in production)
+console.log('DEBUG - Environment check:');
+console.log('AWS_ACCESS_KEY_ID:', process.env.AWS_ACCESS_KEY_ID ? `${process.env.AWS_ACCESS_KEY_ID.substring(0, 4)}...` : 'MISSING');
+console.log('AWS_SECRET_ACCESS_KEY:', process.env.AWS_SECRET_ACCESS_KEY ? 'SET' : 'MISSING');
+console.log('AWS_REGION:', process.env.AWS_REGION || 'us-east-2 (default)');
+console.log('S3_BUCKET_NAME:', process.env.S3_BUCKET_NAME || 'dotsoflove-pet-images (default)');
 
 const S3_BUCKET = process.env.S3_BUCKET_NAME || 'dotsoflove-pet-images';
 
 // Test S3 connection on startup
 async function testS3Connection() {
     try {
+        console.log(`Testing connection to bucket: ${S3_BUCKET} in region: ${process.env.AWS_REGION || 'us-east-2'}`);
         await s3Client.send(new HeadBucketCommand({ Bucket: S3_BUCKET }));
         console.log('✅ S3 connection successful');
     } catch (error) {
-        console.error('❌ S3 connection failed:', error.message);
+        console.error('❌ S3 connection failed:');
+        console.error('Error name:', error.name);
+        console.error('Error code:', error.$metadata?.httpStatusCode);
+        console.error('Error message:', error.message);
+        console.error('Full error:', error);
     }
 }
-
 // JWT middleware for admin authentication
 const authenticateAdmin = (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
