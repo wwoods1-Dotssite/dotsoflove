@@ -1,4 +1,4 @@
-// js/admin.js - Admin panel functionality with Featured Services Support
+// js/admin.js - Admin panel functionality with dual gallery and edit story support
 
 // Initialize admin functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -81,26 +81,62 @@ window.switchAdminTab = function(tab) {
     }
 };
 
-// ========== GALLERY MANAGEMENT ==========
+// ========== DUAL GALLERY MANAGEMENT ==========
 
-// Load admin gallery
+// Load admin gallery with dual sections
 window.loadAdminGallery = async function() {
     try {
-        Utils.showLoading('adminGalleryLoading');
+        console.log('🔄 Loading admin dual gallery...');
+        
+        // Show loading for both sections
+        Utils.showLoading('adminDorothyPetsLoading');
+        Utils.showLoading('adminClientPetsLoading');
+        
         const pets = await API.gallery.getAll();
         
-        const adminGrid = document.getElementById('adminGalleryGrid');
-        Utils.hideLoading('adminGalleryLoading');
+        // Separate pets into Dorothy's pets and client pets
+        const dorothyPets = pets.filter(pet => pet.is_dorothy_pet === true);
+        const clientPets = pets.filter(pet => pet.is_dorothy_pet !== true);
         
-        adminGrid.innerHTML = pets.map(pet => createAdminGalleryItem(pet)).join('');
+        console.log(`📊 Admin gallery loaded: ${dorothyPets.length} Dorothy's pets, ${clientPets.length} client pets`);
+        
+        // Load Dorothy's pets section
+        loadAdminGallerySection('dorothy', dorothyPets);
+        
+        // Load client pets section
+        loadAdminGallerySection('client', clientPets);
         
     } catch (error) {
-        console.error('Error loading admin gallery:', error);
-        Utils.showError('adminGalleryLoading', 'Error loading gallery.');
+        console.error('❌ Error loading admin gallery:', error);
+        Utils.showError('adminDorothyPetsLoading', 'Error loading gallery.');
+        Utils.showError('adminClientPetsLoading', 'Error loading gallery.');
     }
 };
 
-// Create admin gallery item HTML
+// Load a specific admin gallery section
+function loadAdminGallerySection(sectionType, pets) {
+    const gridId = sectionType === 'dorothy' ? 'adminDorothyPetsGrid' : 'adminClientPetsGrid';
+    const loadingId = sectionType === 'dorothy' ? 'adminDorothyPetsLoading' : 'adminClientPetsLoading';
+    const emptyId = sectionType === 'dorothy' ? 'adminDorothyPetsEmpty' : 'adminClientPetsEmpty';
+    
+    const adminGrid = document.getElementById(gridId);
+    const emptyElement = document.getElementById(emptyId);
+    
+    Utils.hideLoading(loadingId);
+    
+    if (pets.length === 0) {
+        if (emptyElement) emptyElement.style.display = 'block';
+        if (adminGrid) adminGrid.innerHTML = '';
+        return;
+    }
+    
+    if (emptyElement) emptyElement.style.display = 'none';
+    if (adminGrid) {
+        adminGrid.innerHTML = pets.map(pet => createAdminGalleryItem(pet)).join('');
+    }
+}
+
+// Create admin gallery item HTML with edit story button
 function createAdminGalleryItem(pet) {
     const images = pet.images || [];
     const primaryImage = images.find(img => img.isPrimary) || images[0];
@@ -108,7 +144,7 @@ function createAdminGalleryItem(pet) {
     return `
         <div class="admin-gallery-item">
             <div class="admin-actions">
-                <button class="edit-btn" onclick="editPet(${pet.id})" title="Edit Pet">✏️</button>
+                <button class="edit-btn" onclick="openEditStoryModal(${JSON.stringify(pet).replace(/"/g, '&quot;')})" title="Edit Pet Story">✏️</button>
                 <button class="delete-btn" onclick="deletePet(${pet.id})" title="Delete Pet">&times;</button>
             </div>
             ${primaryImage ? 
@@ -119,6 +155,7 @@ function createAdminGalleryItem(pet) {
             ${pet.service_date ? `<div style="font-size: 0.9rem; color: #666;">${pet.service_date}</div>` : ''}
             ${pet.is_dorothy_pet ? '<div style="background: #ffd700; color: #333; padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.8rem; margin-top: 0.5rem; display: inline-block;">Dorothy\'s Pet</div>' : ''}
             ${images.length > 1 ? `<div style="margin-top: 0.5rem; font-size: 0.8rem; color: #667eea;">${images.length} photos</div>` : ''}
+            ${pet.story_description ? `<div style="margin-top: 0.5rem; font-size: 0.8rem; color: #666; max-height: 3em; overflow: hidden; text-overflow: ellipsis;" title="${pet.story_description}">${pet.story_description}</div>` : ''}
         </div>
     `;
 }
@@ -138,7 +175,7 @@ async function handleAddPet(e) {
             e.target.reset();
             document.getElementById('filePreview').innerHTML = '';
             loadAdminGallery();
-            if (window.loadGallery) loadGallery(); // Refresh public gallery
+            if (window.loadDualGallery) loadDualGallery(); // Refresh public gallery
         } else {
             Utils.showError('addPetError', result.error || 'Failed to add pet');
         }
@@ -166,26 +203,6 @@ function handleFilePreview() {
 }
 
 // Pet management functions
-window.editPet = async function(petId) {
-    const newStory = prompt('Edit pet story (leave empty to keep current):');
-    if (newStory !== null) {
-        try {
-            const result = await API.gallery.update(petId, {
-                petName: 'Current Name', // This should be enhanced to get actual current name
-                storyDescription: newStory
-            });
-            
-            if (result.success) {
-                loadAdminGallery();
-                if (window.loadGallery) loadGallery();
-            }
-        } catch (error) {
-            console.error('Error editing pet:', error);
-            alert('Failed to edit pet. Please try again.');
-        }
-    }
-};
-
 window.deletePet = async function(petId) {
     if (!confirm('Are you sure you want to delete this pet from the gallery? This will also delete all associated images.')) {
         return;
@@ -196,7 +213,7 @@ window.deletePet = async function(petId) {
         
         if (result.success) {
             loadAdminGallery();
-            if (window.loadGallery) loadGallery(); // Refresh public gallery
+            if (window.loadDualGallery) loadDualGallery(); // Refresh public gallery
         } else {
             alert('Failed to delete pet. Please try again.');
         }
