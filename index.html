@@ -40,41 +40,64 @@
     </div>
 
     <!-- Pet Story Edit Modal -->
-    <div id="editStoryModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <span class="close" onclick="closeEditStoryModal()">&times;</span>
-            <div style="padding: 2rem;">
-                <h3 style="color: #667eea; margin-bottom: 1rem;">Edit Pet Story</h3>
-                <form id="editStoryForm">
-                    <input type="hidden" id="editPetId">
-                    <div class="form-group">
-                        <label for="editPetName">Pet Name *</label>
-                        <input type="text" id="editPetName" required>
+
+<div id="editStoryModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;"> <!-- Increased width -->
+        <span class="close" onclick="closeEditStoryModal()">&times;</span>
+        <div style="padding: 2rem;">
+            <h3 style="color: #667eea; margin-bottom: 1rem;">Edit Pet Story & Photos</h3>
+            <form id="editStoryForm" enctype="multipart/form-data"> <!-- Added enctype -->
+                <input type="hidden" id="editPetId">
+                
+                <!-- Existing fields -->
+                <div class="form-group">
+                    <label for="editPetName">Pet Name *</label>
+                    <input type="text" id="editPetName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editServiceDate">Service Date</label>
+                    <input type="text" id="editServiceDate" placeholder="e.g., Summer 2024">
+                </div>
+                <div class="form-group">
+                    <label for="editStoryDescription">Story Description</label>
+                    <textarea id="editStoryDescription" rows="5"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="editIsDorothyPet" style="margin-right: 0.5rem;">
+                        This is one of Dorothy's own pets
+                    </label>
+                </div>
+
+                <!-- NEW: Add Photos Section -->
+                <div class="form-group">
+                    <label>Add More Photos (Optional)</label>
+                    <div class="file-upload" onclick="document.getElementById('editPetImages').click()">
+                        <button type="button" class="file-upload-btn">Choose Additional Photos</button>
+                        <p style="margin-top: 1rem; color: #666;">Click to upload additional photos (max 5MB each)</p>
+                        <input type="file" id="editPetImages" name="images" accept="image/*" multiple style="display: none;">
+                        <div id="editFilePreview" style="margin-top: 1rem;"></div>
                     </div>
-                    <div class="form-group">
-                        <label for="editServiceDate">Service Date</label>
-                        <input type="text" id="editServiceDate" placeholder="e.g., Summer 2024">
+                </div>
+
+                <!-- NEW: Current Photos Display -->
+                <div class="form-group" id="currentPhotosSection" style="display: none;">
+                    <label>Current Photos</label>
+                    <div id="currentPhotosList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
+                        <!-- Current photos will be displayed here -->
                     </div>
-                    <div class="form-group">
-                        <label for="editStoryDescription">Story Description</label>
-                        <textarea id="editStoryDescription" rows="5"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="editIsDorothyPet" style="margin-right: 0.5rem;">
-                            This is one of Dorothy's own pets
-                        </label>
-                    </div>
-                    <div style="text-align: center; margin-top: 2rem;">
-                        <button type="submit" class="btn">Update Pet</button>
-                        <button type="button" class="btn btn-secondary" onclick="closeEditStoryModal()" style="margin-left: 1rem;">Cancel</button>
-                    </div>
-                    <div class="success-message" id="editStorySuccess"></div>
-                    <div class="error-message" id="editStoryError"></div>
-                </form>
-            </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button type="submit" class="btn">Update Pet</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditStoryModal()" style="margin-left: 1rem;">Cancel</button>
+                </div>
+                <div class="success-message" id="editStorySuccess"></div>
+                <div class="error-message" id="editStoryError"></div>
+            </form>
         </div>
     </div>
+</div>
 
     <!-- About Me Page -->
     <div id="about" class="page active">
