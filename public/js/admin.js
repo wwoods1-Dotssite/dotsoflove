@@ -337,6 +337,9 @@ async function handleEditStorySubmission(e) {
         formData.append('storyDescription', storyDescription);
         formData.append('isDorothyPet', isDorothyPet);
         
+        // Removals (checkboxes)
+        document.querySelectorAll('input[name="remove[]"]:checked').forEach(cb => formData.append('remove[]', cb.value));
+        
         // Add new images if any
         for (let i = 0; i < newImages.length; i++) {
             formData.append('images', newImages[i]);

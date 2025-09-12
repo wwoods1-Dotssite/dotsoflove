@@ -346,7 +346,22 @@ window.openEditStoryModal = function(pet) {
     Utils.hideMessage('editStorySuccess');
     Utils.hideMessage('editStoryError');
     
-    // Show modal
+    
+    // Render current images with remove checkboxes
+    const container = document.getElementById('editCurrentPhotos');
+    if (container) {
+        const imgs = Array.isArray(pet.images) ? pet.images : [];
+        container.innerHTML = imgs.length ? imgs.map(img => `
+            <label style="display:block;border:1px solid #eee;border-radius:8px;padding:.5rem">
+              <img src="${img.url}" alt="${pet.pet_name || ''}" style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:.4rem;">
+              <div style="display:flex;align-items:center;gap:.5rem;">
+                <input type="checkbox" name="remove[]" value="${img.url}">
+                <span style="font-size:.9rem;color:#333;">Remove this photo</span>
+              </div>
+            </label>
+        `).join('') : '<div style="color:#666">No current photos.</div>';
+    }
+// Show modal
     const modal = document.getElementById('editStoryModal');
     modal.style.display = 'block';
     document.body.style.overflow = 'hidden';
