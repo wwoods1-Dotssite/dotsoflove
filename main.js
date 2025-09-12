@@ -261,7 +261,7 @@ function createGalleryItem(pet) {
         <div class="gallery-item" onclick="openModal(${JSON.stringify(pet).replace(/"/g, '&quot;')})">
             <div class="gallery-image">
                 ${primaryImage ? 
-                    `<img src="${API_BASE}${primaryImage.url}" alt="${pet.pet_name}">` :
+                    `<img src="${primaryImage.url}" alt="${pet.pet_name}">` :
                     `🐾`
                 }
                 ${images.length > 1 ? `<div class="image-count">${images.length} photos</div>` : ''}
