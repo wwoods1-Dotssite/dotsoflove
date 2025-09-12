@@ -706,7 +706,7 @@ app.put('/api/admin/gallery/:id/update-with-photos', authenticateAdmin, upload.a
             // Delete from DB
             await client.query(`DELETE FROM pet_images WHERE pet_id = $1 AND image_url = ANY($2::text[])`, [petId, removals]);
         }
-);
+
         }
         
         // Add new images if provided
