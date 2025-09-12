@@ -693,7 +693,7 @@ app.put('/api/admin/gallery/:id/update-with-photos', authenticateAdmin, upload.a
         
         if (petUpdateResult.rowCount === 0) {
             await client.query('ROLLBACK');
-            return res.status(404).json({ error: 'Pet not found' }
+            return res.status(404).json({ error: 'Pet not found' };
         // Handle removals (array of URLs)
         const removalsRaw = req.body['remove[]'];
         const removals = Array.isArray(removalsRaw) ? removalsRaw : (removalsRaw ? [removalsRaw] : []);
