@@ -648,6 +648,104 @@ app.delete('/api/admin/gallery/:id', authenticateAdmin, async (req, res) => {
     }
 });
 
+// Add this new endpoint to your server.js file
+// Place it after your existing gallery endpoints but before the rates endpoints
+
+// Admin: Update existing pet story and add new photos
+app.put('/api/admin/gallery/:id/update-with-photos', authenticateAdmin, upload.array('images', 10), async (req, res) => {
+    const petId = req.params.id;
+    const { petName, storyDescription, serviceDate, isDorothyPet } = req.body;
+    const newImages = req.files || [];
+    
+    console.log('📝 Updating pet with story and photos:', {
+        petId,
+        petName,
+        storyDescription,
+        serviceDate,
+        isDorothyPet,
+        newImagesCount: newImages.length
+    });
+    
+    if (!petName) {
+        return res.status(400).json({ error: 'Pet name is required' });
+    }
+    
+    const client = await pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+        
+        // Convert isDorothyPet to boolean properly
+        const isDorothyPetBool = isDorothyPet === 'true' || isDorothyPet === true;
+        console.log('🔄 Converting isDorothyPet for update:', { original: isDorothyPet, converted: isDorothyPetBool });
+        
+        // Update the pet record
+        const petUpdateResult = await client.query(`
+            UPDATE gallery_pets 
+            SET pet_name = $1, story_description = $2, service_date = $3, is_dorothy_pet = $4, updated_at = CURRENT_TIMESTAMP
+            WHERE id = $5
+        `, [petName, storyDescription || '', serviceDate || '', isDorothyPetBool, petId]);
+        
+        if (petUpdateResult.rowCount === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Pet not found' });
+        }
+        
+        // Add new images if provided
+        let uploadedImagesCount = 0;
+        if (newImages.length > 0) {
+            console.log(`Processing ${newImages.length} new images for upload...`);
+            
+            // Get current image count to determine display order
+            const currentImagesResult = await client.query('SELECT COUNT(*) as count FROM pet_images WHERE pet_id = $1', [petId]);
+            let nextDisplayOrder = parseInt(currentImagesResult.rows[0].count);
+            
+            for (let index = 0; index < newImages.length; index++) {
+                const file = newImages[index];
+                
+                try {
+                    // Upload to S3
+                    const s3Url = await uploadToS3(file, 'pets');
+                    
+                    // Extract S3 key for future deletion
+                    const urlParts = s3Url.split('/');
+                    const s3Key = urlParts.slice(-2).join('/');
+                    
+                    // Insert image record
+                    await client.query(`
+                        INSERT INTO pet_images (pet_id, image_url, s3_key, is_primary, display_order)
+                        VALUES ($1, $2, $3, $4, $5)
+                    `, [petId, s3Url, s3Key, false, nextDisplayOrder + index]); // New images are not primary by default
+                    
+                    uploadedImagesCount++;
+                    console.log(`New image ${index + 1} uploaded successfully: ${s3Url}`);
+                } catch (uploadError) {
+                    console.error(`Failed to upload new image ${index + 1}:`, uploadError);
+                    // Continue with other images even if one fails
+                }
+            }
+        }
+        
+        await client.query('COMMIT');
+        
+        console.log('✅ Pet updated successfully with story changes and new photos');
+        
+        res.json({ 
+            success: true, 
+            message: `Pet updated successfully! ${uploadedImagesCount > 0 ? `Added ${uploadedImagesCount} new photos.` : ''}`,
+            isDorothyPet: isDorothyPetBool,
+            newPhotosAdded: uploadedImagesCount
+        });
+        
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('❌ Database error:', error);
+        res.status(500).json({ error: 'Failed to update pet story and photos' });
+    } finally {
+        client.release();
+    }
+});
+
 // RATES MANAGEMENT ENDPOINTS (unchanged from previous version)
 
 // Get all service rates (public endpoint)
