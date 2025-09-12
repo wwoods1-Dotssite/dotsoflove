@@ -342,13 +342,18 @@ app.get('/health', async (req, res) => {
 
 // Add a simple root route that explicitly serves your index.html:
 app.get('/', (req, res) => {
-    console.log(`📄 Serving index.html for ${req.ip}`);
-    res.sendFile(path.join(__dirname, 'index.html'), (err) => {
+    const indexPath = path.join(__dirname, 'index.html');
+    console.log('Attempting to serve:', indexPath);
+    console.log('File exists:', fs.existsSync(indexPath));
+    
+    res.sendFile(indexPath, (err) => {
         if (err) {
-            console.error('Error serving index.html:', err);
-            res.status(500).send('Error loading page');
-        } else {
-            console.log('✅ Successfully served index.html');
+            console.error('SendFile error:', err);
+            res.status(404).send(`
+                <h1>File Not Found</h1>
+                <p>Looking for: ${indexPath}</p>
+                <p>Directory contents: ${fs.readdirSync(__dirname).join(', ')}</p>
+            `);
         }
     });
 });
