@@ -154,7 +154,7 @@ function createAdminGalleryItem(pet) {
                 <button class="delete-btn" onclick="deletePet(${pet.id})" title="Delete Pet">&times;</button>
             </div>
             ${primaryImage ? 
-                `<img src="${API_BASE}${primaryImage.url}" alt="${pet.pet_name}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem;">` :
+                `<img src="${primaryImage.url}" alt="${pet.pet_name}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem;">` :
                 `<div style="width: 100%; height: 150px; background: #f0f0f0; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🐾</div>`
             }
             <div style="font-weight: bold; color: #667eea;">${pet.pet_name}</div>
@@ -283,7 +283,7 @@ function displayCurrentPhotos(images) {
         currentPhotosSection.style.display = 'block';
         currentPhotosList.innerHTML = images.map(img => `
             <div style="position: relative;">
-                <img src="${API_BASE}${img.url}" 
+                <img src="${img.url}" 
                      alt="Current photo" 
                      style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;">
                 ${img.isPrimary ? 
