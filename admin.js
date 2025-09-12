@@ -1,4 +1,4 @@
-// js/admin.js - Admin panel functionality with dual gallery and edit story support
+// js/admin.js - Admin panel functionality with dual gallery, edit story support, and photo uploads
 
 // Initialize admin functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -25,10 +25,16 @@ function initializeAdminPanel() {
         rateForm.addEventListener('submit', handleRateSubmission);
     }
 
-    // File upload preview
+    // File upload preview for add pet form
     const petImages = document.getElementById('petImages');
     if (petImages) {
         petImages.addEventListener('change', handleFilePreview);
+    }
+
+    // NEW: File upload preview for edit pet form
+    const editPetImages = document.getElementById('editPetImages');
+    if (editPetImages) {
+        editPetImages.addEventListener('change', handleEditFilePreview);
     }
 }
 
@@ -187,7 +193,7 @@ async function handleAddPet(e) {
     }
 }
 
-// Handle file preview
+// Handle file preview for add pet form
 function handleFilePreview() {
     const preview = document.getElementById('filePreview');
     const files = this.files;
@@ -196,6 +202,21 @@ function handleFilePreview() {
     
     if (files.length > 0) {
         preview.innerHTML = `<p style="color: #667eea; font-weight: bold;">${files.length} file(s) selected:</p>`;
+        Array.from(files).forEach(file => {
+            preview.innerHTML += `<p style="font-size: 0.9rem; color: #666;">• ${file.name}</p>`;
+        });
+    }
+}
+
+// NEW: Handle file preview for edit pet form
+function handleEditFilePreview() {
+    const preview = document.getElementById('editFilePreview');
+    const files = this.files;
+    
+    preview.innerHTML = '';
+    
+    if (files.length > 0) {
+        preview.innerHTML = `<p style="color: #667eea; font-weight: bold;">${files.length} new file(s) selected:</p>`;
         Array.from(files).forEach(file => {
             preview.innerHTML += `<p style="font-size: 0.9rem; color: #666;">• ${file.name}</p>`;
         });
@@ -222,6 +243,145 @@ window.deletePet = async function(petId) {
         alert('Failed to delete pet. Please try again.');
     }
 };
+
+// ========== EDIT STORY AND PHOTOS FUNCTIONALITY ==========
+
+// UPDATED: Open edit story modal with photo support
+window.openEditStoryModal = function(pet) {
+    console.log('📝 Opening edit modal for pet:', pet);
+    
+    // Populate form with current pet data
+    document.getElementById('editPetId').value = pet.id;
+    document.getElementById('editPetName').value = pet.pet_name || '';
+    document.getElementById('editServiceDate').value = pet.service_date || '';
+    document.getElementById('editStoryDescription').value = pet.story_description || '';
+    document.getElementById('editIsDorothyPet').checked = Boolean(pet.is_dorothy_pet);
+    
+    // Clear file input and preview
+    document.getElementById('editPetImages').value = '';
+    document.getElementById('editFilePreview').innerHTML = '';
+    
+    // NEW: Display current photos
+    displayCurrentPhotos(pet.images || []);
+    
+    // Clear any previous messages
+    Utils.hideMessage('editStorySuccess');
+    Utils.hideMessage('editStoryError');
+    
+    // Show modal
+    const modal = document.getElementById('editStoryModal');
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+};
+
+// NEW: Display current photos in edit modal
+function displayCurrentPhotos(images) {
+    const currentPhotosSection = document.getElementById('currentPhotosSection');
+    const currentPhotosList = document.getElementById('currentPhotosList');
+    
+    if (images && images.length > 0) {
+        currentPhotosSection.style.display = 'block';
+        currentPhotosList.innerHTML = images.map(img => `
+            <div style="position: relative;">
+                <img src="${API_BASE}${img.url}" 
+                     alt="Current photo" 
+                     style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;">
+                ${img.isPrimary ? 
+                    '<div style="position: absolute; top: -5px; right: -5px; background: #ffd700; color: #333; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">★</div>' : 
+                    ''
+                }
+            </div>
+        `).join('');
+    } else {
+        currentPhotosSection.style.display = 'none';
+    }
+}
+
+// Close edit story modal
+window.closeEditStoryModal = function() {
+    const modal = document.getElementById('editStoryModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    
+    // Clear form
+    document.getElementById('editStoryForm').reset();
+    document.getElementById('editFilePreview').innerHTML = '';
+    document.getElementById('currentPhotosSection').style.display = 'none';
+    Utils.hideMessage('editStorySuccess');
+    Utils.hideMessage('editStoryError');
+};
+
+// UPDATED: Handle edit story form submission with photo uploads
+async function handleEditStorySubmission(e) {
+    e.preventDefault();
+    
+    const petId = document.getElementById('editPetId').value;
+    const petName = document.getElementById('editPetName').value.trim();
+    const serviceDate = document.getElementById('editServiceDate').value.trim();
+    const storyDescription = document.getElementById('editStoryDescription').value.trim();
+    const isDorothyPet = document.getElementById('editIsDorothyPet').checked;
+    const newImages = document.getElementById('editPetImages').files;
+    
+    if (!petName) {
+        Utils.showError('editStoryError', 'Pet name is required.');
+        return;
+    }
+    
+    try {
+        console.log(`📝 Updating pet ${petId} with new data and ${newImages.length} new images...`);
+        
+        // Create FormData for file upload
+        const formData = new FormData();
+        formData.append('petName', petName);
+        formData.append('serviceDate', serviceDate);
+        formData.append('storyDescription', storyDescription);
+        formData.append('isDorothyPet', isDorothyPet);
+        
+        // Add new images if any
+        for (let i = 0; i < newImages.length; i++) {
+            formData.append('images', newImages[i]);
+        }
+        
+        // Use the new API endpoint that handles both data and files
+        const response = await API.authRequest(`/api/admin/gallery/${petId}/update-with-photos`, {
+            method: 'PUT',
+            body: formData
+            // Don't set Content-Type header - let the browser set it for FormData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const message = newImages.length > 0 
+                ? `Pet story and ${newImages.length} new photos updated successfully!`
+                : 'Pet story updated successfully!';
+            Utils.showSuccess('editStorySuccess', message);
+            Utils.hideMessage('editStoryError');
+            
+            // Refresh the galleries
+            setTimeout(() => {
+                closeEditStoryModal();
+                loadAdminGallery(); // Refresh admin gallery
+                if (window.loadDualGallery) loadDualGallery(); // Refresh public gallery if open
+            }, 1500);
+            
+        } else {
+            Utils.showError('editStoryError', result.error || 'Failed to update pet story and photos');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error updating pet story and photos:', error);
+        Utils.showError('editStoryError', 'Failed to update pet story and photos. Please try again.');
+    }
+}
+
+// Initialize edit story modal form handler
+document.addEventListener('DOMContentLoaded', function() {
+    const editStoryForm = document.getElementById('editStoryForm');
+    if (editStoryForm) {
+        editStoryForm.addEventListener('submit', handleEditStorySubmission);
+    }
+});
 
 // ========== RATES MANAGEMENT WITH FEATURED SERVICES ==========
 
