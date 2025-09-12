@@ -661,10 +661,6 @@ app.put('/api/admin/gallery/:id/update-with-photos', authenticateAdmin, upload.a
     const petId = req.params.id;
     const { petName, storyDescription, serviceDate, isDorothyPet } = req.body;
     const newImages = req.files || [];
-    // Images to remove (array of URLs)
-    const removalsRaw = req.body['remove[]'];
-    const removals = Array.isArray(removalsRaw) ? removalsRaw : (removalsRaw ? [removalsRaw] : []);
-
     
     console.log('📝 Updating pet with story and photos:', {
         petId,
@@ -697,24 +693,23 @@ app.put('/api/admin/gallery/:id/update-with-photos', authenticateAdmin, upload.a
         
         if (petUpdateResult.rowCount === 0) {
             await client.query('ROLLBACK');
-            return res.status(404).json({ error: 'Pet not found' });
-        }
-        
-        
-        // Remove selected images
+            return res.status(404).json({ error: 'Pet not found' }
+        // Handle removals (array of URLs)
+        const removalsRaw = req.body['remove[]'];
+        const removals = Array.isArray(removalsRaw) ? removalsRaw : (removalsRaw ? [removalsRaw] : []);
         if (removals.length > 0) {
-            console.log('🗑️ Removing images:', removals);
-            // delete from S3
+            console.log('🗑️ Removing images:', removals.length);
+            // Delete from S3 (best-effort)
             for (const url of removals) {
                 try { await deleteFromS3(url); } catch (e) { console.warn('S3 delete failed for', url, e.message); }
             }
-            // delete from DB
-            await client.query(
-                `DELETE FROM pet_images WHERE pet_id = $1 AND image_url = ANY($2::text[])`,
-                [petId, removals]
-            );
+            // Delete from DB
+            await client.query(`DELETE FROM pet_images WHERE pet_id = $1 AND image_url = ANY($2::text[])`, [petId, removals]);
         }
-// Add new images if provided
+);
+        }
+        
+        // Add new images if provided
         let uploadedImagesCount = 0;
         if (newImages.length > 0) {
             console.log(`Processing ${newImages.length} new images for upload...`);
