@@ -279,24 +279,31 @@ function displayCurrentPhotos(images) {
     const container = document.getElementById('editCurrentPhotos');
     if (!container) return;
 
-    // No images
-    if (!images || images.length === 0) {
+    console.log('[Edit Modal] images received:', images);
+
+    if (!Array.isArray(images) || images.length === 0) {
         container.innerHTML = '<div style="color:#666;">No current photos.</div>';
         return;
     }
 
-    // Render thumbnails + remove checkboxes
-    container.innerHTML = images.map(img => `
+    // Normalize each image to have a .url we can render
+    const items = images.map((img, idx) => {
+        const url = img.url || img.image_url || ''; // <- handle both shapes
+        return `
         <label style="display:block;border:1px solid #eee;border-radius:8px;padding:.5rem;margin-bottom:.5rem;">
-            <img src="${img.url}" alt="Current photo"
+            <img src="${url}" alt="Current photo ${idx + 1}"
                  style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:.4rem;">
             <div style="display:flex;align-items:center;gap:.5rem;">
-                <input type="checkbox" name="remove[]" value="${img.url}">
+                <input type="checkbox" name="remove[]" value="${url}">
                 <span style="font-size:.9rem;color:#333;">Remove this photo</span>
-                ${img.isPrimary ? '<span style="margin-left:auto;font-size:.8rem;background:#ffd700;color:#333;padding:0 .4rem;border-radius:10px;">Primary</span>' : ''}
+                ${(img.isPrimary || img.is_primary) ? '<span style="margin-left:auto;font-size:.8rem;background:#ffd700;color:#333;padding:0 .4rem;border-radius:10px;">Primary</span>' : ''}
             </div>
-        </label>
-    `).join('');
+        </label>`;
+    });
+
+    container.innerHTML = items.join('');
+    // Make sure it isn't collapsed by accidental styling
+    container.style.display = 'block';
 }
 
 
