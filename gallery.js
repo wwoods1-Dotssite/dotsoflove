@@ -45,7 +45,7 @@ function createImageCarousel(images, petName) {
         <div class="image-carousel">
             <div class="carousel-container">
                 ${images.map((img, index) => `
-                    <img src="${API_BASE}${img.url}" 
+                    <img src="${img.url}" 
                          alt="${petName}" 
                          class="carousel-image ${index === 0 ? 'active' : ''}"
                          data-index="${index}">
@@ -65,7 +65,7 @@ function createImageCarousel(images, petName) {
 
 // Create single image HTML
 function createSingleImage(image, petName) {
-    return `<img src="${API_BASE}${image.url}" alt="${petName}" class="single-image">`;
+    return `<img src="${image.url}" alt="${petName}" class="single-image">`;
 }
 
 // Create no image placeholder
