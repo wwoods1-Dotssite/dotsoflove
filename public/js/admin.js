@@ -274,42 +274,50 @@ window.openEditStoryModal = function(pet) {
     document.body.style.overflow = 'hidden';
 };
 
-// NEW: Display current photos in edit modal
+// Display existing photos with "Remove" checkboxes in the edit modal
 function displayCurrentPhotos(images) {
-    const currentPhotosSection = document.getElementById('currentPhotosSection');
-    const currentPhotosList = document.getElementById('currentPhotosList');
-    
-    if (images && images.length > 0) {
-        currentPhotosSection.style.display = 'block';
-        currentPhotosList.innerHTML = images.map(img => `
-            <div style="position: relative;">
-                <img src="${img.url}" 
-                     alt="Current photo" 
-                     style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;">
-                ${img.isPrimary ? 
-                    '<div style="position: absolute; top: -5px; right: -5px; background: #ffd700; color: #333; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">★</div>' : 
-                    ''
-                }
-            </div>
-        `).join('');
-    } else {
-        currentPhotosSection.style.display = 'none';
+    const container = document.getElementById('editCurrentPhotos');
+    if (!container) return;
+
+    // No images
+    if (!images || images.length === 0) {
+        container.innerHTML = '<div style="color:#666;">No current photos.</div>';
+        return;
     }
+
+    // Render thumbnails + remove checkboxes
+    container.innerHTML = images.map(img => `
+        <label style="display:block;border:1px solid #eee;border-radius:8px;padding:.5rem;margin-bottom:.5rem;">
+            <img src="${img.url}" alt="Current photo"
+                 style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:.4rem;">
+            <div style="display:flex;align-items:center;gap:.5rem;">
+                <input type="checkbox" name="remove[]" value="${img.url}">
+                <span style="font-size:.9rem;color:#333;">Remove this photo</span>
+                ${img.isPrimary ? '<span style="margin-left:auto;font-size:.8rem;background:#ffd700;color:#333;padding:0 .4rem;border-radius:10px;">Primary</span>' : ''}
+            </div>
+        </label>
+    `).join('');
 }
+
 
 // Close edit story modal
 window.closeEditStoryModal = function() {
     const modal = document.getElementById('editStoryModal');
     modal.style.display = 'none';
     document.body.style.overflow = 'auto';
-    
+
     // Clear form
     document.getElementById('editStoryForm').reset();
     document.getElementById('editFilePreview').innerHTML = '';
-    document.getElementById('currentPhotosSection').style.display = 'none';
+    // OLD: document.getElementById('currentPhotosSection').style.display = 'none';
+    // NEW:
+    const container = document.getElementById('editCurrentPhotos');
+    if (container) container.innerHTML = '<small>Check any photos you want to remove.</small>';
+
     Utils.hideMessage('editStorySuccess');
     Utils.hideMessage('editStoryError');
 };
+
 
 // UPDATED: Handle edit story form submission with photo uploads
 async function handleEditStorySubmission(e) {
