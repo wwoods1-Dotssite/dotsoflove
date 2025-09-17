@@ -274,57 +274,65 @@ window.openEditStoryModal = function(pet) {
     document.body.style.overflow = 'hidden';
 };
 
+// NEW: Display current photos in edit modal
 // Display existing photos with "Remove" checkboxes in the edit modal
 function displayCurrentPhotos(images) {
-    const container = document.getElementById('editCurrentPhotos');
-    if (!container) return;
+  const container = document.getElementById('editCurrentPhotos');
+  if (!container) return;
 
-    console.log('[Edit Modal] images received:', images);
+  if (!Array.isArray(images) || images.length === 0) {
+    container.innerHTML = '<div style="color:#666;">No current photos.</div>';
+    return;
+  }
 
-    if (!Array.isArray(images) || images.length === 0) {
-        container.innerHTML = '<div style="color:#666;">No current photos.</div>';
-        return;
-    }
-
-    // Normalize each image to have a .url we can render
-    const items = images.map((img, idx) => {
-        const url = img.url || img.image_url || ''; // <- handle both shapes
-        return `
-        <label style="display:block;border:1px solid #eee;border-radius:8px;padding:.5rem;margin-bottom:.5rem;">
-            <img src="${url}" alt="Current photo ${idx + 1}"
-                 style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:.4rem;">
-            <div style="display:flex;align-items:center;gap:.5rem;">
-                <input type="checkbox" name="remove[]" value="${url}">
-                <span style="font-size:.9rem;color:#333;">Remove this photo</span>
-                ${(img.isPrimary || img.is_primary) ? '<span style="margin-left:auto;font-size:.8rem;background:#ffd700;color:#333;padding:0 .4rem;border-radius:10px;">Primary</span>' : ''}
-            </div>
-        </label>`;
-    });
-
-    container.innerHTML = items.join('');
-    // Make sure it isn't collapsed by accidental styling
-    container.style.display = 'block';
+  container.innerHTML = images.map((img, idx) => {
+    const url = img.url || img.image_url || '';
+    const primary = (img.isPrimary || img.is_primary) ? `
+      <span style="margin-left:auto;font-size:.8rem;background:#ffd700;color:#333;padding:0 .4rem;border-radius:10px;">
+        Primary
+      </span>` : '';
+    return `
+      <label style="display:block;border:1px solid #eee;border-radius:8px;padding:.5rem;">
+        <img src="${url}" alt="Current photo ${idx + 1}"
+             style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:.4rem;">
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <input type="checkbox" name="remove[]" value="${url}">
+          <span style="font-size:.9rem;color:#333;">Remove this photo</span>
+          ${primary}
+        </div>
+      </label>`;
+  }).join('');
 }
-
+" 
+                     alt="Current photo" 
+                     style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;">
+                ${img.isPrimary ? 
+                    '<div style="position: absolute; top: -5px; right: -5px; background: #ffd700; color: #333; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">★</div>' : 
+                    ''
+                }
+            </div>
+        `).join('');
+    } else {
+        currentPhotosSection.style.display = 'none';
+    }
+}
 
 // Close edit story modal
 window.closeEditStoryModal = function() {
     const modal = document.getElementById('editStoryModal');
     modal.style.display = 'none';
     document.body.style.overflow = 'auto';
-
+    
     // Clear form
     document.getElementById('editStoryForm').reset();
     document.getElementById('editFilePreview').innerHTML = '';
-    // OLD: document.getElementById('currentPhotosSection').style.display = 'none';
-    // NEW:
-    const container = document.getElementById('editCurrentPhotos');
-    if (container) container.innerHTML = '<small>Check any photos you want to remove.</small>';
-
+    document.getElementById('currentPhotosSection').style.display = 'none';
     Utils.hideMessage('editStorySuccess');
     Utils.hideMessage('editStoryError');
-};
 
+  const _c = document.getElementById('editCurrentPhotos'); if (_c) _c.innerHTML = '';
+  const _p = document.getElementById('editFilePreview'); if (_p) _p.innerHTML = '';
+};
 
 // UPDATED: Handle edit story form submission with photo uploads
 async function handleEditStorySubmission(e) {
@@ -351,9 +359,6 @@ async function handleEditStorySubmission(e) {
         formData.append('serviceDate', serviceDate);
         formData.append('storyDescription', storyDescription);
         formData.append('isDorothyPet', isDorothyPet);
-        
-        // Removals (checkboxes)
-        document.querySelectorAll('input[name="remove[]"]:checked').forEach(cb => formData.append('remove[]', cb.value));
         
         // Add new images if any
         for (let i = 0; i < newImages.length; i++) {

@@ -346,22 +346,7 @@ window.openEditStoryModal = function(pet) {
     Utils.hideMessage('editStorySuccess');
     Utils.hideMessage('editStoryError');
     
-    
-    // Render current images with remove checkboxes
-    const container = document.getElementById('editCurrentPhotos');
-    if (container) {
-        const imgs = Array.isArray(pet.images) ? pet.images : [];
-        container.innerHTML = imgs.length ? imgs.map(img => `
-            <label style="display:block;border:1px solid #eee;border-radius:8px;padding:.5rem">
-              <img src="${img.url}" alt="${pet.pet_name || ''}" style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:.4rem;">
-              <div style="display:flex;align-items:center;gap:.5rem;">
-                <input type="checkbox" name="remove[]" value="${img.url}">
-                <span style="font-size:.9rem;color:#333;">Remove this photo</span>
-              </div>
-            </label>
-        `).join('') : '<div style="color:#666">No current photos.</div>';
-    }
-// Show modal
+    // Show modal
     const modal = document.getElementById('editStoryModal');
     modal.style.display = 'block';
     document.body.style.overflow = 'hidden';
@@ -380,7 +365,50 @@ window.closeEditStoryModal = function() {
 };
 
 // Handle edit story form submission
-
+async function handleEditStorySubmission(e) {
+    e.preventDefault();
+    
+    const petId = document.getElementById('editPetId').value;
+    const petName = document.getElementById('editPetName').value.trim();
+    const serviceDate = document.getElementById('editServiceDate').value.trim();
+    const storyDescription = document.getElementById('editStoryDescription').value.trim();
+    const isDorothyPet = document.getElementById('editIsDorothyPet').checked;
+    
+    if (!petName) {
+        Utils.showError('editStoryError', 'Pet name is required.');
+        return;
+    }
+    
+    try {
+        console.log(`📝 Updating pet ${petId} with new data...`);
+        
+        const result = await API.gallery.update(petId, {
+            petName: petName,
+            serviceDate: serviceDate,
+            storyDescription: storyDescription,
+            isDorothyPet: isDorothyPet
+        });
+        
+        if (result.success) {
+            Utils.showSuccess('editStorySuccess', 'Pet story updated successfully!');
+            Utils.hideMessage('editStoryError');
+            
+            // Refresh the galleries
+            setTimeout(() => {
+                closeEditStoryModal();
+                loadDualGallery(); // Refresh public gallery
+                if (window.loadAdminGallery) loadAdminGallery(); // Refresh admin gallery if open
+            }, 1500);
+            
+        } else {
+            Utils.showError('editStoryError', result.error || 'Failed to update pet story');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error updating pet story:', error);
+        Utils.showError('editStoryError', 'Failed to update pet story. Please try again.');
+    }
+}
 
 // Check admin authentication
 function checkAdminAuth() {

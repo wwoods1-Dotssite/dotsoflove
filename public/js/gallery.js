@@ -1,4 +1,3 @@
-
 // js/gallery.js - Gallery and modal functionality
 
 // Global variables for image carousel
