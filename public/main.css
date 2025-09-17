@@ -1,0 +1,537 @@
+/* Mobile Responsiveness Fixes for Dot's of Love Pet Sitting */
+
+/* 1. Fix viewport and base mobile styles */
+@media (max-width: 768px) {
+    /* Ensure proper touch targets and font sizes */
+    html {
+        font-size: 16px; /* Prevent zoom on iOS */
+        -webkit-text-size-adjust: 100%;
+    }
+    
+    body {
+        font-size: 1rem;
+        line-height: 1.5;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .container {
+        padding: 0 15px; /* Reduce side padding on mobile */
+    }
+}
+
+/* 2. Fix navigation for mobile */
+@media (max-width: 768px) {
+    nav {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem 0;
+    }
+    
+    .logo {
+        font-size: 1.4rem;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.3rem;
+        width: 100%;
+    }
+    
+    .nav-links a {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        min-width: auto;
+    }
+    
+    /* Ensure admin link is visible */
+    .admin-link {
+        background: linear-gradient(45deg, #667eea, #764ba2) !important;
+        color: white !important;
+    }
+}
+
+/* 3. Fix hero section for mobile */
+@media (max-width: 768px) {
+    .hero {
+        padding: 2rem 0;
+        text-align: center;
+    }
+    
+    .hero h1 {
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+        line-height: 1.2;
+    }
+    
+    .hero p {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 0 1rem;
+    }
+}
+
+/* 4. Fix cards and layout on mobile */
+@media (max-width: 768px) {
+    .card {
+        margin: 1rem 0;
+        padding: 1.5rem;
+        border-radius: 15px;
+    }
+    
+    .profile-section {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        text-align: center;
+    }
+    
+    .profile-image {
+        height: 200px;
+        font-size: 2.5rem;
+        margin: 0 auto;
+        max-width: 250px;
+    }
+}
+
+/* 5. Fix services grid for mobile */
+@media (max-width: 768px) {
+    .services-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+    
+    .service-item {
+        padding: 1.2rem;
+        text-align: center;
+    }
+    
+    .service-item h3 {
+        font-size: 1.2rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    .featured-service {
+        grid-column: 1; /* Remove spanning on mobile */
+        transform: none; /* Remove hover transforms that can cause issues */
+    }
+    
+    .featured-service::before {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.8rem;
+    }
+}
+
+/* 6. Fix gallery for mobile */
+@media (max-width: 768px) {
+    .gallery-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .gallery-item {
+        grid-template-columns: 1fr;
+        border-radius: 12px;
+    }
+    
+    .gallery-image {
+        width: 100%;
+        height: 200px;
+        border-radius: 12px 12px 0 0;
+    }
+    
+    .gallery-content {
+        padding: 1.2rem;
+    }
+    
+    .pet-name {
+        font-size: 1.3rem;
+    }
+    
+    .pet-story {
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    
+    .image-count {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+    }
+}
+
+/* 7. Fix rates grid for mobile */
+@media (max-width: 768px) {
+    .rates-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+    
+    .rate-card {
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .rate-title {
+        font-size: 1.2rem;
+    }
+    
+    .rate-price {
+        font-size: 2rem;
+    }
+    
+    .featured-rate {
+        transform: none; /* Remove scale transform on mobile */
+    }
+}
+
+/* 8. Fix forms for mobile */
+@media (max-width: 768px) {
+    .contact-form {
+        padding: 0;
+    }
+    
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 0.8rem;
+        font-size: 1rem;
+        border-radius: 8px;
+    }
+    
+    .btn {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1rem;
+        border-radius: 8px;
+    }
+    
+    /* Fix date picker container */
+    .date-picker-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .form-group input[type="date"] {
+        padding: 0.8rem !important;
+        font-size: 1rem !important;
+        -webkit-appearance: none;
+        -moz-appearance: textfield;
+    }
+}
+
+/* 9. Fix modals for mobile */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 5% auto;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .modal-image-container {
+        height: 50vh;
+    }
+    
+    .modal-details {
+        padding: 1rem;
+    }
+    
+    .modal-pet-name {
+        font-size: 1.4rem;
+    }
+    
+    .modal-pet-story {
+        font-size: 1rem;
+    }
+    
+    .close {
+        top: 10px;
+        right: 15px;
+        font-size: 25px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    /* Carousel controls */
+    .carousel-prev,
+    .carousel-next {
+        padding: 0.5rem;
+        font-size: 1.2rem;
+    }
+    
+    .carousel-prev {
+        left: 10px;
+    }
+    
+    .carousel-next {
+        right: 10px;
+    }
+    
+    .carousel-dots {
+        bottom: 15px;
+    }
+    
+    .dot {
+        width: 10px;
+        height: 10px;
+    }
+}
+
+/* 10. Fix admin panel for mobile */
+@media (max-width: 768px) {
+    .admin-panel {
+        padding: 0;
+    }
+    
+    .admin-tabs {
+        flex-direction: column;
+        margin-bottom: 1rem;
+        padding: 0.3rem;
+    }
+    
+    .admin-tab {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .admin-form {
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .admin-gallery-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .admin-gallery-item {
+        padding: 1rem;
+    }
+    
+    /* Fix tables on mobile */
+    .contacts-table,
+    .admin-rates-grid {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .contacts-table table,
+    .admin-rates-grid table {
+        min-width: 600px;
+        font-size: 0.85rem;
+    }
+    
+    .contacts-table th,
+    .contacts-table td,
+    .admin-rates-grid th,
+    .admin-rates-grid td {
+        padding: 0.5rem;
+    }
+    
+    .auth-form {
+        margin: 2rem auto;
+        padding: 1.5rem;
+        max-width: 350px;
+    }
+}
+
+/* 11. Fix testimonials for mobile */
+@media (max-width: 768px) {
+    .testimonials {
+        gap: 1rem;
+    }
+    
+    .testimonial {
+        padding: 1rem;
+        border-radius: 12px;
+    }
+    
+    .testimonial-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .rating {
+        font-size: 1rem;
+    }
+}
+
+/* 12. Fix edit story modal for mobile */
+@media (max-width: 768px) {
+    #editStoryModal .modal-content {
+        width: 95% !important;
+        max-width: 95% !important;
+        margin: 5% auto !important;
+        max-height: 90vh;
+    }
+    
+    #editStoryModal .close {
+        top: 5px;
+        right: 10px;
+        font-size: 20px;
+        width: 30px;
+        height: 30px;
+    }
+    
+    #currentPhotosList {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    #editCurrentPhotos {
+        padding: 0.8rem;
+    }
+    
+    .file-upload-btn {
+        padding: 0.6rem 1.5rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    #editStoryModal .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    #editStoryModal .btn {
+        min-width: 100px;
+        padding: 0.7rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* 13. Fix text sizing and readability */
+@media (max-width: 768px) {
+    h1 { font-size: 1.8rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.3rem; }
+    
+    p, li {
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    
+    /* Ensure buttons are touch-friendly */
+    button, .btn, input[type="submit"] {
+        min-height: 44px;
+        min-width: 44px;
+        touch-action: manipulation;
+    }
+    
+    /* Fix hover states that can cause issues on touch */
+    .gallery-item:hover {
+        transform: none;
+    }
+    
+    .service-item:hover {
+        transform: none;
+    }
+    
+    .card:hover {
+        transform: none;
+    }
+}
+
+/* 14. Additional mobile-specific fixes */
+@media (max-width: 480px) {
+    /* Extra small screens */
+    .container {
+        padding: 0 10px;
+    }
+    
+    .nav-links {
+        gap: 0.2rem;
+    }
+    
+    .nav-links a {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .hero h1 {
+        font-size: 1.6rem;
+    }
+    
+    .card {
+        padding: 1rem;
+    }
+    
+    .gallery-image {
+        height: 180px;
+    }
+    
+    .modal-content {
+        width: 98%;
+        margin: 1% auto;
+    }
+    
+    .modal-image-container {
+        height: 40vh;
+    }
+}
+
+/* 15. Landscape orientation fixes */
+@media (max-width: 768px) and (orientation: landscape) {
+    .hero {
+        padding: 1.5rem 0;
+    }
+    
+    .hero h1 {
+        font-size: 1.6rem;
+    }
+    
+    .modal-image-container {
+        height: 70vh;
+    }
+    
+    .gallery-image {
+        height: 180px;
+    }
+}
+
+/* 16. Fix any remaining overflow issues */
+@media (max-width: 768px) {
+    * {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .page {
+        min-height: auto;
+        padding: 1rem 0;
+    }
+    
+    /* Prevent horizontal scrolling */
+    body, html {
+        overflow-x: hidden;
+        width: 100%;
+    }
+    
+    /* Fix any elements that might cause horizontal scroll */
+    .modal-content,
+    .card,
+    .gallery-item,
+    .service-item,
+    .rate-card {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+}
