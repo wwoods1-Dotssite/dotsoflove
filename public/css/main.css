@@ -1,4 +1,350 @@
-/* Mobile Responsiveness Fixes for Dot's of Love Pet Sitting */
+/* css/main.css - Core styles and layout */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header and Navigation */
+header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 1rem 0;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #667eea;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo::before {
+    content: '🐾';
+    font-size: 2rem;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+}
+
+.nav-links a:hover, .nav-links a.active {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.admin-link {
+    background: linear-gradient(45deg, #667eea, #764ba2) !important;
+    color: white !important;
+}
+
+/* Page Layout */
+.page {
+    display: none;
+    padding: 2rem 0;
+    min-height: calc(100vh - 80px);
+}
+
+.page.active {
+    display: block;
+}
+
+/* Hero Section */
+.hero {
+    text-align: center;
+    padding: 4rem 0;
+    color: white;
+}
+
+.hero h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Card Components */
+.card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* Profile Section */
+.profile-section {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    align-items: center;
+}
+
+.profile-image {
+    width: 100%;
+    height: 300px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+/* Button Styles */
+.btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-block;
+    text-decoration: none;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #6c757d;
+}
+
+.btn-success {
+    background: #28a745;
+}
+
+.btn-danger {
+    background: #dc3545;
+}
+
+/* Message Styles */
+.success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+    display: none;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+    display: none;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+/* Testimonials */
+.testimonials {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.testimonial {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 1.5rem;
+    border-radius: 15px;
+    border-left: 5px solid #667eea;
+}
+
+.testimonial-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.customer-name {
+    font-weight: bold;
+    color: #667eea;
+}
+
+.rating {
+    color: #ffd700;
+    font-size: 1.2rem;
+}
+
+.contact-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Date picker specific styles */
+.date-picker-container {
+    background: rgba(102, 126, 234, 0.1);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    margin: 1rem 0;
+}
+
+.date-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.date-input-group label {
+    font-weight: bold;
+    color: #667eea !important;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+}
+
+/* CRITICAL: Force date inputs to show as date pickers */
+.form-group input[type="date"] {
+    background: white !important;
+    color: #333 !important;
+    font-family: inherit !important;
+    font-size: 1rem !important;
+    padding: 1rem !important;
+    cursor: pointer !important;
+    border: 2px solid #667eea !important;
+    border-radius: 8px !important;
+    
+    /* Remove any appearance overrides that might hide the date picker */
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+    appearance: none;
+    
+    /* Show the calendar icon */
+    background-image: none;
+}
+
+/* Style the calendar picker icon */
+.form-group input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer !important;
+    padding: 0.3rem;
+    border-radius: 3px;
+    background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23667eea'%3e%3cpath fill-rule='evenodd' d='M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z' clip-rule='evenodd'/%3e%3c/svg%3e") no-repeat;
+    background-size: 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    opacity: 1;
+}
+
+/* Reset any conflicting styles that might interfere */
+.form-group input[type="date"]::-webkit-input-placeholder {
+    color: #999;
+}
+
+.form-group input[type="date"]:focus {
+    outline: none !important;
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+}
+
+/* Two column layout for date inputs on larger screens */
+@media (min-width: 768px) {
+    .date-picker-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    
+    .date-input-group {
+        margin-bottom: 0;
+    }
+}
+
+/* ========== MOBILE RESPONSIVENESS FIXES ========== */
 
 /* 1. Fix viewport and base mobile styles */
 @media (max-width: 768px) {
@@ -97,99 +443,7 @@
     }
 }
 
-/* 5. Fix services grid for mobile */
-@media (max-width: 768px) {
-    .services-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-        margin: 1.5rem 0;
-    }
-    
-    .service-item {
-        padding: 1.2rem;
-        text-align: center;
-    }
-    
-    .service-item h3 {
-        font-size: 1.2rem;
-        margin-bottom: 0.8rem;
-    }
-    
-    .featured-service {
-        grid-column: 1; /* Remove spanning on mobile */
-        transform: none; /* Remove hover transforms that can cause issues */
-    }
-    
-    .featured-service::before {
-        font-size: 0.7rem;
-        padding: 0.2rem 0.8rem;
-    }
-}
-
-/* 6. Fix gallery for mobile */
-@media (max-width: 768px) {
-    .gallery-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-    
-    .gallery-item {
-        grid-template-columns: 1fr;
-        border-radius: 12px;
-    }
-    
-    .gallery-image {
-        width: 100%;
-        height: 200px;
-        border-radius: 12px 12px 0 0;
-    }
-    
-    .gallery-content {
-        padding: 1.2rem;
-    }
-    
-    .pet-name {
-        font-size: 1.3rem;
-    }
-    
-    .pet-story {
-        font-size: 0.95rem;
-        line-height: 1.5;
-    }
-    
-    .image-count {
-        font-size: 0.75rem;
-        padding: 0.2rem 0.5rem;
-    }
-}
-
-/* 7. Fix rates grid for mobile */
-@media (max-width: 768px) {
-    .rates-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-        margin: 1.5rem 0;
-    }
-    
-    .rate-card {
-        padding: 1.5rem;
-        text-align: center;
-    }
-    
-    .rate-title {
-        font-size: 1.2rem;
-    }
-    
-    .rate-price {
-        font-size: 2rem;
-    }
-    
-    .featured-rate {
-        transform: none; /* Remove scale transform on mobile */
-    }
-}
-
-/* 8. Fix forms for mobile */
+/* 5. Fix forms for mobile */
 @media (max-width: 768px) {
     .contact-form {
         padding: 0;
@@ -229,127 +483,7 @@
     }
 }
 
-/* 9. Fix modals for mobile */
-@media (max-width: 768px) {
-    .modal-content {
-        width: 95%;
-        margin: 5% auto;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-    
-    .modal-image-container {
-        height: 50vh;
-    }
-    
-    .modal-details {
-        padding: 1rem;
-    }
-    
-    .modal-pet-name {
-        font-size: 1.4rem;
-    }
-    
-    .modal-pet-story {
-        font-size: 1rem;
-    }
-    
-    .close {
-        top: 10px;
-        right: 15px;
-        font-size: 25px;
-        width: 40px;
-        height: 40px;
-    }
-    
-    /* Carousel controls */
-    .carousel-prev,
-    .carousel-next {
-        padding: 0.5rem;
-        font-size: 1.2rem;
-    }
-    
-    .carousel-prev {
-        left: 10px;
-    }
-    
-    .carousel-next {
-        right: 10px;
-    }
-    
-    .carousel-dots {
-        bottom: 15px;
-    }
-    
-    .dot {
-        width: 10px;
-        height: 10px;
-    }
-}
-
-/* 10. Fix admin panel for mobile */
-@media (max-width: 768px) {
-    .admin-panel {
-        padding: 0;
-    }
-    
-    .admin-tabs {
-        flex-direction: column;
-        margin-bottom: 1rem;
-        padding: 0.3rem;
-    }
-    
-    .admin-tab {
-        padding: 0.8rem;
-        font-size: 0.9rem;
-    }
-    
-    .admin-form {
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-    
-    .admin-gallery-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .admin-gallery-item {
-        padding: 1rem;
-    }
-    
-    /* Fix tables on mobile */
-    .contacts-table,
-    .admin-rates-grid {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    .contacts-table table,
-    .admin-rates-grid table {
-        min-width: 600px;
-        font-size: 0.85rem;
-    }
-    
-    .contacts-table th,
-    .contacts-table td,
-    .admin-rates-grid th,
-    .admin-rates-grid td {
-        padding: 0.5rem;
-    }
-    
-    .auth-form {
-        margin: 2rem auto;
-        padding: 1.5rem;
-        max-width: 350px;
-    }
-}
-
-/* 11. Fix testimonials for mobile */
+/* 6. Fix testimonials for mobile */
 @media (max-width: 768px) {
     .testimonials {
         gap: 1rem;
@@ -371,49 +505,7 @@
     }
 }
 
-/* 12. Fix edit story modal for mobile */
-@media (max-width: 768px) {
-    #editStoryModal .modal-content {
-        width: 95% !important;
-        max-width: 95% !important;
-        margin: 5% auto !important;
-        max-height: 90vh;
-    }
-    
-    #editStoryModal .close {
-        top: 5px;
-        right: 10px;
-        font-size: 20px;
-        width: 30px;
-        height: 30px;
-    }
-    
-    #currentPhotosList {
-        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-        gap: 0.5rem;
-    }
-    
-    #editCurrentPhotos {
-        padding: 0.8rem;
-    }
-    
-    .file-upload-btn {
-        padding: 0.6rem 1.5rem !important;
-        font-size: 0.9rem !important;
-    }
-    
-    #editStoryModal .form-group {
-        margin-bottom: 1rem;
-    }
-    
-    #editStoryModal .btn {
-        min-width: 100px;
-        padding: 0.7rem 1rem;
-        font-size: 0.9rem;
-    }
-}
-
-/* 13. Fix text sizing and readability */
+/* 7. Fix text sizing and readability */
 @media (max-width: 768px) {
     h1 { font-size: 1.8rem; }
     h2 { font-size: 1.5rem; }
@@ -430,22 +522,9 @@
         min-width: 44px;
         touch-action: manipulation;
     }
-    
-    /* Fix hover states that can cause issues on touch */
-    .gallery-item:hover {
-        transform: none;
-    }
-    
-    .service-item:hover {
-        transform: none;
-    }
-    
-    .card:hover {
-        transform: none;
-    }
 }
 
-/* 14. Additional mobile-specific fixes */
+/* 8. Additional mobile-specific fixes */
 @media (max-width: 480px) {
     /* Extra small screens */
     .container {
@@ -468,22 +547,9 @@
     .card {
         padding: 1rem;
     }
-    
-    .gallery-image {
-        height: 180px;
-    }
-    
-    .modal-content {
-        width: 98%;
-        margin: 1% auto;
-    }
-    
-    .modal-image-container {
-        height: 40vh;
-    }
 }
 
-/* 15. Landscape orientation fixes */
+/* 9. Landscape orientation fixes */
 @media (max-width: 768px) and (orientation: landscape) {
     .hero {
         padding: 1.5rem 0;
@@ -492,17 +558,9 @@
     .hero h1 {
         font-size: 1.6rem;
     }
-    
-    .modal-image-container {
-        height: 70vh;
-    }
-    
-    .gallery-image {
-        height: 180px;
-    }
 }
 
-/* 16. Fix any remaining overflow issues */
+/* 10. Fix any remaining overflow issues */
 @media (max-width: 768px) {
     * {
         word-wrap: break-word;
@@ -526,11 +584,7 @@
     }
     
     /* Fix any elements that might cause horizontal scroll */
-    .modal-content,
-    .card,
-    .gallery-item,
-    .service-item,
-    .rate-card {
+    .card {
         max-width: 100%;
         box-sizing: border-box;
     }
