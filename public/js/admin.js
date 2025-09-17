@@ -31,36 +31,88 @@ function initializeAdminPanel() {
         petImages.addEventListener('change', handleFilePreview);
     }
 
-    // NEW: File upload preview for edit pet form
+    // File upload preview for edit pet form
     const editPetImages = document.getElementById('editPetImages');
     if (editPetImages) {
         editPetImages.addEventListener('change', handleEditFilePreview);
     }
 }
 
-// Handle admin login
+// Handle admin login with enhanced debugging
 async function handleAdminLogin(e) {
     e.preventDefault();
     
     const username = document.getElementById('adminUsername').value;
     const password = document.getElementById('adminPassword').value;
     
+    console.log('🔐 Attempting admin login with username:', username);
+    console.log('🌐 API_BASE:', API_BASE);
+    
     try {
-        await API.auth.login(username, password);
-        Utils.hideMessage('authError');
+        // Show loading state
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Logging in...';
+        submitBtn.disabled = true;
         
-        // Show admin panel
-        document.getElementById('adminAuth').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'block';
-        resetSessionTimeout();
+        const response = await fetch(`${API_BASE}/api/admin/auth`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        });
         
-        // Load admin content
-        loadAdminGallery();
-        loadAdminRates();
-        loadAdminContacts();
+        console.log('📡 Login response status:', response.status);
+        console.log('📡 Login response ok:', response.ok);
+        
+        const data = await response.json();
+        console.log('📡 Login response data:', data);
+        
+        if (response.ok && data.success) {
+            // Store token
+            adminToken = data.token;
+            localStorage.setItem('adminToken', adminToken);
+            console.log('✅ Admin token stored:', adminToken ? 'Yes' : 'No');
+            
+            Utils.hideMessage('authError');
+            
+            // Show admin panel
+            document.getElementById('adminAuth').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            resetSessionTimeout();
+            
+            console.log('🎯 Admin panel should now be visible');
+            
+            // Load admin content
+            loadAdminGallery();
+            loadAdminRates();
+            loadAdminContacts();
+            
+        } else {
+            throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        // Reset button
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
         
     } catch (error) {
-        Utils.showError('authError', error.message || 'Login failed. Please try again.');
+        console.error('❌ Admin login error:', error);
+        console.error('❌ Error details:', {
+            message: error.message,
+            stack: error.stack
+        });
+        
+        Utils.showError('authError', error.message || 'Login failed. Please check credentials and try again.');
+        
+        // Reset button
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.textContent = 'Login';
+            submitBtn.disabled = false;
+        }
     }
 }
 
@@ -208,7 +260,7 @@ function handleFilePreview() {
     }
 }
 
-// NEW: Handle file preview for edit pet form
+// Handle file preview for edit pet form
 function handleEditFilePreview() {
     const preview = document.getElementById('editFilePreview');
     const files = this.files;
@@ -246,7 +298,7 @@ window.deletePet = async function(petId) {
 
 // ========== EDIT STORY AND PHOTOS FUNCTIONALITY ==========
 
-// UPDATED: Open edit story modal with photo support
+// Open edit story modal with photo support
 window.openEditStoryModal = function(pet) {
     console.log('📝 Opening edit modal for pet:', pet);
     
@@ -258,10 +310,12 @@ window.openEditStoryModal = function(pet) {
     document.getElementById('editIsDorothyPet').checked = Boolean(pet.is_dorothy_pet);
     
     // Clear file input and preview
-    document.getElementById('editPetImages').value = '';
-    document.getElementById('editFilePreview').innerHTML = '';
+    const editPetImages = document.getElementById('editPetImages');
+    const editFilePreview = document.getElementById('editFilePreview');
+    if (editPetImages) editPetImages.value = '';
+    if (editFilePreview) editFilePreview.innerHTML = '';
     
-    // NEW: Display current photos
+    // Display current photos
     displayCurrentPhotos(pet.images || []);
     
     // Clear any previous messages
@@ -274,47 +328,38 @@ window.openEditStoryModal = function(pet) {
     document.body.style.overflow = 'hidden';
 };
 
-// NEW: Display current photos in edit modal
 // Display existing photos with "Remove" checkboxes in the edit modal
 function displayCurrentPhotos(images) {
-  const container = document.getElementById('editCurrentPhotos');
-  if (!container) return;
+    const container = document.getElementById('editCurrentPhotos');
+    if (!container) return;
 
-  if (!Array.isArray(images) || images.length === 0) {
-    container.innerHTML = '<div style="color:#666;">No current photos.</div>';
-    return;
-  }
+    console.log('[Edit Modal] images received:', images);
 
-  container.innerHTML = images.map((img, idx) => {
-    const url = img.url || img.image_url || '';
-    const primary = (img.isPrimary || img.is_primary) ? `
-      <span style="margin-left:auto;font-size:.8rem;background:#ffd700;color:#333;padding:0 .4rem;border-radius:10px;">
-        Primary
-      </span>` : '';
-    return `
-      <label style="display:block;border:1px solid #eee;border-radius:8px;padding:.5rem;">
-        <img src="${url}" alt="Current photo ${idx + 1}"
-             style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:.4rem;">
-        <div style="display:flex;align-items:center;gap:.5rem;">
-          <input type="checkbox" name="remove[]" value="${url}">
-          <span style="font-size:.9rem;color:#333;">Remove this photo</span>
-          ${primary}
-        </div>
-      </label>`;
-  }).join('');
-}
-" 
-                     alt="Current photo" 
-                     style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;">
-                ${img.isPrimary ? 
-                    '<div style="position: absolute; top: -5px; right: -5px; background: #ffd700; color: #333; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">★</div>' : 
-                    ''
-                }
-            </div>
-        `).join('');
-    } else {
-        currentPhotosSection.style.display = 'none';
+    if (!Array.isArray(images) || images.length === 0) {
+        container.innerHTML = '<div style="color:#666;">No current photos.</div>';
+        return;
     }
+
+    // Create photo grid with remove checkboxes
+    const items = images.map((img, idx) => {
+        const url = img.url || img.image_url || '';
+        const isPrimary = img.isPrimary || img.is_primary;
+        
+        return `
+            <label style="display:block;border:1px solid #eee;border-radius:8px;padding:.5rem;margin-bottom:.5rem;">
+                <img src="${url}" alt="Current photo ${idx + 1}"
+                     style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:.4rem;">
+                <div style="display:flex;align-items:center;gap:.5rem;">
+                    <input type="checkbox" name="remove[]" value="${url}">
+                    <span style="font-size:.9rem;color:#333;">Remove this photo</span>
+                    ${isPrimary ? '<span style="margin-left:auto;font-size:.8rem;background:#ffd700;color:#333;padding:0 .4rem;border-radius:10px;">Primary</span>' : ''}
+                </div>
+            </label>
+        `;
+    });
+
+    container.innerHTML = items.join('');
+    container.style.display = 'block';
 }
 
 // Close edit story modal
@@ -322,19 +367,20 @@ window.closeEditStoryModal = function() {
     const modal = document.getElementById('editStoryModal');
     modal.style.display = 'none';
     document.body.style.overflow = 'auto';
-    
+
     // Clear form
     document.getElementById('editStoryForm').reset();
-    document.getElementById('editFilePreview').innerHTML = '';
-    document.getElementById('currentPhotosSection').style.display = 'none';
+    const editFilePreview = document.getElementById('editFilePreview');
+    const editCurrentPhotos = document.getElementById('editCurrentPhotos');
+    
+    if (editFilePreview) editFilePreview.innerHTML = '';
+    if (editCurrentPhotos) editCurrentPhotos.innerHTML = '';
+
     Utils.hideMessage('editStorySuccess');
     Utils.hideMessage('editStoryError');
-
-  const _c = document.getElementById('editCurrentPhotos'); if (_c) _c.innerHTML = '';
-  const _p = document.getElementById('editFilePreview'); if (_p) _p.innerHTML = '';
 };
 
-// UPDATED: Handle edit story form submission with photo uploads
+// Handle edit story form submission with photo uploads
 async function handleEditStorySubmission(e) {
     e.preventDefault();
     
@@ -343,7 +389,7 @@ async function handleEditStorySubmission(e) {
     const serviceDate = document.getElementById('editServiceDate').value.trim();
     const storyDescription = document.getElementById('editStoryDescription').value.trim();
     const isDorothyPet = document.getElementById('editIsDorothyPet').checked;
-    const newImages = document.getElementById('editPetImages').files;
+    const newImages = document.getElementById('editPetImages')?.files || [];
     
     if (!petName) {
         Utils.showError('editStoryError', 'Pet name is required.');
@@ -360,16 +406,19 @@ async function handleEditStorySubmission(e) {
         formData.append('storyDescription', storyDescription);
         formData.append('isDorothyPet', isDorothyPet);
         
+        // Handle removals (checkboxes)
+        const removeCheckboxes = document.querySelectorAll('input[name="remove[]"]:checked');
+        removeCheckboxes.forEach(cb => formData.append('remove[]', cb.value));
+        
         // Add new images if any
         for (let i = 0; i < newImages.length; i++) {
             formData.append('images', newImages[i]);
         }
         
-        // Use the new API endpoint that handles both data and files
+        // Use the API endpoint that handles both data and files
         const response = await API.authRequest(`/api/admin/gallery/${petId}/update-with-photos`, {
             method: 'PUT',
             body: formData
-            // Don't set Content-Type header - let the browser set it for FormData
         });
         
         const result = await response.json();
@@ -500,7 +549,7 @@ window.setFeaturedService = async function(rateId) {
         if (result.success) {
             console.log('✅ Featured service updated successfully');
             
-            // CRITICAL: Refresh ALL the UI components
+            // Refresh all the UI components
             console.log('🔄 Refreshing admin rates table...');
             await loadAdminRates();
             
@@ -510,7 +559,6 @@ window.setFeaturedService = async function(rateId) {
             console.log('🔄 Refreshing About page services...');
             if (window.loadAboutServices) await loadAboutServices();
             
-            // Show success message
             console.log('🎉 All UI components refreshed!');
             
         } else {
