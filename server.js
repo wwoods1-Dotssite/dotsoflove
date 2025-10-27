@@ -407,7 +407,7 @@ app.get('/api/gallery', async (req, res) => {
         `;
         
         const result = await pool.query(query);
-        res.json(result.rows);
+        res.json(result.rows[0]); // return single object instead of array
     } catch (error) {
         console.error('Database error:', error);
         res.status(500).json({ error: 'Failed to retrieve gallery' });
@@ -516,34 +516,35 @@ app.post('/api/admin/gallery', authenticateAdmin, upload.array('images', 10), as
         
         await client.query('COMMIT');
 
-// Fetch the updated pet and its images
+// Fetch the newly created pet and its images
 const updatedPetQuery = `
-    SELECT 
-        p.*,
-        COALESCE(
-            json_agg(
-                json_build_object(
-                    'id', i.id,
-                    'url', i.image_url,
-                    'isPrimary', i.is_primary,
-                    'displayOrder', i.display_order
-                ) ORDER BY i.display_order, i.created_at
-            ) FILTER (WHERE i.id IS NOT NULL),
-            '[]'::json
-        ) as images
-    FROM gallery_pets p
-    LEFT JOIN pet_images i ON p.id = i.pet_id
-    WHERE p.id = $1
-    GROUP BY p.id
+  SELECT 
+      p.*,
+      COALESCE(
+          json_agg(
+              json_build_object(
+                  'id', i.id,
+                  'url', i.image_url,
+                  'isPrimary', i.is_primary,
+                  'displayOrder', i.display_order
+              )
+              ORDER BY i.display_order, i.created_at
+          ) FILTER (WHERE i.id IS NOT NULL),
+          '[]'::json
+      ) AS images
+  FROM gallery_pets p
+  LEFT JOIN pet_images i ON p.id = i.pet_id
+  WHERE p.id = $1
+  GROUP BY p.id
 `;
 
-const updatedResult = await client.query(updatedPetQuery, [petId]);
-const updatedPet = updatedResult.rows[0];
+const result = await client.query(updatedPetQuery, [newPetId]);
+const newPet = result.rows[0];
 
 res.json({
-    success: true,
-    message: `Pet updated successfully. ${req.files?.length || 0} photos added, ${removeUrls.length} photos removed.`,
-    pet: updatedPet
+  success: true,
+  message: 'Pet added successfully.',
+  pet: newPet
 });
     } catch (error) {
         await client.query('ROLLBACK');
@@ -706,12 +707,37 @@ app.put('/api/admin/gallery/:id/update-with-photos', authenticateAdmin, upload.a
         }
         
         await client.query('COMMIT');
-        
-        res.json({ 
-            success: true, 
-            message: `Pet updated successfully. ${req.files?.length || 0} photos added, ${removeUrls.length} photos removed.`,
-            petId: petId
-        });
+
+// Fetch the newly created pet and its images
+const updatedPetQuery = `
+  SELECT 
+      p.*,
+      COALESCE(
+          json_agg(
+              json_build_object(
+                  'id', i.id,
+                  'url', i.image_url,
+                  'isPrimary', i.is_primary,
+                  'displayOrder', i.display_order
+              )
+              ORDER BY i.display_order, i.created_at
+          ) FILTER (WHERE i.id IS NOT NULL),
+          '[]'::json
+      ) AS images
+  FROM gallery_pets p
+  LEFT JOIN pet_images i ON p.id = i.pet_id
+  WHERE p.id = $1
+  GROUP BY p.id
+`;
+
+const result = await client.query(updatedPetQuery, [newPetId]);
+const newPet = result.rows[0];
+
+res.json({
+  success: true,
+  message: 'Pet added successfully.',
+  pet: newPet
+});
         
     } catch (error) {
         await client.query('ROLLBACK');
@@ -760,7 +786,7 @@ app.delete('/api/admin/gallery/:id', authenticateAdmin, async (req, res) => {
 app.get('/api/rates', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM service_rates WHERE is_active = TRUE ORDER BY service_type');
-        res.json(result.rows);
+        res.json(result.rows[0]); // return single object instead of array
     } catch (error) {
         console.error('Database error:', error);
         res.status(500).json({ error: 'Failed to retrieve rates' });
@@ -771,7 +797,7 @@ app.get('/api/rates', async (req, res) => {
 app.get('/api/admin/rates', authenticateAdmin, async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM service_rates ORDER BY service_type');
-        res.json(result.rows);
+        res.json(result.rows[0]); // return single object instead of array
     } catch (error) {
         console.error('Database error:', error);
         res.status(500).json({ error: 'Failed to retrieve rates' });
@@ -822,34 +848,35 @@ app.post('/api/admin/rates', authenticateAdmin, async (req, res) => {
         
         await client.query('COMMIT');
 
-// Fetch the updated pet and its images
+// Fetch the newly created pet and its images
 const updatedPetQuery = `
-    SELECT 
-        p.*,
-        COALESCE(
-            json_agg(
-                json_build_object(
-                    'id', i.id,
-                    'url', i.image_url,
-                    'isPrimary', i.is_primary,
-                    'displayOrder', i.display_order
-                ) ORDER BY i.display_order, i.created_at
-            ) FILTER (WHERE i.id IS NOT NULL),
-            '[]'::json
-        ) as images
-    FROM gallery_pets p
-    LEFT JOIN pet_images i ON p.id = i.pet_id
-    WHERE p.id = $1
-    GROUP BY p.id
+  SELECT 
+      p.*,
+      COALESCE(
+          json_agg(
+              json_build_object(
+                  'id', i.id,
+                  'url', i.image_url,
+                  'isPrimary', i.is_primary,
+                  'displayOrder', i.display_order
+              )
+              ORDER BY i.display_order, i.created_at
+          ) FILTER (WHERE i.id IS NOT NULL),
+          '[]'::json
+      ) AS images
+  FROM gallery_pets p
+  LEFT JOIN pet_images i ON p.id = i.pet_id
+  WHERE p.id = $1
+  GROUP BY p.id
 `;
 
-const updatedResult = await client.query(updatedPetQuery, [petId]);
-const updatedPet = updatedResult.rows[0];
+const result = await client.query(updatedPetQuery, [newPetId]);
+const newPet = result.rows[0];
 
 res.json({
-    success: true,
-    message: `Pet updated successfully. ${req.files?.length || 0} photos added, ${removeUrls.length} photos removed.`,
-    pet: updatedPet
+  success: true,
+  message: 'Pet added successfully.',
+  pet: newPet
 });
     } catch (error) {
         await client.query('ROLLBACK');
@@ -896,34 +923,35 @@ app.put('/api/admin/rates/:id', authenticateAdmin, async (req, res) => {
         
         await client.query('COMMIT');
 
-// Fetch the updated pet and its images
+// Fetch the newly created pet and its images
 const updatedPetQuery = `
-    SELECT 
-        p.*,
-        COALESCE(
-            json_agg(
-                json_build_object(
-                    'id', i.id,
-                    'url', i.image_url,
-                    'isPrimary', i.is_primary,
-                    'displayOrder', i.display_order
-                ) ORDER BY i.display_order, i.created_at
-            ) FILTER (WHERE i.id IS NOT NULL),
-            '[]'::json
-        ) as images
-    FROM gallery_pets p
-    LEFT JOIN pet_images i ON p.id = i.pet_id
-    WHERE p.id = $1
-    GROUP BY p.id
+  SELECT 
+      p.*,
+      COALESCE(
+          json_agg(
+              json_build_object(
+                  'id', i.id,
+                  'url', i.image_url,
+                  'isPrimary', i.is_primary,
+                  'displayOrder', i.display_order
+              )
+              ORDER BY i.display_order, i.created_at
+          ) FILTER (WHERE i.id IS NOT NULL),
+          '[]'::json
+      ) AS images
+  FROM gallery_pets p
+  LEFT JOIN pet_images i ON p.id = i.pet_id
+  WHERE p.id = $1
+  GROUP BY p.id
 `;
 
-const updatedResult = await client.query(updatedPetQuery, [petId]);
-const updatedPet = updatedResult.rows[0];
+const result = await client.query(updatedPetQuery, [newPetId]);
+const newPet = result.rows[0];
 
 res.json({
-    success: true,
-    message: `Pet updated successfully. ${req.files?.length || 0} photos added, ${removeUrls.length} photos removed.`,
-    pet: updatedPet
+  success: true,
+  message: 'Pet added successfully.',
+  pet: newPet
 });
     } catch (error) {
         await client.query('ROLLBACK');
@@ -960,34 +988,35 @@ app.put('/api/admin/rates/:id/featured', authenticateAdmin, async (req, res) => 
         
         await client.query('COMMIT');
 
-// Fetch the updated pet and its images
+// Fetch the newly created pet and its images
 const updatedPetQuery = `
-    SELECT 
-        p.*,
-        COALESCE(
-            json_agg(
-                json_build_object(
-                    'id', i.id,
-                    'url', i.image_url,
-                    'isPrimary', i.is_primary,
-                    'displayOrder', i.display_order
-                ) ORDER BY i.display_order, i.created_at
-            ) FILTER (WHERE i.id IS NOT NULL),
-            '[]'::json
-        ) as images
-    FROM gallery_pets p
-    LEFT JOIN pet_images i ON p.id = i.pet_id
-    WHERE p.id = $1
-    GROUP BY p.id
+  SELECT 
+      p.*,
+      COALESCE(
+          json_agg(
+              json_build_object(
+                  'id', i.id,
+                  'url', i.image_url,
+                  'isPrimary', i.is_primary,
+                  'displayOrder', i.display_order
+              )
+              ORDER BY i.display_order, i.created_at
+          ) FILTER (WHERE i.id IS NOT NULL),
+          '[]'::json
+      ) AS images
+  FROM gallery_pets p
+  LEFT JOIN pet_images i ON p.id = i.pet_id
+  WHERE p.id = $1
+  GROUP BY p.id
 `;
 
-const updatedResult = await client.query(updatedPetQuery, [petId]);
-const updatedPet = updatedResult.rows[0];
+const result = await client.query(updatedPetQuery, [newPetId]);
+const newPet = result.rows[0];
 
 res.json({
-    success: true,
-    message: `Pet updated successfully. ${req.files?.length || 0} photos added, ${removeUrls.length} photos removed.`,
-    pet: updatedPet
+  success: true,
+  message: 'Pet added successfully.',
+  pet: newPet
 });
     } catch (error) {
         await client.query('ROLLBACK');
@@ -1060,7 +1089,7 @@ app.get('/api/admin/validate', authenticateAdmin, (req, res) => {
 app.get('/api/admin/contacts', authenticateAdmin, async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM contacts ORDER BY created_at DESC');
-        res.json(result.rows);
+        res.json(result.rows[0]); // return single object instead of array
     } catch (error) {
         console.error('Database error:', error);
         res.status(500).json({ error: 'Failed to retrieve contacts' });
