@@ -192,7 +192,8 @@ window.openEditStoryModal = async function(pet) {
 
     try {
         const freshPet = await API.gallery.getById(pet.id);
-        displayCurrentPhotos(freshPet.images || []);
+        displayCurrentPhotos((freshPet && Array.isArray(freshPet.images)) ? freshPet.images : []);
+
     } catch {
         displayCurrentPhotos(pet.images || []);
     }
@@ -200,6 +201,7 @@ window.openEditStoryModal = async function(pet) {
 
 function displayCurrentPhotos(images) {
     const container = document.getElementById('editCurrentPhotos');
+    console.log("🐾 Loaded pet from API:", freshPet);
     const section = document.getElementById('currentPhotosSection');
 
     if (!Array.isArray(images) || images.length === 0) {
