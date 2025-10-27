@@ -452,7 +452,7 @@ app.get('/api/gallery/:id', async (req, res) => {
     }
 });
 
-// Admin: Add new pet to gallery with S3 v3 image upload// Admin: Add new pet to gallery with S3 v3 image upload
+// Admin: Add new pet to gallery with S3 v3 image upload
 app.post('/api/admin/gallery', authenticateAdmin, upload.array('images', 10), async (req, res) => {
     const { petName, storyDescription, serviceDate, isDorothyPet } = req.body;
     
@@ -531,7 +531,7 @@ app.post('/api/admin/gallery', authenticateAdmin, upload.array('images', 10), as
     }
 });
 
-// Admin: Update existing pet story and details
+// Admin: Update existing pet story and details (without photos)
 app.put('/api/admin/gallery/:id', authenticateAdmin, async (req, res) => {
     const petId = req.params.id;
     const { petName, storyDescription, serviceDate, isDorothyPet } = req.body;
@@ -574,6 +574,128 @@ app.put('/api/admin/gallery/:id', authenticateAdmin, async (req, res) => {
     } catch (error) {
         console.error('❌ Database error:', error);
         res.status(500).json({ error: 'Failed to update pet' });
+    }
+});
+
+// Admin: Update pet with photo management (add/remove photos)
+app.put('/api/admin/gallery/:id/update-with-photos', authenticateAdmin, upload.array('images', 10), async (req, res) => {
+    const petId = req.params.id;
+    const { petName, serviceDate, storyDescription, isDorothyPet } = req.body;
+    const removeUrls = req.body['remove[]'] ? (Array.isArray(req.body['remove[]']) ? req.body['remove[]'] : [req.body['remove[]']]) : [];
+    
+    console.log('📝 Updating pet with photos:', {
+        petId,
+        petName,
+        newImages: req.files?.length || 0,
+        removeUrls: removeUrls.length
+    });
+    
+    if (!petName) {
+        return res.status(400).json({ error: 'Pet name is required' });
+    }
+    
+    const client = await pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+        
+        // Update pet details
+        const isDorothyPetBool = isDorothyPet === 'true' || isDorothyPet === true || isDorothyPet === 'on';
+        
+        const petUpdateResult = await client.query(`
+            UPDATE gallery_pets 
+            SET pet_name = $1, story_description = $2, service_date = $3, is_dorothy_pet = $4, updated_at = CURRENT_TIMESTAMP
+            WHERE id = $5
+        `, [petName, storyDescription || '', serviceDate || '', isDorothyPetBool, petId]);
+        
+        if (petUpdateResult.rowCount === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Pet not found' });
+        }
+        
+        // Handle photo removals
+        if (removeUrls.length > 0) {
+            console.log('Removing photos:', removeUrls);
+            
+            for (const url of removeUrls) {
+                // Get the image record to find S3 key
+                const imageResult = await client.query(
+                    'SELECT id, s3_key FROM pet_images WHERE pet_id = $1 AND image_url = $2',
+                    [petId, url]
+                );
+                
+                if (imageResult.rows.length > 0) {
+                    const imageId = imageResult.rows[0].id;
+                    
+                    // Delete from S3
+                    await deleteFromS3(url);
+                    
+                    // Delete from database
+                    await client.query('DELETE FROM pet_images WHERE id = $1', [imageId]);
+                    console.log('Removed photo:', url);
+                }
+            }
+        }
+        
+        // Handle new photo uploads
+        if (req.files && req.files.length > 0) {
+            console.log(`Adding ${req.files.length} new photos...`);
+            
+            // Get current max display order
+            const orderResult = await client.query(
+                'SELECT COALESCE(MAX(display_order), -1) as max_order FROM pet_images WHERE pet_id = $1',
+                [petId]
+            );
+            let currentMaxOrder = orderResult.rows[0].max_order;
+            
+            // Check if there are any existing primary images
+            const primaryCheck = await client.query(
+                'SELECT COUNT(*) as count FROM pet_images WHERE pet_id = $1',
+                [petId]
+            );
+            const hasExistingImages = primaryCheck.rows[0].count > 0;
+            
+            for (let index = 0; index < req.files.length; index++) {
+                const file = req.files[index];
+                const displayOrder = currentMaxOrder + index + 1;
+                const isPrimary = !hasExistingImages && index === 0; // Only set primary if no existing images
+                
+                try {
+                    // Upload to S3
+                    const s3Url = await uploadToS3(file, 'pets');
+                    
+                    // Extract S3 key for future deletion
+                    const urlParts = s3Url.split('/');
+                    const s3Key = urlParts.slice(-2).join('/');
+                    
+                    // Insert image record
+                    await client.query(`
+                        INSERT INTO pet_images (pet_id, image_url, s3_key, is_primary, display_order)
+                        VALUES ($1, $2, $3, $4, $5)
+                    `, [petId, s3Url, s3Key, isPrimary, displayOrder]);
+                    
+                    console.log(`New photo ${index + 1} uploaded: ${s3Url}`);
+                } catch (uploadError) {
+                    console.error(`Failed to upload new photo ${index + 1}:`, uploadError);
+                    // Continue with other images
+                }
+            }
+        }
+        
+        await client.query('COMMIT');
+        
+        res.json({ 
+            success: true, 
+            message: `Pet updated successfully. ${req.files?.length || 0} photos added, ${removeUrls.length} photos removed.`,
+            petId: petId
+        });
+        
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('❌ Error updating pet with photos:', error);
+        res.status(500).json({ error: 'Failed to update pet with photos' });
+    } finally {
+        client.release();
     }
 });
 
@@ -913,7 +1035,6 @@ async function sendEmailNotification(contactData) {
     }
 }
 
-
 // Catch-all route for SPA - MUST BE LAST
 app.get('*', (req, res) => {
     // Don't serve index.html for API routes
@@ -922,9 +1043,10 @@ app.get('*', (req, res) => {
     }
     res.sendFile(path.join(__dirname, 'index.html'));
 });
+
 // Start server
 app.listen(PORT, () => {
-    console.log(`Pet Sitting Backend Service v2.1-checkbox-fix running on port ${PORT}`);
+    console.log(`Pet Sitting Backend Service v2.2-photos-fix running on port ${PORT}`);
     console.log(`Email recipients: ${EMAIL_RECIPIENTS.join(', ')}`);
     console.log(`Database: PostgreSQL (${process.env.NODE_ENV})`);
     console.log(`S3 Storage: ${S3_BUCKET} (AWS SDK v3)`);
