@@ -515,13 +515,36 @@ app.post('/api/admin/gallery', authenticateAdmin, upload.array('images', 10), as
         }
         
         await client.query('COMMIT');
-        
-        res.json({ 
-            success: true, 
-            message: 'Pet added to gallery successfully!',
-            petId: petId,
-            isDorothyPet: isDorothyPetBool
-        });
+
+// Fetch the updated pet and its images
+const updatedPetQuery = `
+    SELECT 
+        p.*,
+        COALESCE(
+            json_agg(
+                json_build_object(
+                    'id', i.id,
+                    'url', i.image_url,
+                    'isPrimary', i.is_primary,
+                    'displayOrder', i.display_order
+                ) ORDER BY i.display_order, i.created_at
+            ) FILTER (WHERE i.id IS NOT NULL),
+            '[]'::json
+        ) as images
+    FROM gallery_pets p
+    LEFT JOIN pet_images i ON p.id = i.pet_id
+    WHERE p.id = $1
+    GROUP BY p.id
+`;
+
+const updatedResult = await client.query(updatedPetQuery, [petId]);
+const updatedPet = updatedResult.rows[0];
+
+res.json({
+    success: true,
+    message: `Pet updated successfully. ${req.files?.length || 0} photos added, ${removeUrls.length} photos removed.`,
+    pet: updatedPet
+});
     } catch (error) {
         await client.query('ROLLBACK');
         console.error('Database error:', error);
@@ -798,12 +821,36 @@ app.post('/api/admin/rates', authenticateAdmin, async (req, res) => {
         `, [serviceType, ratePerUnit, unitType, description || '', isActive !== false, isFeatured || false]);
         
         await client.query('COMMIT');
-        
-        res.json({ 
-            success: true, 
-            message: 'Rate created successfully',
-            rateId: result.rows[0].id 
-        });
+
+// Fetch the updated pet and its images
+const updatedPetQuery = `
+    SELECT 
+        p.*,
+        COALESCE(
+            json_agg(
+                json_build_object(
+                    'id', i.id,
+                    'url', i.image_url,
+                    'isPrimary', i.is_primary,
+                    'displayOrder', i.display_order
+                ) ORDER BY i.display_order, i.created_at
+            ) FILTER (WHERE i.id IS NOT NULL),
+            '[]'::json
+        ) as images
+    FROM gallery_pets p
+    LEFT JOIN pet_images i ON p.id = i.pet_id
+    WHERE p.id = $1
+    GROUP BY p.id
+`;
+
+const updatedResult = await client.query(updatedPetQuery, [petId]);
+const updatedPet = updatedResult.rows[0];
+
+res.json({
+    success: true,
+    message: `Pet updated successfully. ${req.files?.length || 0} photos added, ${removeUrls.length} photos removed.`,
+    pet: updatedPet
+});
     } catch (error) {
         await client.query('ROLLBACK');
         if (error.constraint === 'service_rates_service_type_key') {
@@ -848,11 +895,36 @@ app.put('/api/admin/rates/:id', authenticateAdmin, async (req, res) => {
         }
         
         await client.query('COMMIT');
-        
-        res.json({ 
-            success: true, 
-            message: 'Rate updated successfully' 
-        });
+
+// Fetch the updated pet and its images
+const updatedPetQuery = `
+    SELECT 
+        p.*,
+        COALESCE(
+            json_agg(
+                json_build_object(
+                    'id', i.id,
+                    'url', i.image_url,
+                    'isPrimary', i.is_primary,
+                    'displayOrder', i.display_order
+                ) ORDER BY i.display_order, i.created_at
+            ) FILTER (WHERE i.id IS NOT NULL),
+            '[]'::json
+        ) as images
+    FROM gallery_pets p
+    LEFT JOIN pet_images i ON p.id = i.pet_id
+    WHERE p.id = $1
+    GROUP BY p.id
+`;
+
+const updatedResult = await client.query(updatedPetQuery, [petId]);
+const updatedPet = updatedResult.rows[0];
+
+res.json({
+    success: true,
+    message: `Pet updated successfully. ${req.files?.length || 0} photos added, ${removeUrls.length} photos removed.`,
+    pet: updatedPet
+});
     } catch (error) {
         await client.query('ROLLBACK');
         if (error.constraint === 'service_rates_service_type_key') {
@@ -887,11 +959,36 @@ app.put('/api/admin/rates/:id/featured', authenticateAdmin, async (req, res) => 
         }
         
         await client.query('COMMIT');
-        
-        res.json({ 
-            success: true, 
-            message: 'Featured service updated successfully' 
-        });
+
+// Fetch the updated pet and its images
+const updatedPetQuery = `
+    SELECT 
+        p.*,
+        COALESCE(
+            json_agg(
+                json_build_object(
+                    'id', i.id,
+                    'url', i.image_url,
+                    'isPrimary', i.is_primary,
+                    'displayOrder', i.display_order
+                ) ORDER BY i.display_order, i.created_at
+            ) FILTER (WHERE i.id IS NOT NULL),
+            '[]'::json
+        ) as images
+    FROM gallery_pets p
+    LEFT JOIN pet_images i ON p.id = i.pet_id
+    WHERE p.id = $1
+    GROUP BY p.id
+`;
+
+const updatedResult = await client.query(updatedPetQuery, [petId]);
+const updatedPet = updatedResult.rows[0];
+
+res.json({
+    success: true,
+    message: `Pet updated successfully. ${req.files?.length || 0} photos added, ${removeUrls.length} photos removed.`,
+    pet: updatedPet
+});
     } catch (error) {
         await client.query('ROLLBACK');
         console.error('Database error:', error);
