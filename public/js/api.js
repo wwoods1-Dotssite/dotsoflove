@@ -1,34 +1,27 @@
-// js/api.js - API helper functions and configuration with enhanced update support
+// js/api.js - Updated with FormData fix, no-cache fetches, and improved auth handling
 
-// API Configuration
 const API_BASE = 'https://dotsoflove-production.up.railway.app';
 
-// Global variables
 let adminToken = localStorage.getItem('adminToken');
-
-// Session timeout management
 let sessionTimeout;
 
 function resetSessionTimeout() {
     clearTimeout(sessionTimeout);
-    // Auto logout after 30 minutes of inactivity
     sessionTimeout = setTimeout(() => {
         alert('Session expired for security. Please log in again.');
         logout();
-    }, 30 * 60 * 1000); // 30 minutes
+    }, 30 * 60 * 1000);
 }
 
-// Reset timeout on any user activity
 document.addEventListener('click', resetSessionTimeout);
 document.addEventListener('keypress', resetSessionTimeout);
 
-// API Helper Functions
 const API = {
-    // Generic fetch with error handling
     async request(url, options = {}) {
         try {
             const response = await fetch(`${API_BASE}${url}`, {
                 ...options,
+                cache: 'no-store',
                 headers: {
                     'Content-Type': 'application/json',
                     ...options.headers
@@ -36,7 +29,7 @@ const API = {
             });
 
             if (!response.ok) {
-                const error = await response.json();
+                const error = await response.json().catch(() => ({}));
                 throw new Error(error.error || `HTTP ${response.status}`);
             }
 
@@ -47,80 +40,72 @@ const API = {
         }
     },
 
-    // Authenticated request helper
     async authRequest(url, options = {}) {
-        if (!adminToken) {
-            throw new Error('No admin token available');
+        if (!adminToken) throw new Error('No admin token available');
+
+        const headers = {
+            ...options.headers,
+            'Authorization': `Bearer ${adminToken}`
+        };
+
+        // ✅ Fix: Allow FormData uploads
+        if (options.body instanceof FormData) {
+            delete headers['Content-Type'];
         }
 
         return fetch(`${API_BASE}${url}`, {
             ...options,
-            headers: {
-                ...options.headers,
-                'Authorization': `Bearer ${adminToken}`
-            }
+            headers,
+            cache: 'no-store'
         });
     },
 
-    // Gallery endpoints
     gallery: {
         async getAll() {
-            return API.request('/api/gallery');
+            return API.request(`/api/gallery?nocache=${Date.now()}`, { cache: 'no-store' });
         },
 
         async getById(id) {
-            return API.request(`/api/gallery/${id}`);
+            return API.request(`/api/gallery/${id}?nocache=${Date.now()}`, { cache: 'no-store' });
         },
 
         async add(formData) {
             const response = await API.authRequest('/api/admin/gallery', {
                 method: 'POST',
                 body: formData,
-                headers: {} // Don't set Content-Type for FormData
+                headers: {}
             });
             return response.json();
         },
 
-        // Enhanced update method for editing pet stories
         async update(id, data) {
             console.log(`📡 API: Updating pet ${id} with data:`, data);
-            
             const response = await API.authRequest(`/api/admin/gallery/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-            
             const result = await response.json();
-            console.log(`📡 API: Update response:`, result);
-            
+            console.log('📡 API: Update response:', result);
             return result;
         },
 
         async delete(id) {
-            const response = await API.authRequest(`/api/admin/gallery/${id}`, {
-                method: 'DELETE'
-            });
+            const response = await API.authRequest(`/api/admin/gallery/${id}`, { method: 'DELETE' });
             return response.json();
         }
     },
 
-    // Rates endpoints (updated)
     rates: {
-        async getAll() {
-            return API.request('/api/rates');
-        },
-
+        async getAll() { return API.request('/api/rates'); },
         async getAllAdmin() {
             const response = await API.authRequest('/api/admin/rates');
             return response.json();
         },
-
         async getById(id) {
             const response = await API.authRequest(`/api/admin/rates/${id}`);
             return response.json();
         },
-
         async add(data) {
             const response = await API.authRequest('/api/admin/rates', {
                 method: 'POST',
@@ -129,7 +114,6 @@ const API = {
             });
             return response.json();
         },
-
         async update(id, data) {
             const response = await API.authRequest(`/api/admin/rates/${id}`, {
                 method: 'PUT',
@@ -138,24 +122,16 @@ const API = {
             });
             return response.json();
         },
-
         async delete(id) {
-            const response = await API.authRequest(`/api/admin/rates/${id}`, {
-                method: 'DELETE'
-            });
+            const response = await API.authRequest(`/api/admin/rates/${id}`, { method: 'DELETE' });
             return response.json();
         },
-
-        // New method for setting featured service
         async setFeatured(id) {
-            const response = await API.authRequest(`/api/admin/rates/${id}/featured`, {
-                method: 'PUT'
-            });
+            const response = await API.authRequest(`/api/admin/rates/${id}/featured`, { method: 'PUT' });
             return response.json();
         }
     },
 
-    // Contact endpoints
     contact: {
         async submit(data) {
             return API.request('/api/contact', {
@@ -163,14 +139,12 @@ const API = {
                 body: JSON.stringify(data)
             });
         },
-
         async getAllAdmin() {
             const response = await API.authRequest('/api/admin/contacts');
             return response.json();
         }
     },
 
-    // Admin authentication
     auth: {
         async login(username, password) {
             const response = await fetch(`${API_BASE}/api/admin/auth`, {
@@ -178,31 +152,20 @@ const API = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
-            
             const data = await response.json();
-            
             if (response.ok) {
                 adminToken = data.token;
                 localStorage.setItem('adminToken', adminToken);
                 return data;
-            } else {
-                throw new Error(data.error || 'Authentication failed');
-            }
+            } else throw new Error(data.error || 'Authentication failed');
         },
-
         async validate() {
-            if (!adminToken) {
-                return false;
-            }
-
+            if (!adminToken) return false;
             try {
                 const response = await API.authRequest('/api/admin/validate');
                 return response.ok;
-            } catch (error) {
-                return false;
-            }
+            } catch { return false; }
         },
-
         logout() {
             localStorage.removeItem('adminToken');
             adminToken = null;
@@ -211,76 +174,17 @@ const API = {
     }
 };
 
-// Utility functions
 const Utils = {
-    // Show loading state
-    showLoading(elementId) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.style.display = 'block';
-        }
-    },
-
-    // Hide loading state
-    hideLoading(elementId) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.style.display = 'none';
-        }
-    },
-
-    // Show success message
-    showSuccess(elementId, message) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.textContent = message;
-            element.style.display = 'block';
-            setTimeout(() => {
-                element.style.display = 'none';
-            }, 5000);
-        }
-    },
-
-    // Show error message
-    showError(elementId, message) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.textContent = message;
-            element.style.display = 'block';
-        }
-    },
-
-    // Hide message
-    hideMessage(elementId) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.style.display = 'none';
-        }
-    },
-
-    // Format date
-    formatDate(dateString) {
-        return new Date(dateString).toLocaleDateString();
-    },
-
-    // Format time
-    formatTime(dateString) {
-        return new Date(dateString).toLocaleTimeString();
-    },
-
-    // Validate email
-    isValidEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    },
-
-    // Validate phone
-    isValidPhone(phone) {
-        const phoneRegex = /^[\d\s\-\(\)\+]+$/;
-        return phoneRegex.test(phone);
-    }
+    showLoading(id) { const e = document.getElementById(id); if (e) e.style.display = 'block'; },
+    hideLoading(id) { const e = document.getElementById(id); if (e) e.style.display = 'none'; },
+    showSuccess(id, msg) { const e = document.getElementById(id); if (e) { e.textContent = msg; e.style.display = 'block'; setTimeout(() => e.style.display = 'none', 5000); } },
+    showError(id, msg) { const e = document.getElementById(id); if (e) { e.textContent = msg; e.style.display = 'block'; } },
+    hideMessage(id) { const e = document.getElementById(id); if (e) e.style.display = 'none'; },
+    formatDate(d) { return new Date(d).toLocaleDateString(); },
+    formatTime(d) { return new Date(d).toLocaleTimeString(); },
+    isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); },
+    isValidPhone(p) { return /^[\d\s\-\(\)\+]+$/.test(p); }
 };
 
-// Export for use in other files
 window.API = API;
 window.Utils = Utils;
