@@ -298,8 +298,8 @@ window.deletePet = async function(petId) {
 
 // ========== EDIT STORY AND PHOTOS FUNCTIONALITY ==========
 
-// Open edit story modal with photo support
-window.openEditStoryModal = function(pet) {
+// Open edit story modal with photo support - FIXED VERSION
+window.openEditStoryModal = async function(pet) {
     console.log('📝 Opening edit modal for pet:', pet);
     
     // Populate form with current pet data
@@ -315,8 +315,19 @@ window.openEditStoryModal = function(pet) {
     if (editPetImages) editPetImages.value = '';
     if (editFilePreview) editFilePreview.innerHTML = '';
     
-    // Display current photos
-    displayCurrentPhotos(pet.images || []);
+    // Fetch fresh pet data to ensure we have the latest images
+    try {
+        console.log('🔄 Fetching fresh pet data for ID:', pet.id);
+        const freshPet = await API.gallery.getById(pet.id);
+        console.log('📸 Fresh pet data with images:', freshPet);
+        
+        // Display current photos with the fresh data
+        displayCurrentPhotos(freshPet.images || []);
+    } catch (error) {
+        console.error('❌ Error fetching fresh pet data:', error);
+        // Fall back to existing images
+        displayCurrentPhotos(pet.images || []);
+    }
     
     // Clear any previous messages
     Utils.hideMessage('editStorySuccess');
@@ -328,38 +339,57 @@ window.openEditStoryModal = function(pet) {
     document.body.style.overflow = 'hidden';
 };
 
-// Display existing photos with "Remove" checkboxes in the edit modal
+// Display existing photos with "Remove" checkboxes in the edit modal - IMPROVED VERSION
 function displayCurrentPhotos(images) {
     const container = document.getElementById('editCurrentPhotos');
-    if (!container) return;
-
-    console.log('[Edit Modal] images received:', images);
-
-    if (!Array.isArray(images) || images.length === 0) {
-        container.innerHTML = '<div style="color:#666;">No current photos.</div>';
+    const sectionElement = document.getElementById('currentPhotosSection');
+    
+    if (!container) {
+        console.error('❌ Current photos container not found!');
         return;
     }
 
-    // Create photo grid with remove checkboxes
+    console.log('[Edit Modal] Displaying images:', images);
+
+    if (!Array.isArray(images) || images.length === 0) {
+        container.innerHTML = '<div style="color:#666;text-align:center;padding:1rem;">No current photos.</div>';
+        if (sectionElement) {
+            sectionElement.style.display = 'block'; // Show section even if no photos
+        }
+        return;
+    }
+
+    // Create photo grid with remove checkboxes - IMPROVED LAYOUT
     const items = images.map((img, idx) => {
         const url = img.url || img.image_url || '';
         const isPrimary = img.isPrimary || img.is_primary;
         
         return `
-            <label style="display:block;border:1px solid #eee;border-radius:8px;padding:.5rem;margin-bottom:.5rem;">
+            <div style="border:1px solid #ddd;border-radius:8px;padding:0.5rem;background:white;">
                 <img src="${url}" alt="Current photo ${idx + 1}"
-                     style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:.4rem;">
-                <div style="display:flex;align-items:center;gap:.5rem;">
-                    <input type="checkbox" name="remove[]" value="${url}">
-                    <span style="font-size:.9rem;color:#333;">Remove this photo</span>
-                    ${isPrimary ? '<span style="margin-left:auto;font-size:.8rem;background:#ffd700;color:#333;padding:0 .4rem;border-radius:10px;">Primary</span>' : ''}
+                     style="width:100%;height:100px;object-fit:cover;border-radius:4px;margin-bottom:0.3rem;"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                <div style="display:none;height:100px;background:#f0f0f0;border-radius:4px;margin-bottom:0.3rem;display:flex;align-items:center;justify-content:center;">
+                    <span style="color:#999;">Image unavailable</span>
                 </div>
-            </label>
+                <label style="display:flex;align-items:center;gap:0.3rem;font-size:0.8rem;">
+                    <input type="checkbox" name="remove[]" value="${url}" style="margin:0;">
+                    <span>Remove</span>
+                    ${isPrimary ? '<span style="margin-left:auto;background:#ffd700;color:#333;padding:0 0.3rem;border-radius:8px;font-size:0.7rem;">Primary</span>' : ''}
+                </label>
+            </div>
         `;
     });
 
     container.innerHTML = items.join('');
-    container.style.display = 'block';
+    container.style.display = 'grid';
+    container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(120px, 1fr))';
+    container.style.gap = '0.75rem';
+    
+    // Make sure the section is visible
+    if (sectionElement) {
+        sectionElement.style.display = 'block';
+    }
 }
 
 // Close edit story modal
@@ -380,7 +410,7 @@ window.closeEditStoryModal = function() {
     Utils.hideMessage('editStoryError');
 };
 
-// Handle edit story form submission with photo uploads
+// Handle edit story form submission with photo uploads - IMPROVED ERROR HANDLING
 async function handleEditStorySubmission(e) {
     e.preventDefault();
     
@@ -408,11 +438,26 @@ async function handleEditStorySubmission(e) {
         
         // Handle removals (checkboxes)
         const removeCheckboxes = document.querySelectorAll('input[name="remove[]"]:checked');
-        removeCheckboxes.forEach(cb => formData.append('remove[]', cb.value));
+        console.log(`📸 Photos to remove: ${removeCheckboxes.length}`);
+        removeCheckboxes.forEach(cb => {
+            formData.append('remove[]', cb.value);
+            console.log('  - Removing:', cb.value);
+        });
         
         // Add new images if any
         for (let i = 0; i < newImages.length; i++) {
             formData.append('images', newImages[i]);
+            console.log(`  + Adding new image: ${newImages[i].name}`);
+        }
+        
+        // Log FormData contents for debugging
+        console.log('📦 FormData contents:');
+        for (let pair of formData.entries()) {
+            if (pair[1] instanceof File) {
+                console.log(`  ${pair[0]}: File(${pair[1].name})`);
+            } else {
+                console.log(`  ${pair[0]}: ${pair[1]}`);
+            }
         }
         
         // Use the API endpoint that handles both data and files
@@ -421,12 +466,16 @@ async function handleEditStorySubmission(e) {
             body: formData
         });
         
+        console.log('📡 Response status:', response.status);
         const result = await response.json();
+        console.log('📡 Response data:', result);
         
         if (result.success) {
             const message = newImages.length > 0 
                 ? `Pet story and ${newImages.length} new photos updated successfully!`
-                : 'Pet story updated successfully!';
+                : removeCheckboxes.length > 0
+                    ? `Pet story updated and ${removeCheckboxes.length} photos removed successfully!`
+                    : 'Pet story updated successfully!';
             Utils.showSuccess('editStorySuccess', message);
             Utils.hideMessage('editStoryError');
             
@@ -438,6 +487,7 @@ async function handleEditStorySubmission(e) {
             }, 1500);
             
         } else {
+            console.error('❌ Update failed:', result);
             Utils.showError('editStoryError', result.error || 'Failed to update pet story and photos');
         }
         
