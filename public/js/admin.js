@@ -1,4 +1,4 @@
-// js/admin.js - Fully fixed version with all admin functionality restored
+// js/admin.js - Final full version with all functions restored and working
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeAdminPanel();
@@ -287,7 +287,45 @@ window.deletePet = async function(petId) {
     }
 };
 
-// ===================== RATES & CONTACTS RESTORED =====================
+// ===================== RATES MANAGEMENT RESTORED =====================
+async function handleRateSubmission(e) {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const data = Object.fromEntries(formData.entries());
+  data.isActive = document.getElementById('isActive').checked;
+  const featuredCheckbox = document.getElementById('isFeatured');
+  if (featuredCheckbox) data.isFeatured = featuredCheckbox.checked;
+  const rateId = document.getElementById('rateId').value;
+  const isEdit = !!rateId;
+  try {
+    let result;
+    if (isEdit) result = await API.rates.update(rateId, data);
+    else result = await API.rates.add(data);
+    if (result.success) {
+      Utils.showSuccess('rateSuccess', `Rate ${isEdit ? 'updated' : 'created'} successfully!`);
+      Utils.hideMessage('rateError');
+      resetRateForm();
+      loadAdminRates();
+      if (window.loadRates) loadRates();
+      if (window.loadAboutServices) loadAboutServices();
+    } else Utils.showError('rateError', result.error || 'Failed to save rate');
+  } catch (error) {
+    console.error('Error saving rate:', error);
+    Utils.showError('rateError', 'Failed to save rate.');
+  }
+}
+
+window.resetRateForm = function() {
+  document.getElementById('rateForm').reset();
+  document.getElementById('rateId').value = '';
+  const featuredCheckbox = document.getElementById('isFeatured');
+  if (featuredCheckbox) featuredCheckbox.checked = false;
+  document.getElementById('rateSubmitBtn').textContent = 'Add Rate';
+  Utils.hideMessage('rateSuccess');
+  Utils.hideMessage('rateError');
+};
+
+// ===================== RATES & CONTACTS LOADERS =====================
 window.loadAdminRates = async function() {
   try {
     Utils.showLoading('adminRatesLoading');
