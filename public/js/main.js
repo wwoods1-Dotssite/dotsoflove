@@ -97,20 +97,25 @@ async function loadUnifiedRates() {
 }
 
 
-  // =====================================
-  // Navigation Logic
-  // =====================================
-  function setupNavigation() {
-    document.querySelectorAll('.nav-link').forEach(link => {
-      link.addEventListener('click', e => {
-        e.preventDefault();
-        const target = link.getAttribute('href').replace('#', '');
-        window.location.hash = target;
-        handleHashChange();
-      });
-    });
+// =====================================
+// Navigation Logic
+// =====================================
+function handleHashChange() {
+  const hash = window.location.hash.replace('#', '') || 'about';
+  const sections = document.querySelectorAll('section');
 
-    window.addEventListener('hashchange', handleHashChange);
+  sections.forEach(sec => {
+    sec.style.display = sec.id === hash ? 'block' : 'none';
+  });
+
+  // Trigger data reloads only when relevant
+  if (hash === 'rates' || hash === 'about') {
+    loadUnifiedRates();
+  }
+}
+window.addEventListener('hashchange', handleHashChange);
+window.addEventListener('DOMContentLoaded', handleHashChange);
+
   }
 
   function handleHashChange() {
