@@ -199,13 +199,15 @@ app.post('/api/contact', async (req, res) => {
 // =====================================
 // ✅ Admin Auth (alias route support)
 // =====================================
-app.post(['/auth', '/api/admin/auth'], (req, res) => {
+// ✅ Admin Auth (alias route support)
+app.post(['/auth', '/api/auth', '/api/admin/auth'], (req, res) => {
   const { username, password } = req.body;
   if (username === 'dorothy' && password === process.env.ADMIN_PASSWORD) {
     return res.json({ success: true, token: 'mock-token-123' });
   }
   res.status(401).json({ success: false, message: 'Invalid credentials' });
 });
+
 
 // =====================================
 // ✅ Root + Error Handler
