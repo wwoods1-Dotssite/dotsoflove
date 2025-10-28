@@ -1,4 +1,4 @@
-// server.js - Compatible version with About/My Services compatibility restored
+// server.js — Cleaned-up unified backend for Rates and Services
 
 const express = require("express");
 const cors = require("cors");
@@ -11,7 +11,13 @@ require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 8080;
 
-app.use(cors({ origin: "*", methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], allowedHeaders: ["Content-Type", "Authorization"] }));
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
+);
 app.options("*", cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -31,31 +37,10 @@ const s3 = new S3Client({
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-// ✅ Rates endpoint - with virtual service_type
-app.get("/api/rates", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT
-        description AS service_type,
-        rate_per_unit,
-        unit_type,
-        description,
-        is_active,
-        is_featured,
-        created_at
-      FROM service_rates
-      WHERE is_active = true
-      ORDER BY is_featured DESC, created_at DESC;
-    `);
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Error fetching rates:", err);
-    res.status(500).json({ error: "Failed to fetch service rates" });
-  }
-});
-
-// ✅ About/My Services endpoint - restores compatibility and feature highlighting
-app.get("/api/services", async (req, res) => {
+// -------------------------------------------------------------
+// ✅ Unified Rates + Services endpoint
+// -------------------------------------------------------------
+app.get(["/api/rates", "/api/services"], async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
@@ -65,19 +50,28 @@ app.get("/api/services", async (req, res) => {
         unit_type,
         is_active,
         is_featured,
-        created_at
+        created_at,
+        ROW_NUMBER() OVER (ORDER BY is_featured DESC, created_at DESC) AS display_order
       FROM service_rates
       WHERE is_active = true
       ORDER BY is_featured DESC, created_at DESC;
     `);
+
+    // When no active services are available, prevent "Loading..." from persisting
+    if (!result.rows.length) {
+      return res.json([{ service_type: "No services available", is_empty: true }]);
+    }
+
     res.json(result.rows);
   } catch (err) {
-    console.error("Error fetching services:", err);
-    res.status(500).json({ error: "Failed to fetch services" });
+    console.error("Error fetching rates/services:", err);
+    res.status(500).json({ error: "Failed to fetch service data" });
   }
 });
 
-// ✅ Gallery Endpoint
+// -------------------------------------------------------------
+// ✅ Gallery endpoint (unchanged, just clean formatting)
+// -------------------------------------------------------------
 app.get("/api/gallery", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -94,7 +88,9 @@ app.get("/api/gallery", async (req, res) => {
   }
 });
 
-// ✅ Contacts Endpoint
+// -------------------------------------------------------------
+// ✅ Contact Requests endpoint
+// -------------------------------------------------------------
 app.get("/api/contacts", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM contact_requests ORDER BY id DESC");
@@ -105,7 +101,9 @@ app.get("/api/contacts", async (req, res) => {
   }
 });
 
-// ✅ Admin Auth
+// -------------------------------------------------------------
+// ✅ Mock Admin Authentication
+// -------------------------------------------------------------
 app.post("/api/admin/auth", (req, res) => {
   const { username, password } = req.body;
   const adminUser = process.env.ADMIN_USER || "dorothy";
@@ -117,7 +115,6 @@ app.post("/api/admin/auth", (req, res) => {
   }
 });
 
-// ✅ Validate Admin Auth
 app.get("/api/admin/validate", (req, res) => {
   const authHeader = req.headers.authorization || "";
   if (authHeader === "Bearer mock-token") {
@@ -127,10 +124,13 @@ app.get("/api/admin/validate", (req, res) => {
   }
 });
 
-// ✅ Add Pet to Gallery
+// -------------------------------------------------------------
+// ✅ Gallery Management for Admin
+// -------------------------------------------------------------
 app.post("/api/admin/gallery", upload.array("images"), async (req, res) => {
   try {
     const { pet_name, story_description, service_date, is_dorothy_pet } = req.body;
+
     const newPet = await pool.query(
       `INSERT INTO pets (pet_name, story_description, service_date, is_dorothy_pet)
        VALUES ($1, $2, $3, $4) RETURNING id`,
@@ -157,4 +157,4 @@ app.post("/api/admin/gallery", upload.array("images"), async (req, res) => {
   }
 });
 
-app.listen(port, () => console.log(`Server running on port ${port}`));
+app.listen(port, () => console.log(`✅ Server running cleanly on port ${port}`));
