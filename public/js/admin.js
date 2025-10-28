@@ -44,7 +44,14 @@ async function handleAdminLogin(event) {
     if (data.success) {
       console.log("✅ Admin logged in successfully");
       localStorage.setItem("adminToken", data.token);
-      location.reload();
+// ✅ Store token and navigate directly to Admin section
+localStorage.setItem("adminToken", data.token);
+console.log("🔐 Redirecting to Admin dashboard...");
+if (window.location.pathname !== "/admin") {
+  window.history.pushState({}, "", "/admin");
+}
+checkAdminAuth(); // show Admin UI immediately
+
     } else {
       if (errorBox) errorBox.textContent = "Invalid credentials.";
     }
