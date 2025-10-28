@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dot's of Love Pet Sitting</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">Dot's of Love Pet Sitting</div>
+            <ul class="nav-links">
+                <li><a href="#about" class="nav-link active">About</a></li>
+                <li><a href="#gallery" class="nav-link">Gallery</a></li>
+                <li><a href="#rates" class="nav-link">Rates</a></li>
+                <li><a href="#testimonials" class="nav-link">Reviews</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+                <li><a href="#admin" class="nav-link admin-link">Admin</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Enhanced Image Modal -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-image-container" id="modalImageContainer">
+                <!-- Images will be loaded here -->
+            </div>
+            <div class="modal-details">
+                <div id="modalBadge" class="modal-badge" style="display: none;">Dorothy's Pet</div>
+                <div id="modalPetName" class="modal-pet-name"></div>
+                <div id="modalPetDate" class="modal-pet-date"></div>
+                <div id="modalPetStory" class="modal-pet-story"></div>
+            </div>
+        </div>
+    </div>
+
+<!-- Replace the existing editStoryModal section in your index.html with this -->
+<div id="editStoryModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+        <span class="close" onclick="closeEditStoryModal()">&times;</span>
+        <div style="padding: 2rem;">
+            <h3 style="color: #667eea; margin-bottom: 1rem;">Edit Pet Story</h3>
+            <form id="editStoryForm">
+                <input type="hidden" id="editPetId">
+                
+                <div class="form-group">
+                    <label for="editPetName">Pet Name *</label>
+                    <input type="text" id="editPetName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editServiceDate">Service Date</label>
+                    <input type="text" id="editServiceDate" placeholder="e.g., Summer 2024">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editStoryDescription">Story Description</label>
+                    <textarea id="editStoryDescription" rows="5"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="editIsDorothyPet" style="margin-right: 0.5rem;">
+                        This is one of Dorothy's own pets
+                    </label>
+                </div>
+                
+                <!-- Current Photos Section -->
+                <div class="form-group" id="currentPhotosSection">
+                    <label style="color: #667eea !important; font-weight: 600; margin-bottom: 0.5rem;">Current Photos</label>
+                    <div id="editCurrentPhotos" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem;background:rgba(102,126,234,0.05);padding:1rem;border-radius:8px;border:1px solid rgba(102,126,234,0.2);margin:1rem 0;">
+                        <!-- Current photos will be loaded here -->
+                    </div>
+                    <small style="color: #666; font-size: 0.85rem;">Check any photos you want to remove.</small>
+                </div>
+
+                <!-- Add New Photos Section -->
+                <div class="form-group">
+                    <label for="editPetImages">Add New Photos</label>
+                    <div class="file-upload" onclick="document.getElementById('editPetImages').click()" style="border:2px dashed rgba(102,126,234,0.3);background:rgba(102,126,234,0.05);transition:all 0.3s ease;">
+                        <button type="button" class="file-upload-btn">Choose Photos</button>
+                        <p style="margin-top: 1rem; color: #666;">Click to upload new photos (max 5MB each)</p>
+                        <input type="file" id="editPetImages" name="images" accept="image/*" multiple style="display: none;">
+                        <div id="editFilePreview" style="margin-top: 1rem; font-size: 0.9rem; color: #666;"></div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button type="submit" class="btn">Update Pet</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditStoryModal()" style="margin-left: 1rem;">Cancel</button>
+                </div>
+                
+                <div class="success-message" id="editStorySuccess"></div>
+                <div class="error-message" id="editStoryError"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+    <!-- About Me Page -->
+    <div id="about" class="page active">
+        <div class="container">
+            <div class="hero">
+                <h1>Hi, I'm Dorothy!</h1>
+                <p>Your trusted neighborhood pet sitter (call me Dot or Dotty!)</p>
+            </div>
+            
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">My Services</h2>
+                <div class="services-grid" id="aboutServicesGrid">
+                    <!-- Services will be dynamically loaded from rates API -->
+                </div>
+                <div id="aboutServicesLoading" class="loading">
+                    <p>Loading services...</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="profile-section">
+                    <div class="profile-image">
+                        👩🐕🐱
+                    </div>
+                    <div>
+                        <h2>About Me</h2>
+                        <p>Hi there! I'm Dorothy, but everyone calls me Dot or Dotty. I'm a 25-year-old animal lover who has been caring for pets professionally for over 8 years. I understand how important your furry family members are to you, and I'm here to provide them with the love, attention, and care they deserve while you're away.</p>
+                        
+                        <p>Growing up with four dogs (Connie Sioux, Tarnation, Nala, and Beau) and four cats (Nimbus, Orion, Rafiki, and Jonesy) of my own, I've learned to read animal behavior and understand their unique needs. As a dedicated professional, I'm responsible, reliable, and genuinely passionate about animal welfare.</p>
+                        
+                        <h3 style="margin-top: 2rem; color: #667eea;">Why Choose Me?</h3>
+                        <ul style="margin-top: 1rem; padding-left: 1.5rem;">
+                            <li>🏆 8+ years of professional pet sitting experience</li>
+                            <li>📱 Regular photo and text updates</li>
+                            <li>🚨 Trained in pet first aid</li>
+                            <li>👍 Flexible scheduling including holidays</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Updated Gallery Page with Two Sections -->
+    <div id="gallery" class="page">
+        <div class="container">
+            <div class="hero">
+                <h1>Pet Gallery</h1>
+                <p>Meet my fur family and some of the wonderful pets I've cared for!</p>
+            </div>
+
+            <!-- Dorothy's Pet Family Section -->
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">🏠 Dorothy's Pet Family</h2>
+                <p style="text-align: center; margin-bottom: 2rem; color: #666;">
+                    Meet my beloved fur babies - the heart and soul of Dot's of Love Pet Sitting!
+                </p>
+                <div class="gallery-grid" id="dorothyPetsGrid">
+                    <!-- Dorothy's pets will be loaded here -->
+                </div>
+                <div id="dorothyPetsLoading" class="loading">
+                    <p>Loading Dorothy's pets...</p>
+                </div>
+                <div id="dorothyPetsEmpty" style="text-align: center; padding: 2rem; display: none;">
+                    <p>Dorothy's pet family photos coming soon!</p>
+                </div>
+            </div>
+
+            <!-- Client Pets Section -->
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">🐾 Happy Clients</h2>
+                <p style="text-align: center; margin-bottom: 2rem; color: #666;">
+                    Some of the wonderful pets I've had the pleasure of caring for over the years
+                </p>
+                <div class="gallery-grid" id="clientPetsGrid">
+                    <!-- Client pets will be loaded here -->
+                </div>
+                <div id="clientPetsLoading" class="loading">
+                    <p>Loading client pets...</p>
+                </div>
+                <div id="clientPetsEmpty" style="text-align: center; padding: 2rem; display: none;">
+                    <p>Client pet photos coming soon!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rates Page -->
+    <div id="rates" class="page">
+        <div class="container">
+            <div class="hero">
+                <h1>Service Rates</h1>
+                <p>Transparent pricing for quality pet care</p>
+            </div>
+
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">Current Rates</h2>
+                <div class="rates-grid" id="ratesGrid">
+                    <!-- Rates will be loaded here -->
+                </div>
+                <div id="ratesLoading" class="loading">
+                    <p>Loading current rates...</p>
+                </div>
+                <div id="ratesEmpty" style="text-align: center; padding: 2rem; display: none;">
+                    <p>Rates information will be available soon!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Testimonials Page -->
+    <div id="testimonials" class="page">
+        <div class="container">
+            <div class="hero">
+                <h1>Happy Customers</h1>
+                <p>See what pet parents are saying about our services</p>
+            </div>
+
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">Customer Reviews</h2>
+                <div class="testimonials">
+                    <div class="testimonial">
+                        <div class="testimonial-header">
+                            <span class="customer-name">Emma S.</span>
+                            <span class="rating">⭐⭐⭐⭐⭐</span>
+                        </div>
+                        <p>"This is only a TEST-imonial. Dad jokes for the win!"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Page -->
+    <div id="contact" class="page">
+        <div class="container">
+            <div class="hero">
+                <h1>Let's Connect!</h1>
+                <p>Ready to give your pet the best care possible?</p>
+            </div>
+
+            <div class="card">
+                <div class="contact-form">
+                    <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">Request Pet Sitting Services</h2>
+                    <form id="contactForm">
+                        <div class="form-group">
+                            <label for="name">Your Name *</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="phone">
+                            <small style="color: #666; font-size: 0.9em;">* Either email or phone number is required</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bestTime">Best Time to Call *</label>
+                            <select id="bestTime" name="bestTime" required>
+                                <option value="">Select a time...</option>
+                                <option value="morning">Morning (8 AM - 12 PM)</option>
+                                <option value="afternoon">Afternoon (12 PM - 5 PM)</option>
+                                <option value="evening">Evening (5 PM - 8 PM)</option>
+                                <option value="weekend">Weekends</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="service">Service Needed</label>
+                            <select id="service" name="service">
+                                <option value="">Select a service...</option>
+                                <option value="overnight">Overnight Pet Sitting</option>
+                                <option value="walks">Daily Dog Walks</option>
+                                <option value="visits">Pet Visits</option>
+                                <option value="playtime">Pet Playtime</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="petInfo">Tell me about your pet(s)</label>
+                            <textarea id="petInfo" name="petInfo" rows="4" placeholder="Pet's name, breed, age, special needs, etc."></textarea>
+                        </div>
+
+                       <div class="form-group">
+                            <label>Service Dates</label>
+                            <div class="date-picker-container">
+                                <div class="date-input-group">
+                                    <label for="startDate">Start Date *</label>
+                                    <input type="date" id="startDate" name="startDate" required>
+                                </div>
+                                <div class="date-input-group">
+                                    <label for="endDate">End Date</label>
+                                    <input type="date" id="endDate" name="endDate">
+                                </div>
+                            </div>
+                            <small style="color: #666; font-size: 0.9em; margin-top: 0.5rem; display: block;">
+                                * Start date is required. Leave end date empty for single-day services.
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message">Additional Message</label>
+                            <textarea id="message" name="message" rows="3" placeholder="Any other details or questions?"></textarea>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <button type="submit" class="btn">Send Request</button>
+                        </div>
+
+                        <div class="success-message" id="successMessage">
+                            Thank you for your request! We'll contact you soon via your preferred method to discuss your pet sitting needs.
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Admin Page -->
+    <div id="admin" class="page">
+        <div class="container">
+            <div id="adminAuth" class="auth-form">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">Admin Login</h2>
+                <form id="authForm">
+                    <div class="form-group">
+                        <label for="adminUsername">Username:</label>
+                        <input type="text" id="adminUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">Password:</label>
+                        <input type="password" id="adminPassword" required>
+                    </div>
+                    <div style="text-align: center;">
+                        <button type="submit" class="btn">Login</button>
+                    </div>
+                    <div class="error-message" id="authError"></div>
+                </form>
+            </div>
+
+            <div id="adminPanel" class="admin-panel" style="display: none;">
+                <div class="hero">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h1>Admin Dashboard</h1>
+                            <p>Manage gallery, rates, and contacts</p>
+                        </div>
+                        <button onclick="logout()" class="btn btn-danger" style="margin-left: auto;">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="switchAdminTab('gallery')">Gallery Management</button>
+                    <button class="admin-tab" onclick="switchAdminTab('rates')">Rates Management</button>
+                    <button class="admin-tab" onclick="switchAdminTab('contacts')">Contact Requests</button>
+                </div>
+
+                <!-- Gallery Management Tab -->
+                <div id="galleryTab" class="admin-tab-content active">
+                    <div class="admin-form">
+                        <h3 style="color: #667eea; margin-bottom: 1rem;">Add New Pet</h3>
+                        <form id="addPetForm" enctype="multipart/form-data">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="petName">Pet Name *</label>
+                                    <input type="text" id="petName" name="petName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="serviceDate">Service Date</label>
+                                    <input type="text" id="serviceDate" name="serviceDate" placeholder="e.g., Summer 2024">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="storyDescription">Story Description</label>
+                                <textarea id="storyDescription" name="storyDescription" rows="4" placeholder="Tell us about this pet and your experience caring for them..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="isDorothyPet" name="isDorothyPet" style="margin-right: 0.5rem;">
+                                    This is one of Dorothy's own pets
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Pet Photos (Multiple files supported)</label>
+                                <div class="file-upload" onclick="document.getElementById('petImages').click()">
+                                    <button type="button" class="file-upload-btn">Choose Photos</button>
+                                    <p style="margin-top: 1rem; color: #666;">Click to upload photos (max 5MB each)</p>
+                                    <input type="file" id="petImages" name="images" accept="image/*" multiple>
+                                    <div id="filePreview" style="margin-top: 1rem;"></div>
+                                </div>
+                            </div>
+
+                            <div style="text-align: center;">
+                                <button type="submit" class="btn">Add to Gallery</button>
+                            </div>
+                            <div class="success-message" id="addPetSuccess"></div>
+                            <div class="error-message" id="addPetError"></div>
+                        </form>
+                    </div>
+
+                    <!-- Dorothy's Pets Section -->
+                    <div class="card">
+                        <h3 style="color: #667eea; margin-bottom: 1rem;">🏠 Dorothy's Pet Family</h3>
+                        <div class="admin-gallery-grid" id="adminDorothyPetsGrid">
+                            <!-- Dorothy's pets will be loaded here -->
+                        </div>
+                        <div id="adminDorothyPetsLoading" class="loading">
+                            <p>Loading Dorothy's pets...</p>
+                        </div>
+                        <div id="adminDorothyPetsEmpty" style="text-align: center; padding: 2rem; display: none;">
+                            <p>No pets in Dorothy's family yet.</p>
+                        </div>
+                    </div>
+
+                    <!-- Client Pets Section -->
+                    <div class="card">
+                        <h3 style="color: #667eea; margin-bottom: 1rem;">🐾 Client Pets</h3>
+                        <div class="admin-gallery-grid" id="adminClientPetsGrid">
+                            <!-- Client pets will be loaded here -->
+                        </div>
+                        <div id="adminClientPetsLoading" class="loading">
+                            <p>Loading client pets...</p>
+                        </div>
+                        <div id="adminClientPetsEmpty" style="text-align: center; padding: 2rem; display: none;">
+                            <p>No client pets yet.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rates Management Tab -->
+                <div id="ratesTab" class="admin-tab-content">
+                    <div class="admin-form">
+                        <h3 style="color: #667eea; margin-bottom: 1rem;">Add/Edit Service Rate</h3>
+                        <form id="rateForm">
+                            <input type="hidden" id="rateId" name="rateId">
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="serviceType">Service Type *</label>
+                                    <input type="text" id="serviceType" name="serviceType" required placeholder="e.g., Pet Sitting (Overnight)">
+                                </div>
+                                <div class="form-group">
+                                    <label for="ratePerUnit">Rate Per Unit *</label>
+                                    <input type="number" id="ratePerUnit" name="ratePerUnit" step="0.01" min="0" required placeholder="0.00">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="unitType">Unit Type *</label>
+                                    <select id="unitType" name="unitType" required>
+                                        <option value="">Select unit...</option>
+                                        <option value="per_night">Per Night</option>
+                                        <option value="per_day">Per Day</option>
+                                        <option value="per_visit">Per Visit</option>
+                                        <option value="per_walk">Per Walk</option>
+                                        <option value="per_hour">Per Hour</option>
+                                    </select>
+                                </div>
+                                <div class="form-group featured-options">
+                                    <div class="featured-checkbox-group">
+                                        <label>
+                                            <input type="checkbox" id="isActive" name="isActive" checked style="margin-right: 0.5rem;">
+                                            Active Rate
+                                        </label>
+                                        <label>
+                                            <input type="checkbox" id="isFeatured" name="isFeatured" style="margin-right: 0.5rem;">
+                                            Featured Service ⭐
+                                        </label>
+                                        <div class="featured-help-text">
+                                            Featured service appears first and highlighted on the About page
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <textarea id="description" name="description" rows="3" placeholder="Describe this service..."></textarea>
+                            </div>
+
+                            <div style="text-align: center;">
+                                <button type="submit" class="btn" id="rateSubmitBtn">Add Rate</button>
+                                <button type="button" class="btn btn-secondary" onclick="resetRateForm()" style="margin-left: 1rem;">Reset</button>
+                            </div>
+                            
+                            <div class="success-message" id="rateSuccess"></div>
+                            <div class="error-message" id="rateError"></div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="color: #667eea; margin-bottom: 1rem;">Current Rates</h3>
+                        <div class="admin-rates-grid" id="adminRatesGrid">
+                            <!-- Rates table will be loaded here -->
+                        </div>
+                        <div id="adminRatesLoading" class="loading">
+                            <p>Loading rates...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Requests Tab -->
+                <div id="contactsTab" class="admin-tab-content">
+                    <div class="card">
+                        <h3 style="color: #667eea; margin-bottom: 1rem;">Contact Requests</h3>
+                        <div class="contacts-table" id="contactsTable">
+                            <!-- Contacts table will be loaded here -->
+                        </div>
+                        <div id="contactsLoading" class="loading">
+                            <p>Loading contact requests...</p>
+                        </div>
+                        <div id="contactsEmpty" style="text-align: center; padding: 2rem; display: none;">
+                            <p>No contact requests yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load JavaScript files -->
+    <script src="js/api.js"></script>
+    <script src="js/gallery.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/contact.js"></script>
+    <script src="js/main.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+  const token = localStorage.getItem('adminToken');
+  if (token && window.API && window.API.auth && window.API.auth.validate) {
+    try {
+      const valid = await API.auth.validate();
+      if (valid) {
+        // Hide all public pages
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+        // Show the admin page
+        document.getElementById('admin').classList.add('active');
+
+        // Show admin panel instead of login
+        document.getElementById('adminAuth').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+
+        // Load admin data
+        if (typeof loadAdminGallery === 'function') loadAdminGallery();
+        if (typeof loadAdminRates === 'function') loadAdminRates();
+        if (typeof loadAdminContacts === 'function') loadAdminContacts();
+      } else {
+        localStorage.removeItem('adminToken');
+      }
+    } catch (err) {
+      console.error('Admin session restore failed:', err);
+      localStorage.removeItem('adminToken');
+    }
+  }
+});
+</script>
+
+</body>
+</html>
