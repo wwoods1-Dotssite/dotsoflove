@@ -4,7 +4,13 @@
 
 // ---------- GLOBAL ----------
 const ADMIN_API_BASE = "/api";
-let adminToken = null;
+
+// Prevent redeclaration if script reloaded by dynamic navigation
+if (typeof window.adminToken === "undefined") {
+  window.adminToken = null;
+}
+const ADMIN_API_BASE = "/api";
+
 
 // ---------- AUTH ----------
 
