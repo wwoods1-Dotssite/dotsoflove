@@ -199,14 +199,28 @@ app.post('/api/contact', async (req, res) => {
 // =====================================
 // ✅ Admin Auth (alias route support)
 // =====================================
-// ✅ Admin Auth (alias route support)
 app.post(['/auth', '/api/auth', '/api/admin/auth'], (req, res) => {
-  const { username, password } = req.body;
-  if (username === 'dorothy' && password === process.env.ADMIN_PASSWORD) {
-    return res.json({ success: true, token: 'mock-token-123' });
+  try {
+    const { username, password } = req.body;
+
+    console.log('🧩 Admin login attempt:', username);
+
+    if (username === 'dorothy' && password === process.env.ADMIN_PASSWORD) {
+      return res.json({
+        success: true,
+        token: 'mock-token-123',
+        message: 'Login successful',
+      });
+    }
+
+    console.warn('❌ Invalid admin credentials');
+    res.status(401).json({ success: false, message: 'Invalid credentials' });
+  } catch (err) {
+    console.error('❌ Admin auth error:', err);
+    res.status(500).json({ success: false, message: 'Server error during login' });
   }
-  res.status(401).json({ success: false, message: 'Invalid credentials' });
 });
+
 
 
 // =====================================
