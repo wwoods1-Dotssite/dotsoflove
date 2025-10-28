@@ -5,6 +5,14 @@ document.addEventListener('DOMContentLoaded', function() {
     loadInitialContent();
     setupDateValidation();
     // initializeEditStoryModal();
+ // ✅ Detect if user should be on Admin page
+    const hash = window.location.hash || "";
+    if (hash === "#admin" || window.location.pathname === "/admin") {
+        if (typeof checkAdminAuth === "function") {
+            console.log("🔐 Restoring Admin view...");
+            checkAdminAuth();
+        }
+    }
 });
 
 function initializeNavigation() {
