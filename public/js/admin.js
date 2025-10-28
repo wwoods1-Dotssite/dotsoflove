@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeAdminPanel();
 });
 
+// Temporary stubs to silence missing references
+function autoRestoreAdminSession() { console.log('Session restore placeholder'); }
+function initializeEditStoryModal() { console.log('Edit story modal placeholder'); }
+
 function initializeAdminPanel() {
   const authForm = document.getElementById('authForm');
   if (authForm) authForm.addEventListener('submit', handleAdminLogin);
