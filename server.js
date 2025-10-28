@@ -1,18 +1,17 @@
-// server.js - Fixed version with CORS configured properly
+// server.js - CommonJS version with CORS configured properly for Railway
 
-import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import multer from "multer";
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { Pool } from "pg";
-import dotenv from "dotenv";
-dotenv.config();
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const multer = require("multer");
+const { S3Client, PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const { Pool } = require("pg");
+require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT || 8080;
 
-// ✅ Enable CORS globally before any routes
+// ✅ Enable CORS globally before routes
 app.use(cors({
   origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -44,10 +43,10 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // ✅ Health check endpoint
 app.get("/", (req, res) => {
-  res.send("Dot's of Love Pet Sitting API running successfully.");
+  res.send("Dot's of Love Pet Sitting API is running successfully (CommonJS version).");
 });
 
-// ✅ Example routes
+// ✅ Rates endpoint
 app.get("/api/rates", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM service_rates WHERE is_active = true ORDER BY id");
@@ -58,6 +57,7 @@ app.get("/api/rates", async (req, res) => {
   }
 });
 
+// ✅ Gallery endpoint
 app.get("/api/gallery", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -74,7 +74,18 @@ app.get("/api/gallery", async (req, res) => {
   }
 });
 
-// ✅ Example POST for uploads
+// ✅ Contact requests endpoint
+app.get("/api/contacts", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM contact_requests ORDER BY id DESC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching contacts:", err);
+    res.status(500).json({ error: "Failed to fetch contacts" });
+  }
+});
+
+// ✅ Admin upload endpoint
 app.post("/api/admin/gallery", upload.array("images"), async (req, res) => {
   try {
     const { pet_name, story_description, service_date, is_dorothy_pet } = req.body;
@@ -97,25 +108,14 @@ app.post("/api/admin/gallery", upload.array("images"), async (req, res) => {
       }
     }
 
-    res.status(201).json({ message: "Pet added successfully" });
+    res.status(201).json({ message: "Pet added successfully", petId });
   } catch (err) {
     console.error("Error adding pet:", err);
     res.status(500).json({ error: "Failed to add pet" });
   }
 });
 
-// ✅ Contact requests (example route)
-app.get("/api/contacts", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM contact_requests ORDER BY id DESC");
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Error fetching contacts:", err);
-    res.status(500).json({ error: "Failed to fetch contacts" });
-  }
-});
-
-// Start server
+// ✅ Start server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
