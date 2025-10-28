@@ -4,7 +4,7 @@
 
 // ---------- GLOBAL ----------
 const ADMIN_API_BASE = "/api";
-let adminToken = localStorage.getItem("adminToken") || null;
+//let adminToken = localStorage.getItem("adminToken") || null;
 
 // ---------- AUTH ----------
 
