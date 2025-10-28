@@ -3,8 +3,6 @@
 // ===============================
 
 // ---------- GLOBAL ----------
-const ADMIN_API_BASE = "/api";
-
 // Prevent redeclaration if script reloaded by dynamic navigation
 if (typeof window.adminToken === "undefined") {
   window.adminToken = null;
