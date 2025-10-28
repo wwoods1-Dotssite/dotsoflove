@@ -1,4 +1,4 @@
-// server.js - Dot’s of Love Pet Sitting backend (final, Railway-ready)
+// server.js - Dot’s of Love Pet Sitting backend (final verified version for Railway)
 const express = require('express');
 const cors = require('cors');
 
