@@ -171,7 +171,8 @@ function loadGallerySection(sectionType, pets) {
 
 function createGalleryItem(pet) {
     const images = pet.images || [];
-    const primaryImage = images.find(img => img.isPrimary) || images[0];
+    const primaryImage = images.find(img => img.isPrimary || img.is_primary) || images[0];
+
     return `
         <div class="gallery-item" onclick="openModal(${JSON.stringify(pet).replace(/"/g, '&quot;')})">
             <div class="gallery-image">
