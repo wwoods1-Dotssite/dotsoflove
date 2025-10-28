@@ -1,0 +1,7 @@
+# Ignore frontend build and deployment files
+/public
+/public/css
+/public/js
+/public/index.html
+/netlify.toml
+README.md
