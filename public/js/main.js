@@ -13,7 +13,7 @@
   // =====================================
   // Environment Config
   // =====================================
-  const API_BASE = 'https://dots-pet-sitting-backend-production.up.railway.app';
+  const API_BASE = 'dotsoflove-production.up.railway.app';
   console.log('[API_BASE]', API_BASE || '(using relative /api path)');
 
   function apiUrl(path) {
