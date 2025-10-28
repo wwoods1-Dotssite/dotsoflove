@@ -538,8 +538,8 @@ const updatedPetQuery = `
   GROUP BY p.id
 `;
 
-const result = await client.query(updatedPetQuery, [newPetId]);
-const newPet = result.rows[0];
+const updatedResult = await client.query(updatedPetQuery, [newPetId]);
+const newPet = updatedResult.rows[0];
 
 res.json({
   success: true,
@@ -731,7 +731,7 @@ const updatedPetQuery = `
 `;
 
 const result = await client.query(updatedPetQuery, [newPetId]);
-const newPet = result.rows[0];
+const newPet = updatedResult.rows[0];
 
 res.json({
   success: true,
@@ -871,7 +871,7 @@ const updatedPetQuery = `
 `;
 
 const result = await client.query(updatedPetQuery, [newPetId]);
-const newPet = result.rows[0];
+const newPet = updatedResult.rows[0];
 
 res.json({
   success: true,
@@ -946,7 +946,7 @@ const updatedPetQuery = `
 `;
 
 const result = await client.query(updatedPetQuery, [newPetId]);
-const newPet = result.rows[0];
+const newPet = updatedResult.rows[0];
 
 res.json({
   success: true,
@@ -1011,7 +1011,7 @@ const updatedPetQuery = `
 `;
 
 const result = await client.query(updatedPetQuery, [newPetId]);
-const newPet = result.rows[0];
+const newPet = updatedResult.rows[0];
 
 res.json({
   success: true,
