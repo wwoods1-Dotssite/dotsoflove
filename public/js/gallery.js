@@ -65,7 +65,7 @@ function createImageCarousel(images, petName) {
 
 // Create single image HTML
 function createSingleImage(image, petName) {
-    return `<img src="${image.url}" alt="${petName}" class="single-image">`;
+    return `<img src="${image.image_url || image.url}" alt="${petName}" class="single-image">`;
 }
 
 // Create no image placeholder
