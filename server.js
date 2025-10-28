@@ -1,4 +1,4 @@
-// server.js - Dot’s of Love Pet Sitting backend (fully Railway-ready)
+// server.js - Dot’s of Love Pet Sitting backend (final, Railway-ready)
 const express = require('express');
 const cors = require('cors');
 
@@ -93,7 +93,7 @@ app.get('/api/gallery', (req, res) => {
   });
 });
 
-// --- Pets Management Endpoint (for future admin use) ---
+// --- Pets Management Endpoint ---
 app.get('/api/pets', (req, res) => {
   res.json({
     pets: [
