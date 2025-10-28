@@ -1,4 +1,5 @@
-// server.js - CommonJS version with CORS configured properly for Railway
+// server.js - Final CommonJS version for Dot's of Love Pet Sitting
+// Ready for Railway deployment
 
 const express = require("express");
 const cors = require("cors");
@@ -11,7 +12,7 @@ require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 8080;
 
-// ✅ Enable CORS globally before routes
+// ✅ Global CORS configuration
 app.use(cors({
   origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -23,13 +24,13 @@ app.options("*", cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// PostgreSQL setup
+// ✅ PostgreSQL setup
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-// AWS S3 client setup
+// ✅ AWS S3 setup
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
   credentials: {
@@ -38,30 +39,34 @@ const s3 = new S3Client({
   }
 });
 
-// Multer for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ✅ Health check endpoint
 app.get("/", (req, res) => {
-  res.send("Dot's of Love Pet Sitting API is running successfully (CommonJS version).");
+  res.send("Dot's of Love Pet Sitting API running successfully (mock auth version).");
 });
 
-// ✅ Rates endpoint
+// ✅ Service Rates Endpoint
 app.get("/api/rates", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM service_rates WHERE is_active = true ORDER BY id");
+    const result = await pool.query(`
+      SELECT rate_per_unit, unit_type, description, is_active, is_featured, created_at
+      FROM service_rates
+      WHERE is_active = true
+      ORDER BY created_at DESC;
+    `);
     res.json(result.rows);
   } catch (err) {
     console.error("Error fetching rates:", err);
-    res.status(500).json({ error: "Failed to fetch rates" });
+    res.status(500).json({ error: "Failed to fetch service rates" });
   }
 });
 
-// ✅ Gallery endpoint
+// ✅ Gallery Endpoint
 app.get("/api/gallery", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT p.*, json_agg(i.*) AS images
+      SELECT p.*, COALESCE(json_agg(i.*) FILTER (WHERE i.id IS NOT NULL), '[]') AS images
       FROM pets p
       LEFT JOIN pet_images i ON p.id = i.pet_id
       GROUP BY p.id
@@ -74,7 +79,7 @@ app.get("/api/gallery", async (req, res) => {
   }
 });
 
-// ✅ Contact requests endpoint
+// ✅ Contact Requests Endpoint
 app.get("/api/contacts", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM contact_requests ORDER BY id DESC");
@@ -85,7 +90,30 @@ app.get("/api/contacts", async (req, res) => {
   }
 });
 
-// ✅ Admin upload endpoint
+// ✅ Admin Authentication (Mock Login)
+app.post("/api/admin/auth", (req, res) => {
+  const { username, password } = req.body;
+  const adminUser = process.env.ADMIN_USER || "dorothy";
+  const adminPass = process.env.ADMIN_PASS || "password123";
+
+  if (username === adminUser && password === adminPass) {
+    res.status(200).json({ success: true, token: "mock-token" });
+  } else {
+    res.status(401).json({ success: false, error: "Invalid credentials" });
+  }
+});
+
+// ✅ Admin Validation
+app.get("/api/admin/validate", (req, res) => {
+  const authHeader = req.headers.authorization || "";
+  if (authHeader === "Bearer mock-token") {
+    res.status(200).json({ success: true });
+  } else {
+    res.status(401).json({ success: false });
+  }
+});
+
+// ✅ Admin Gallery Upload
 app.post("/api/admin/gallery", upload.array("images"), async (req, res) => {
   try {
     const { pet_name, story_description, service_date, is_dorothy_pet } = req.body;
