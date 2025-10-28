@@ -1,8 +1,15 @@
-[build]
-  publish = "public"
-  command = ""    # no build step for static HTML/JS
+[[redirects]]
+from = "/favicon.ico"
+to = "/favicon.svg"
+status = 200
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+from = "/api/*"
+to = "https://dotsoflove-production.up.railway.app/:splat"
+status = 200
+force = true
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
