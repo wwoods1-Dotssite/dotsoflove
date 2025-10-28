@@ -45,7 +45,7 @@ function createImageCarousel(images, petName) {
         <div class="image-carousel">
             <div class="carousel-container">
                 ${images.map((img, index) => `
-                    <img src="${image.image_url || img.url}" 
+                    <img src="${img.image_url || img.url}" 
                          alt="${petName}" 
                          class="carousel-image ${index === 0 ? 'active' : ''}"
                          data-index="${index}">
