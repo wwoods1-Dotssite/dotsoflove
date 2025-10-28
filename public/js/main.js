@@ -5,19 +5,18 @@ document.addEventListener('DOMContentLoaded', function() {
     setupDateValidation();
     // initializeEditStoryModal();
 
-    // ✅ Detect if user should be on Admin page FIRST
     const hash = window.location.hash || "";
+    // ✅ If admin path, skip loading default About and open Admin directly
     if (hash === "#admin" || window.location.pathname === "/admin") {
+        console.log("🔐 Restoring Admin view...");
         if (typeof checkAdminAuth === "function") {
-            console.log("🔐 Restoring Admin view...");
             checkAdminAuth();
-            return; // 🧠 prevent loading About
         }
+    } else {
+        loadInitialContent(); // load normal About/Gallery/etc only if NOT admin
     }
-
-    // 🟣 Only load default content if not admin
-    loadInitialContent();
 });
+
 
 function initializeNavigation() {
     const navLinks = document.querySelectorAll('.nav-link');
