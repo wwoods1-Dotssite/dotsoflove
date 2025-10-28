@@ -1,4 +1,4 @@
-// admin.js - Final clean version with correct tab switching and full admin functionality
+// admin.js - Fresh version with working tab switching (.admin-nav) and full admin functionality
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeAdminPanel();
@@ -175,7 +175,7 @@ window.logout = function() {
   Utils.showSuccess('authMessage', 'You have been logged out.');
 };
 
-// ===================== TAB SWITCHING =====================
+// ===================== TAB SWITCHING (.admin-nav) =====================
 window.switchAdminTab = function(tabName) {
   // Hide all tab content sections
   document.querySelectorAll('.admin-tab-content').forEach(tab => tab.style.display = 'none');
@@ -185,7 +185,7 @@ window.switchAdminTab = function(tabName) {
   if (active) active.style.display = 'block';
 
   // Update button active states
-  document.querySelectorAll('.admin-tabs button').forEach(btn => btn.classList.remove('active'));
-  const activeButton = document.querySelector(`.admin-tabs button[onclick="switchAdminTab('${tabName}')"]`);
+  document.querySelectorAll('.admin-nav button').forEach(btn => btn.classList.remove('active'));
+  const activeButton = document.querySelector(`.admin-nav button[onclick="switchAdminTab('${tabName}')"]`);
   if (activeButton) activeButton.classList.add('active');
 };
