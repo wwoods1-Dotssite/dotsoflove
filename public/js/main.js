@@ -1,89 +1,73 @@
-// main.js - Final version with SPA-style navigation and lazy data loading
+// main.js — Unified, polished version for Rates and My Services
+// Uses CSS-based formatting, fade-in animations, and unified /api/rates endpoint
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadDualGallery();
-  loadAboutServices();
-  loadRates();
+  loadUnifiedRates();
   setupNavigation();
   handleHashChange();
 });
 
-// ============ GALLERY ============
-async function loadDualGallery() {
+// =====================================
+// Unified Rates + My Services Fetcher
+// =====================================
+async function loadUnifiedRates() {
+  const endpoints = {
+    rates: document.getElementById('ratesGrid'),
+    about: document.getElementById('aboutServices')
+  };
+
   try {
-    const petsResponse = await API.gallery.getAll();
-    const pets = Array.isArray(petsResponse) ? petsResponse : petsResponse?.pets || [];
+    const response = await fetch('/api/rates');
+    const data = await response.json();
 
-    const dorothyPets = pets.filter(p => p.is_dorothy_pet);
-    const clientPets = pets.filter(p => !p.is_dorothy_pet);
+    // Clear previous loading states
+    Object.values(endpoints).forEach(el => {
+      if (el) el.innerHTML = '';
+    });
 
-    renderGallery('dorothy', dorothyPets);
-    renderGallery('client', clientPets);
-  } catch (error) {
-    console.error('Error loading gallery:', error);
-  }
-}
-
-function renderGallery(type, pets) {
-  const containerId = type === 'dorothy' ? 'dorothyPetsGrid' : 'clientPetsGrid';
-  const container = document.getElementById(containerId);
-  if (!container) return;
-
-  if (!Array.isArray(pets) || pets.length === 0) {
-    container.innerHTML = '<p style="text-align:center;color:#666;">No pets to display.</p>';
-    return;
-  }
-
-  container.innerHTML = pets.map(pet => `
-    <div class="gallery-item">
-      ${pet.images?.[0]?.url ? `<img src="${pet.images[0].url}" alt="${pet.pet_name}" />` : ''}
-      <div>${pet.pet_name}</div>
-    </div>
-  `).join('');
-}
-
-// ============ RATES ============
-async function loadAboutServices() {
-  try {
-    const ratesResponse = await API.rates.getAll();
-    const rates = Array.isArray(ratesResponse) ? ratesResponse : ratesResponse?.rates || [];
-    const aboutContainer = document.getElementById('aboutServices');
-    if (!aboutContainer) return;
-
-    if (!rates.length) {
-      aboutContainer.innerHTML = '<p style="text-align:center;color:#666;">No service rates available.</p>';
+    if (!Array.isArray(data) || data.length === 0 || data[0].is_empty) {
+      Object.values(endpoints).forEach(el => {
+        if (el) el.innerHTML = '<p class="no-data">No current services available.</p>';
+      });
       return;
     }
 
-    aboutContainer.innerHTML = rates.map(r => 
-      `<div>${r.service_type}: $${r.rate_per_unit}</div>`
-    ).join('');
-  } catch (err) {
-    console.error('Error loading services:', err);
-  }
-}
+    // Separate featured and standard
+    const featured = data.filter(r => r.is_featured);
+    const regular = data.filter(r => !r.is_featured);
 
-async function loadRates() {
-  try {
-    const ratesResponse = await API.rates.getAll();
-    const rates = Array.isArray(ratesResponse) ? ratesResponse : ratesResponse?.rates || [];
-    const ratesContainer = document.getElementById('ratesGrid');
-    if (!ratesContainer) return;
+    const createCardHTML = (rate, isFeatured = false) => `
+      <div class="rate-card ${isFeatured ? 'featured-rate' : ''} fade-in">
+        <div class="rate-header">${rate.service_type || ''}</div>
+        <div class="rate-body">
+          <div class="rate-description">${rate.description || ''}</div>
+          <div class="rate-value">$${rate.rate_per_unit || '0'} <span class="unit">${rate.unit_type || ''}</span></div>
+        </div>
+      </div>
+    `;
 
-    if (!rates.length) {
-      ratesContainer.innerHTML = '<p style="text-align:center;color:#666;">No rates available.</p>';
-      return;
-    }
+    // Combine all cards: featured first
+    const allCards = [...featured.map(r => createCardHTML(r, true)), ...regular.map(r => createCardHTML(r, false))].join('');
 
-    ratesContainer.innerHTML = rates.map(r => 
-      `<div>${r.service_type}: $${r.rate_per_unit}</div>`
-    ).join('');
+    // Render consistently for both sections
+    Object.entries(endpoints).forEach(([key, container]) => {
+      if (container) {
+        container.classList.add('rates-grid');
+        container.innerHTML = allCards;
+      }
+    });
+
   } catch (err) {
     console.error('Error loading rates:', err);
+    Object.values(endpoints).forEach(el => {
+      if (el) el.innerHTML = '<p class="error-msg">Error loading services. Please try again later.</p>';
+    });
   }
 }
 
-// ============ SIMPLE PAGE ROUTING WITH LAZY LOADING ============
+// =====================================
+// Navigation Logic (unchanged)
+// =====================================
 function setupNavigation() {
   document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', e => {
@@ -107,24 +91,11 @@ function handleHashChange() {
   const activePage = document.getElementById(hash);
   if (activePage) activePage.classList.add('active');
 
-  // Update active link styling
+  // Update active nav styling
   document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
   const activeLink = document.querySelector(`.nav-link[href="#${hash}"]`);
   if (activeLink) activeLink.classList.add('active');
 
-  // 🔁 Lazy-load content when section is viewed
-  switch (hash) {
-    case 'gallery':
-      loadDualGallery();
-      break;
-    case 'rates':
-      loadRates();
-      break;
-    case 'contact':
-      if (typeof loadContacts === 'function') loadContacts();
-      break;
-    case 'about':
-      loadAboutServices();
-      break;
-  }
+  // Lazy reload rates when viewing relevant tabs
+  if (['rates', 'about'].includes(hash)) loadUnifiedRates();
 }
