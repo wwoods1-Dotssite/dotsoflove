@@ -2,17 +2,21 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeNavigation();
-    loadInitialContent();
     setupDateValidation();
     // initializeEditStoryModal();
- // ✅ Detect if user should be on Admin page
+
+    // ✅ Detect if user should be on Admin page FIRST
     const hash = window.location.hash || "";
     if (hash === "#admin" || window.location.pathname === "/admin") {
         if (typeof checkAdminAuth === "function") {
             console.log("🔐 Restoring Admin view...");
             checkAdminAuth();
+            return; // 🧠 prevent loading About
         }
     }
+
+    // 🟣 Only load default content if not admin
+    loadInitialContent();
 });
 
 function initializeNavigation() {
