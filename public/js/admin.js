@@ -163,7 +163,7 @@ window.logout = function() {
 // ===================== ADMIN TAB SWITCHING =====================
 window.switchAdminTab = function(tabName) {
   document.querySelectorAll('.admin-tab').forEach(tab => tab.style.display = 'none');
-  const active = document.getElementById(`admin-${tabName}`);
+  const active = document.getElementById(`${tabName}Tab`);
   if (active) active.style.display = 'block';
   document.querySelectorAll('.admin-nav button').forEach(btn => btn.classList.remove('active'));
   const activeButton = document.querySelector(`.admin-nav button[data-tab="${tabName}"]`);
