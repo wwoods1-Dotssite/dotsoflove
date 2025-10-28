@@ -8,12 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
 function initializeEditStoryModal() { console.log('Edit story modal placeholder'); }
 
 // ✅ NEW – Ensure Utils won’t throw errors if missing
-if (typeof Utils === 'undefined') {
-  var Utils = {
-    showError: (id, msg) => { const el = document.getElementById(id); if (el) el.innerText = msg; },
-    showSuccess: (id, msg) => { const el = document.getElementById(id); if (el) el.innerText = msg; },
-    hideMessage: (id) => { const el = document.getElementById(id); if (el) el.innerText = ''; }
-  };
+window.Utils = window.Utils || {
+  showError: (id, msg) => { const el = document.getElementById(id); if (el) el.innerText = msg; },
+  showSuccess: (id, msg) => { const el = document.getElementById(id); if (el) el.innerText = msg; },
+  hideMessage: (id) => { const el = document.getElementById(id); if (el) el.innerText = ''; }
+};
+
 }
 
 // ✅ NEW – Check authentication token in localStorage
