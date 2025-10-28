@@ -14,8 +14,6 @@ window.Utils = window.Utils || {
   hideMessage: (id) => { const el = document.getElementById(id); if (el) el.innerText = ''; }
 };
 
-}
-
 // ✅ NEW – Check authentication token in localStorage
 function checkAdminAuth() {
   const token = localStorage.getItem('adminToken');
