@@ -1,9 +1,11 @@
-// main.js - final version with null checks and improved error handling
+// main.js - Updated with SPA-style navigation and hash routing
 
 document.addEventListener('DOMContentLoaded', () => {
   loadDualGallery();
   loadAboutServices();
   loadRates();
+  setupNavigation();
+  handleHashChange();
 });
 
 // ============ GALLERY ============
@@ -25,10 +27,7 @@ async function loadDualGallery() {
 function renderGallery(type, pets) {
   const containerId = type === 'dorothy' ? 'dorothyPetsGrid' : 'clientPetsGrid';
   const container = document.getElementById(containerId);
-  if (!container) {
-    console.warn(`Gallery container not found for type: ${type}`);
-    return;
-  }
+  if (!container) return;
 
   if (!Array.isArray(pets) || pets.length === 0) {
     container.innerHTML = '<p style="text-align:center;color:#666;">No pets to display.</p>';
@@ -49,10 +48,7 @@ async function loadAboutServices() {
     const ratesResponse = await API.rates.getAll();
     const rates = Array.isArray(ratesResponse) ? ratesResponse : ratesResponse?.rates || [];
     const aboutContainer = document.getElementById('aboutServices');
-    if (!aboutContainer) {
-      console.warn('About services container not found.');
-      return;
-    }
+    if (!aboutContainer) return;
 
     if (!rates.length) {
       aboutContainer.innerHTML = '<p style="text-align:center;color:#666;">No service rates available.</p>';
@@ -72,10 +68,7 @@ async function loadRates() {
     const ratesResponse = await API.rates.getAll();
     const rates = Array.isArray(ratesResponse) ? ratesResponse : ratesResponse?.rates || [];
     const ratesContainer = document.getElementById('ratesGrid');
-    if (!ratesContainer) {
-      console.warn('Rates container not found.');
-      return;
-    }
+    if (!ratesContainer) return;
 
     if (!rates.length) {
       ratesContainer.innerHTML = '<p style="text-align:center;color:#666;">No rates available.</p>';
@@ -88,4 +81,34 @@ async function loadRates() {
   } catch (err) {
     console.error('Error loading rates:', err);
   }
+}
+
+// ============ SIMPLE PAGE ROUTING ============
+function setupNavigation() {
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const target = link.getAttribute('href').replace('#', '');
+      window.location.hash = target;
+      handleHashChange();
+    });
+  });
+
+  window.addEventListener('hashchange', handleHashChange);
+}
+
+function handleHashChange() {
+  const hash = window.location.hash.substring(1) || 'about';
+
+  // Hide all sections
+  document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+
+  // Show target section if it exists
+  const activePage = document.getElementById(hash);
+  if (activePage) activePage.classList.add('active');
+
+  // Update active link styling
+  document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+  const activeLink = document.querySelector(`.nav-link[href="#${hash}"]`);
+  if (activeLink) activeLink.classList.add('active');
 }
