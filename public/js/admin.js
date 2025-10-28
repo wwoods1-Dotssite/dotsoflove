@@ -133,3 +133,41 @@ window.loadAdminContacts = async function() {
     Utils.showError('contactsLoading', 'Error loading contact requests.');
   }
 };
+// ===================== ADD PET =====================
+async function handleAddPet(e) {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  try {
+    const result = await API.gallery.add(formData);
+    if (result.success) {
+      Utils.showSuccess('addPetSuccess', 'Pet added successfully!');
+      Utils.hideMessage('addPetError');
+      e.target.reset();
+      document.getElementById('filePreview').innerHTML = '';
+      loadAdminGallery();
+    } else {
+      Utils.showError('addPetError', result.error || 'Failed to add pet');
+    }
+  } catch (err) {
+    console.error('Error adding pet:', err);
+    Utils.showError('addPetError', 'Error adding pet.');
+  }
+}
+
+// ===================== ADMIN TAB SWITCHING =====================
+window.switchAdminTab = function(tabName) {
+  document.querySelectorAll('.admin-tab').forEach(tab => tab.style.display = 'none');
+  const active = document.getElementById(`admin-${tabName}`);
+  if (active) active.style.display = 'block';
+  document.querySelectorAll('.admin-nav button').forEach(btn => btn.classList.remove('active'));
+  const activeButton = document.querySelector(`.admin-nav button[data-tab="${tabName}"]`);
+  if (activeButton) activeButton.classList.add('active');
+};
+
+// ===================== LOGOUT =====================
+window.logout = function() {
+  API.auth.logout();
+  document.getElementById('adminAuth').style.display = 'block';
+  document.getElementById('adminPanel').style.display = 'none';
+  Utils.showSuccess('authMessage', 'You have been logged out.');
+};
