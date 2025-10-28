@@ -1,11 +1,23 @@
-// main.js — Unified, polished version for Rates and My Services
-// Uses CSS-based formatting, fade-in animations, and unified /api/rates endpoint
+// main.js — Environment-based API version
+// Uses Netlify + Railway environment variable (VITE_API_BASE)
+// Clean fetch logic and graceful error handling
 
 document.addEventListener('DOMContentLoaded', () => {
   loadUnifiedRates();
   setupNavigation();
   handleHashChange();
 });
+
+// =====================================
+// Environment Config
+// =====================================
+const API_BASE = (window?.env?.VITE_API_BASE || '').replace(/\/$/, '');
+console.log('[API_BASE]', API_BASE || '(using relative /api path)');
+
+// Helper to build URLs safely
+function apiUrl(path) {
+  return API_BASE ? `${API_BASE}${path}` : path;
+}
 
 // =====================================
 // Unified Rates + My Services Fetcher
@@ -16,14 +28,24 @@ async function loadUnifiedRates() {
     about: document.getElementById('aboutServices')
   };
 
-  try {
-    const response = await fetch('/api/rates');
-    const data = await response.json();
+  Object.values(endpoints).forEach(el => {
+    if (el) el.innerHTML = '<p class="loading">Loading current services...</p>';
+  });
 
-    // Clear previous loading states
-    Object.values(endpoints).forEach(el => {
-      if (el) el.innerHTML = '';
+  try {
+    const response = await fetch(apiUrl('/api/rates'), {
+      headers: { 'Accept': 'application/json' },
+      mode: 'cors'
     });
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (!contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error(`Invalid JSON (got HTML): ${text.slice(0, 200)}`);
+    }
+
+    const data = await response.json();
 
     if (!Array.isArray(data) || data.length === 0 || data[0].is_empty) {
       Object.values(endpoints).forEach(el => {
@@ -32,7 +54,6 @@ async function loadUnifiedRates() {
       return;
     }
 
-    // Separate featured and standard
     const featured = data.filter(r => r.is_featured);
     const regular = data.filter(r => !r.is_featured);
 
@@ -46,10 +67,8 @@ async function loadUnifiedRates() {
       </div>
     `;
 
-    // Combine all cards: featured first
     const allCards = [...featured.map(r => createCardHTML(r, true)), ...regular.map(r => createCardHTML(r, false))].join('');
 
-    // Render consistently for both sections
     Object.entries(endpoints).forEach(([key, container]) => {
       if (container) {
         container.classList.add('rates-grid');
@@ -66,7 +85,7 @@ async function loadUnifiedRates() {
 }
 
 // =====================================
-// Navigation Logic (unchanged)
+// Navigation Logic
 // =====================================
 function setupNavigation() {
   document.querySelectorAll('.nav-link').forEach(link => {
@@ -84,18 +103,14 @@ function setupNavigation() {
 function handleHashChange() {
   const hash = window.location.hash.substring(1) || 'about';
 
-  // Hide all sections
   document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
 
-  // Show target section if it exists
   const activePage = document.getElementById(hash);
   if (activePage) activePage.classList.add('active');
 
-  // Update active nav styling
   document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
   const activeLink = document.querySelector(`.nav-link[href="#${hash}"]`);
   if (activeLink) activeLink.classList.add('active');
 
-  // Lazy reload rates when viewing relevant tabs
   if (['rates', 'about'].includes(hash)) loadUnifiedRates();
 }
