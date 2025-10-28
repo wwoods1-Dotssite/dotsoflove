@@ -1,6 +1,5 @@
-// main.js — Safe, encapsulated version to prevent duplicate loads
+// main.js — Fixed and encapsulated version (no duplicate functions)
 (() => {
-  // Prevent redeclaration if this script runs twice
   if (window.__mainLoaded) return;
   window.__mainLoaded = true;
 
@@ -14,7 +13,7 @@
   // Environment Config
   // =====================================
   const API_BASE = 'https://dotsoflove-production.up.railway.app';
-  console.log('[API_BASE]', API_BASE || '(using relative /api path)');
+  console.log('[API_BASE]', API_BASE);
 
   function apiUrl(path) {
     return API_BASE ? `${API_BASE}${path}` : path;
@@ -24,11 +23,6 @@
   // Unified Rates + My Services Fetcher
   // =====================================
   async function loadUnifiedRates() {
-    const API_BASE = window?.env?.VITE_API_BASE || 'https://dotsoflove-production.up.railway.app';
-    console.log('%c[DEBUG]', 'color:#00aaff; font-weight:bold;', 'Using API_BASE:', API_BASE);
-
-    const apiUrl = (path) => `${API_BASE.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
-
     const endpoints = {
       rates: document.getElementById('ratesGrid'),
       about: document.getElementById('aboutServices')
@@ -54,7 +48,7 @@
       }
 
       const data = await response.json();
-      console.log('%c[DEBUG]', 'color:#00aaff;', 'Received rates data:', data);
+      console.log('[DEBUG] Received rates data:', data);
 
       if (!Array.isArray(data) || data.length === 0) {
         Object.values(endpoints).forEach(el => {
@@ -89,7 +83,7 @@
       });
 
     } catch (err) {
-      console.error('%c[DEBUG]', 'color:#ff3333;', 'Error loading rates:', err);
+      console.error('[DEBUG] Error loading rates:', err);
       Object.values(endpoints).forEach(el => {
         if (el) el.innerHTML = '<p class="error-msg">Error loading services. Please try again later.</p>';
       });
@@ -119,7 +113,6 @@
       sec.style.display = sec.id === hash ? 'block' : 'none';
     });
 
-    // Reload data when viewing About or Rates
     if (hash === 'rates' || hash === 'about') {
       loadUnifiedRates();
     }
