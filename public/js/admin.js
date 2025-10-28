@@ -1,6 +1,8 @@
 // ===============================
-// Admin Dashboard Script (Final)
+// Admin Dashboard Script (Final Release)
 // ===============================
+
+console.log("✅ admin.js initialized safely (vFinal)");
 
 // ---------- GLOBAL ----------
 // Prevent redeclaration if script reloaded by dynamic navigation
@@ -8,7 +10,6 @@ if (typeof window.adminToken === "undefined") {
   window.adminToken = null;
 }
 const ADMIN_API_BASE = "/api";
-
 
 // ---------- AUTH ----------
 
@@ -116,9 +117,7 @@ async function loadAdminContacts() {
         <p><strong>Email:</strong> ${c.email}</p>
         <p><strong>Phone:</strong> ${c.phone}</p>
         <p><strong>Service:</strong> ${c.service}</p>
-        <p><strong>Dates:</strong> ${c.start_date || ""} - ${
-          c.end_date || ""
-        }</p>
+        <p><strong>Dates:</strong> ${c.start_date || ""} – ${c.end_date || ""}</p>
         <p><strong>Message:</strong> ${c.message || ""}</p>
       </div>`
       )
@@ -153,8 +152,7 @@ async function loadAdminGallery() {
                     <div class="admin-image-wrapper">
                       <img src="${img.image_url}" alt="${pet.pet_name}">
                       <button class="delete-image" data-pet="${pet.id}" data-image="${img.id}">🗑️</button>
-                    </div>
-                  `
+                    </div>`
                   )
                   .join("")}
               </div>`
@@ -238,3 +236,31 @@ document.addEventListener("DOMContentLoaded", () => {
     banner.style.display = "none";
   }
 });
+
+// ---------- GLOBAL AUTH STATE ----------
+if (typeof window.checkAdminAuth === "undefined") {
+  window.checkAdminAuth = function () {
+    const token = window.adminToken || localStorage.getItem("adminToken");
+    const loginSection = document.getElementById("adminLogin");
+    const panelSection = document.getElementById("adminPanel");
+    const banner = document.getElementById("adminStatusBanner");
+
+    if (token) {
+      if (loginSection) loginSection.style.display = "none";
+      if (panelSection) panelSection.style.display = "block";
+      if (banner) {
+        banner.textContent = "🟢 Logged in as Admin";
+        banner.className = "admin-banner success";
+      }
+      console.log("✅ Admin already authenticated");
+    } else {
+      if (loginSection) loginSection.style.display = "block";
+      if (panelSection) panelSection.style.display = "none";
+      if (banner) {
+        banner.textContent = "🔒 Login required";
+        banner.className = "admin-banner warning";
+      }
+      console.log("🔒 Admin authentication required");
+    }
+  };
+}
