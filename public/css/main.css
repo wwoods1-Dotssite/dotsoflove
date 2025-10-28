@@ -589,3 +589,12 @@ nav {
         box-sizing: border-box;
     }
 }
+/* Hide all pages by default */
+.page {
+  display: none;
+}
+
+/* Only show the active page */
+.page.active {
+  display: block;
+}
