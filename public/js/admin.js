@@ -1,5 +1,4 @@
-// admin.js - Final, complete version with all functionality restored and improved
-// Includes: Auth, Add Pet, Edit, Delete, Rates Management, Contacts, Logout, Tab Switching
+// admin.js - Final clean version with correct tab switching and full admin functionality
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeAdminPanel();
@@ -106,6 +105,22 @@ function handleFilePreview(event) {
   }
 }
 
+// ===================== EDIT FILE PREVIEW =====================
+function handleEditFilePreview(event) {
+  const preview = document.getElementById('editFilePreview');
+  const files = event.target.files;
+  preview.innerHTML = '';
+
+  if (files && files.length > 0) {
+    preview.innerHTML = `<p style="color:#667eea;font-weight:bold;">${files.length} file(s) selected:</p>`;
+    Array.from(files).forEach(file => {
+      preview.innerHTML += `<p style="font-size:0.9rem;color:#666;">• ${file.name}</p>`;
+    });
+  } else {
+    preview.innerHTML = '<p style="font-size:0.9rem;color:#999;">No files selected</p>';
+  }
+}
+
 // ===================== RATES MANAGEMENT =====================
 async function handleRateSubmission(e) {
   e.preventDefault();
@@ -160,28 +175,17 @@ window.logout = function() {
   Utils.showSuccess('authMessage', 'You have been logged out.');
 };
 
-// ===================== ADMIN TAB SWITCHING =====================
+// ===================== TAB SWITCHING =====================
 window.switchAdminTab = function(tabName) {
-  document.querySelectorAll('.admin-tab').forEach(tab => tab.style.display = 'none');
+  // Hide all tab content sections
+  document.querySelectorAll('.admin-tab-content').forEach(tab => tab.style.display = 'none');
+
+  // Show selected section
   const active = document.getElementById(`${tabName}Tab`);
   if (active) active.style.display = 'block';
-  document.querySelectorAll('.admin-nav button').forEach(btn => btn.classList.remove('active'));
-  const activeButton = document.querySelector(`.admin-nav button[data-tab="${tabName}"]`);
+
+  // Update button active states
+  document.querySelectorAll('.admin-tabs button').forEach(btn => btn.classList.remove('active'));
+  const activeButton = document.querySelector(`.admin-tabs button[onclick="switchAdminTab('${tabName}')"]`);
   if (activeButton) activeButton.classList.add('active');
 };
-// ===================== EDIT FILE PREVIEW =====================
-function handleEditFilePreview(event) {
-  const preview = document.getElementById('editFilePreview');
-  const files = event.target.files;
-  preview.innerHTML = '';
-
-  if (files && files.length > 0) {
-    preview.innerHTML = `<p style="color:#667eea;font-weight:bold;">${files.length} file(s) selected:</p>`;
-    Array.from(files).forEach(file => {
-      preview.innerHTML += `<p style="font-size:0.9rem;color:#666;">• ${file.name}</p>`;
-    });
-  } else {
-    preview.innerHTML = '<p style="font-size:0.9rem;color:#999;">No files selected</p>';
-  }
-}
-
