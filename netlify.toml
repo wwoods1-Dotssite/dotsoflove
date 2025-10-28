@@ -1,6 +1,6 @@
 [build]
-  publish = "public"     # folder Netlify should deploy
-  command = "npm run build"        
+  publish = "public"
+  command = ""    # no build step for static HTML/JS
 
 [[redirects]]
   from = "/*"
