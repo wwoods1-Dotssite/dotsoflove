@@ -42,7 +42,7 @@ async function handleAdminLogin(event) {
 
     const data = await res.json();
     if (data.success) {
-      console.log("✅ Admin logged in successfully");
+    //  console.log("✅ Admin logged in successfully");
       localStorage.setItem("adminToken", data.token);
 // ✅ Store token and navigate directly to Admin section
 localStorage.setItem("adminToken", data.token);
