@@ -1,14 +1,13 @@
 // ===============================
-// Admin Dashboard Script
+// Admin Dashboard Script (Final)
 // ===============================
 
 // ---------- GLOBAL ----------
 const ADMIN_API_BASE = "/api";
-//let adminToken = localStorage.getItem("adminToken") || null;
+let adminToken = null;
 
 // ---------- AUTH ----------
 
-// Handle admin login
 async function handleAdminLogin(event) {
   event.preventDefault();
 
@@ -50,15 +49,12 @@ async function handleAdminLogin(event) {
   }
 }
 
-// Logout admin
 function handleAdminLogout() {
   localStorage.removeItem("adminToken");
   location.reload();
 }
 
 // ---------- TAB HANDLING ----------
-
-// Switch between admin tabs
 function switchAdminTab(tabId) {
   document.querySelectorAll(".admin-tab").forEach((tab) => {
     tab.classList.remove("active");
@@ -80,7 +76,6 @@ async function loadAdminRates() {
   if (!container) return;
 
   try {
-    console.log("Loading admin rates...");
     const res = await fetch(`${ADMIN_API_BASE}/rates`);
     const rates = await res.json();
 
@@ -106,7 +101,6 @@ async function loadAdminContacts() {
   if (!container) return;
 
   try {
-    console.log("Loading contact requests...");
     const res = await fetch(`${ADMIN_API_BASE}/contacts`);
     const data = await res.json();
 
@@ -137,7 +131,6 @@ async function loadAdminGallery() {
   if (!container) return;
 
   try {
-    console.log("Loading admin gallery...");
     const res = await fetch(`${ADMIN_API_BASE}/gallery`);
     const pets = await res.json();
 
@@ -168,7 +161,7 @@ async function loadAdminGallery() {
       )
       .join("");
 
-    // Attach delete handlers
+    // Event bindings
     document.querySelectorAll(".delete-pet").forEach((btn) =>
       btn.addEventListener("click", async (e) => {
         const petId = e.target.dataset.pet;
@@ -222,14 +215,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("adminLoginForm");
   const logoutBtn = document.getElementById("adminLogout");
   const token = localStorage.getItem("adminToken");
+  const banner = document.getElementById("adminStatusBanner");
 
   if (loginForm) loginForm.addEventListener("submit", handleAdminLogin);
   if (logoutBtn) logoutBtn.addEventListener("click", handleAdminLogout);
 
   if (token) {
+    adminToken = token;
     document.body.classList.add("admin-logged-in");
+
+    if (banner) banner.textContent = "🔐 Logged in as Dorothy";
+    if (banner) banner.style.display = "block";
+
     loadAdminGallery();
     loadAdminRates();
     loadAdminContacts();
+  } else if (banner) {
+    banner.style.display = "none";
   }
 });
