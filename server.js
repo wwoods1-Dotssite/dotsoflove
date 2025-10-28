@@ -1,10 +1,10 @@
-// server.js - Dot’s of Love Pet Sitting backend (full DB-connected version)
-import express from 'express';
-import cors from 'cors';
-import pg from 'pg';
-import multer from 'multer';
-import AWS from 'aws-sdk';
-import { v4 as uuidv4 } from 'uuid';
+// server.js - Dot’s of Love Pet Sitting backend (CommonJS compatible)
+const express = require('express');
+const cors = require('cors');
+const pg = require('pg');
+const multer = require('multer');
+const AWS = require('aws-sdk');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
