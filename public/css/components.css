@@ -1,183 +1,60 @@
-/* =============================================
-   Dot's of Love Pet Sitting - Components Styles
-   Cleaned & Unified version with Featured Gradient
-   ============================================= */
+/* --- Updated components.css for Featured + Grid Layout --- */
 
-/* === Base Layouts === */
-section {
-  padding: 4rem 2rem;
-  transition: opacity 0.3s ease-in-out;
-}
-
-h2 {
-  text-align: center;
-  font-weight: 700;
-  font-size: 2rem;
-  color: #5a4fcf;
+/* Featured service row */
+.featured-row {
+  display: flex;
+  justify-content: center;
   margin-bottom: 2rem;
 }
 
-/* === Rates & My Services Grid === */
-.rates-grid,
-.services-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+.featured-row .rate-card {
+  flex: 0 1 320px;
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(100, 100, 255, 0.25);
+}
+
+/* Regular services row */
+.regular-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 1.5rem;
-  justify-items: center;
-  margin: 1.5rem 0;
 }
 
-/* === Rate / Service Card === */
-.rate-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-  width: 100%;
-  max-width: 320px;
-  padding: 1.5rem;
-  text-align: center;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(102, 126, 234, 0.15);
-  position: relative;
-  overflow: hidden;
+.regular-row .rate-card {
+  flex: 0 1 260px;
 }
 
-.rate-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.25);
-}
-
-/* === Featured Rate Highlight === */
+/* Featured gradient */
 .featured-rate {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5b4bff 0%, #967bff 100%);
   color: #fff;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 25px rgba(118, 75, 162, 0.4);
-}
-
-.featured-rate .rate-header {
-  color: #fff;
-  font-weight: 700;
+  border: none;
+  position: relative;
 }
 
 .featured-rate::before {
-  content: "★ Featured Service";
+  content: '★ Featured Service';
   position: absolute;
-  top: 10px;
-  left: 10px;
-  background: rgba(255, 255, 255, 0.2);
+  top: -10px;
+  left: 12px;
+  background: #ffffff22;
   color: #fff;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 600;
+  border-radius: 6px;
 }
 
-/* === Card Header === */
-.rate-header {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #667eea;
-  margin-bottom: 0.5rem;
-}
-
-/* === Card Body === */
-.rate-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  color: #333;
-}
-
-.rate-description {
-  font-size: 0.95rem;
-  line-height: 1.4;
-  color: #555;
-}
-
-.rate-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #444;
-}
-
-.rate-value .unit {
-  font-size: 0.9rem;
-  font-weight: 400;
-  color: #888;
-  margin-left: 0.25rem;
-}
-
-/* === Fade-In Animation === */
+/* Smooth fade */
 .fade-in {
   opacity: 0;
   transform: translateY(10px);
-  animation: fadeInUp 0.6s ease-out forwards;
+  animation: fadeIn 0.4s ease forwards;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
+@keyframes fadeIn {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-/* === Gallery Section === */
-.gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-
-.gallery-item {
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.gallery-item:hover {
-  transform: scale(1.03);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
-
-.gallery-item img {
-  width: 100%;
-  height: 240px;
-  object-fit: cover;
-}
-
-/* === Contact & Admin Sections === */
-.contact-section {
-  text-align: center;
-  padding: 2rem 0;
-}
-
-button.primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-button.primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(118, 75, 162, 0.3);
-}
-
-/* === Responsive Design === */
-@media (max-width: 768px) {
-  .rate-card {
-    max-width: 100%;
   }
 }
