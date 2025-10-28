@@ -1,18 +1,22 @@
-// server.js — Clean Railway-ready Express Backend with CORS
-
+// server.js - Dot’s of Love Pet Sitting backend (fully Railway-ready)
 const express = require('express');
 const cors = require('cors');
-const app = express();
 
-// ============================================================
-// ✅ CORS Configuration
-// ============================================================
+const app = express();
+const PORT = process.env.PORT || 8080;
+
+// --- Global Middleware ---
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// --- Universal CORS setup (for Netlify + local dev) ---
 app.use(
   cors({
     origin: [
-      'https://dotsoflovepetsitting.com',   // Netlify site
-      'https://dotsoflove.netlify.app',     // Netlify preview
-      'http://localhost:8888',              // Local dev
+      'https://dotsoflove.netlify.app',
+      'https://dotsoflovepetsitting.com',
+      'http://localhost:8888',
+      'http://localhost:3000',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -20,24 +24,14 @@ app.use(
   })
 );
 
-// ============================================================
-// ✅ Middleware
-// ============================================================
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// ============================================================
-// ✅ Health Check
-// ============================================================
-app.get('/', (req, res) => {
-  res.send('✅ Dot’s Pet Sitting Backend is running!');
+// --- Debug header middleware ---
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  console.log(`➡️ ${req.method} ${req.path}`);
+  next();
 });
 
-// ============================================================
-// ✅ Mock API Routes (for frontend testing)
-// ============================================================
-
-// -- Rates endpoint --
+// --- Rates Endpoint ---
 app.get('/api/rates', (req, res) => {
   res.json([
     {
@@ -75,40 +69,84 @@ app.get('/api/rates', (req, res) => {
   ]);
 });
 
-// -- Gallery endpoint --
+// --- Gallery Endpoint ---
 app.get('/api/gallery', (req, res) => {
-  res.json([
-    {
-      id: 1,
-      name: 'Dotty and Beau',
-      description: 'Our happy pup enjoying a walk!',
-      imageUrl: 'https://place-puppy.com/400x400',
-      is_dorothy_pet: true,
-    },
-    {
-      id: 2,
-      name: 'Happy Client',
-      description: 'Another furry friend enjoying pet sitting!',
-      imageUrl: 'https://placekitten.com/400/400',
-      is_dorothy_pet: false,
-    },
-  ]);
+  res.json({
+    pets: [
+      {
+        id: 1,
+        name: 'Nimboo',
+        type: 'Dog',
+        image_url:
+          'https://dotsoflove-pet-images.s3.us-east-2.amazonaws.com/nimboo.jpg',
+        story: 'Nimboo loves long walks and peanut butter treats!',
+      },
+      {
+        id: 2,
+        name: 'Rafiki',
+        type: 'Cat',
+        image_url:
+          'https://dotsoflove-pet-images.s3.us-east-2.amazonaws.com/rafiki.jpg',
+        story: 'Rafiki is a curious cat with a big personality!',
+      },
+    ],
+  });
 });
 
-// -- Auth endpoint (mocked) --
+// --- Pets Management Endpoint (for future admin use) ---
+app.get('/api/pets', (req, res) => {
+  res.json({
+    pets: [
+      {
+        id: 1,
+        name: 'Nimboo',
+        breed: 'Golden Retriever',
+        age: 5,
+        image_url:
+          'https://dotsoflove-pet-images.s3.us-east-2.amazonaws.com/nimboo.jpg',
+        description: 'Friendly and energetic, loves meeting new people!',
+      },
+      {
+        id: 2,
+        name: 'Rafiki',
+        breed: 'Tabby Cat',
+        age: 3,
+        image_url:
+          'https://dotsoflove-pet-images.s3.us-east-2.amazonaws.com/rafiki.jpg',
+        description: 'Loves window naps and chasing feather toys.',
+      },
+    ],
+  });
+});
+
+// --- Contact Requests Endpoint ---
+app.post('/api/contact', (req, res) => {
+  const { name, email, message } = req.body;
+  console.log(`📩 New contact request from ${name} (${email}): ${message}`);
+  res.json({ success: true, message: 'Your request has been received!' });
+});
+
+// --- Admin Authentication Mock ---
 app.post('/api/admin/auth', (req, res) => {
   const { username, password } = req.body;
-  if (username === 'dorothy' && password === 'password123') {
-    res.json({ success: true, token: 'mock-jwt-token' });
-  } else {
-    res.status(401).json({ success: false, message: 'Invalid credentials' });
+  if (username === 'dorothy' && password === process.env.ADMIN_PASSWORD) {
+    return res.json({ success: true, token: 'mock-token-123' });
   }
+  return res.status(401).json({ success: false, message: 'Invalid credentials' });
 });
 
-// ============================================================
-// ✅ Server Startup
-// ============================================================
-const PORT = process.env.PORT || 3000;
+// --- Root Route ---
+app.get('/', (req, res) => {
+  res.send('🐾 Dot’s of Love Pet Sitting API is running and happy!');
+});
+
+// --- Error Handling Middleware ---
+app.use((err, req, res, next) => {
+  console.error('❌ Server error:', err);
+  res.status(500).json({ error: 'Internal Server Error' });
+});
+
+// --- Start Server ---
 app.listen(PORT, () => {
-  console.log(`🚀 Dot's Pet Sitting Backend running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
