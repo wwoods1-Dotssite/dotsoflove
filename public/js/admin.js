@@ -1,242 +1,235 @@
-// admin.js - Updated version with DB integration, image upload/delete, and gallery management
+// ===============================
+// Admin Dashboard Script
+// ===============================
 
-document.addEventListener('DOMContentLoaded', () => {
-  initializeAdminPanel();
-});
+// ---------- GLOBAL ----------
+const ADMIN_API_BASE = "/api";
+let adminToken = localStorage.getItem("adminToken") || null;
 
-// Temporary stubs to silence missing references
-function initializeEditStoryModal() { console.log('Edit story modal placeholder'); }
+// ---------- AUTH ----------
 
-// ✅ NEW – Ensure Utils won’t throw errors if missing
-window.Utils = window.Utils || {
-  showError: (id, msg) => { const el = document.getElementById(id); if (el) el.innerText = msg; },
-  showSuccess: (id, msg) => { const el = document.getElementById(id); if (el) el.innerText = msg; },
-  hideMessage: (id) => { const el = document.getElementById(id); if (el) el.innerText = ''; }
-};
+// Handle admin login
+async function handleAdminLogin(event) {
+  event.preventDefault();
 
-// ✅ NEW – Check authentication token in localStorage
-function checkAdminAuth() {
-  const token = localStorage.getItem('adminToken');
-  if (token) {
-    console.log('✅ Admin token found');
-    document.getElementById('adminAuth').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'block';
-    return true;
-  } else {
-    console.warn('⚠️ No admin token found');
-    document.getElementById('adminAuth').style.display = 'block';
-    document.getElementById('adminPanel').style.display = 'none';
-    return false;
+  const username = document.getElementById("adminUsername")?.value.trim();
+  const password = document.getElementById("adminPassword")?.value.trim();
+  const errorBox = document.getElementById("adminError");
+
+  if (!username || !password) {
+    if (errorBox) errorBox.textContent = "Please enter username and password.";
+    return;
   }
-}
-
-// ✅ NEW – Restore session on reload
-function autoRestoreAdminSession() {
-  if (checkAdminAuth()) {
-    console.log('🔄 Restoring previous admin session');
-    loadAdminGallery();
-    loadAdminRates();
-  }
-}
-
-function initializeAdminPanel() {
-  const authForm = document.getElementById('authForm');
-  if (authForm) authForm.addEventListener('submit', handleAdminLogin);
-
-  const addPetForm = document.getElementById('addPetForm');
-  if (addPetForm) addPetForm.addEventListener('submit', handleAddPet);
-
-  const petImageUpload = document.getElementById('petImageUpload');
-  if (petImageUpload) petImageUpload.addEventListener('change', handleFilePreview);
-
-  autoRestoreAdminSession();
-}
-
-// ===================== AUTH =====================
-async function handleAdminLogin(e) {
-  e.preventDefault();
-  const username = document.getElementById('adminUsername').value;
-  const password = document.getElementById('adminPassword').value;
 
   try {
-    console.log('🧩 Attempting admin login...');
-    const res = await fetch(`/api/admin/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+    console.log("Attempting admin login...");
+    const res = await fetch(`${ADMIN_API_BASE}/admin/auth`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
     });
 
     if (!res.ok) {
-      console.error('❌ Login HTTP error:', res.status);
-      Utils.showError('authError', `Server returned ${res.status}`);
+      const text = await res.text();
+      console.error("Login HTTP error:", res.status, text);
+      if (errorBox) errorBox.textContent = "Server returned " + res.status;
       return;
     }
 
     const data = await res.json();
-
-    if (!data.success) {
-      Utils.showError('authError', data.message || 'Invalid credentials');
-      return;
+    if (data.success) {
+      console.log("✅ Admin logged in successfully");
+      localStorage.setItem("adminToken", data.token);
+      location.reload();
+    } else {
+      if (errorBox) errorBox.textContent = "Invalid credentials.";
     }
-
-    // ✅ Store token + show panel
-    localStorage.setItem('adminToken', data.token);
-    Utils.hideMessage('authError');
-    document.getElementById('adminAuth').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'block';
-    loadAdminGallery();
-    loadAdminRates();
-    console.log('✅ Admin logged in successfully');
   } catch (err) {
-    console.error('❌ Login failed:', err);
-    Utils.showError('authError', 'Network error during login.');
+    console.error("Login failed:", err);
+    if (errorBox) errorBox.textContent = "Network error.";
   }
 }
 
-// ===================== PET MANAGEMENT =====================
-async function handleAddPet(e) {
-  e.preventDefault();
-  const form = e.target;
-  const data = Object.fromEntries(new FormData(form));
+// Logout admin
+function handleAdminLogout() {
+  localStorage.removeItem("adminToken");
+  location.reload();
+}
+
+// ---------- TAB HANDLING ----------
+
+// Switch between admin tabs
+function switchAdminTab(tabId) {
+  document.querySelectorAll(".admin-tab").forEach((tab) => {
+    tab.classList.remove("active");
+  });
+  document.querySelectorAll(".admin-section").forEach((section) => {
+    section.style.display = "none";
+  });
+
+  const targetTab = document.getElementById(tabId);
+  if (targetTab) {
+    targetTab.style.display = "block";
+    document.querySelector(`[data-tab="${tabId}"]`)?.classList.add("active");
+  }
+}
+
+// ---------- LOAD RATES ----------
+async function loadAdminRates() {
+  const container = document.getElementById("adminRates");
+  if (!container) return;
 
   try {
-    const res = await fetch('/api/pets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
+    console.log("Loading admin rates...");
+    const res = await fetch(`${ADMIN_API_BASE}/rates`);
+    const rates = await res.json();
 
-    if (!res.ok) throw new Error('Failed to add pet');
-
-    const pet = await res.json();
-    Utils.showSuccess('addPetSuccess', 'Pet added successfully!');
-
-    // Upload selected images (if any)
-    const files = document.getElementById('petImageUpload').files;
-    if (files.length > 0) await uploadPetImages(pet.id, files);
-
-    form.reset();
-    loadAdminGallery();
+    container.innerHTML = rates
+      .map(
+        (r) => `
+      <div class="rate-item">
+        <h3>${r.service_type}</h3>
+        <p>${r.description || ""}</p>
+        <strong>$${r.rate_per_unit} ${r.unit_type}</strong>
+      </div>`
+      )
+      .join("");
   } catch (err) {
-    console.error('❌ Error adding pet:', err);
-    Utils.showError('addPetError', 'Error adding pet');
+    console.error("Error loading rates:", err);
+    container.innerHTML = `<p class="error">Failed to load rates.</p>`;
   }
 }
 
-async function uploadPetImages(petId, files) {
-  for (const file of files) {
-    const formData = new FormData();
-    formData.append('image', file);
+// ---------- LOAD CONTACT REQUESTS ----------
+async function loadAdminContacts() {
+  const container = document.getElementById("adminContacts");
+  if (!container) return;
 
-    const res = await fetch(`/api/pets/${petId}/images`, {
-      method: 'POST',
-      body: formData
-    });
+  try {
+    console.log("Loading contact requests...");
+    const res = await fetch(`${ADMIN_API_BASE}/contacts`);
+    const data = await res.json();
 
-    if (!res.ok) {
-      console.error(`❌ Failed to upload image for pet ${petId}`);
-    }
+    container.innerHTML = data
+      .map(
+        (c) => `
+      <div class="contact-item">
+        <h4>${c.name}</h4>
+        <p><strong>Email:</strong> ${c.email}</p>
+        <p><strong>Phone:</strong> ${c.phone}</p>
+        <p><strong>Service:</strong> ${c.service}</p>
+        <p><strong>Dates:</strong> ${c.start_date || ""} - ${
+          c.end_date || ""
+        }</p>
+        <p><strong>Message:</strong> ${c.message || ""}</p>
+      </div>`
+      )
+      .join("");
+  } catch (err) {
+    console.error("Error loading contacts:", err);
+    container.innerHTML = `<p class="error">Failed to load contact requests.</p>`;
   }
 }
 
+// ---------- GALLERY MANAGEMENT ----------
 async function loadAdminGallery() {
+  const container = document.getElementById("adminGallery");
+  if (!container) return;
+
   try {
-    const res = await fetch('/api/gallery');
+    console.log("Loading admin gallery...");
+    const res = await fetch(`${ADMIN_API_BASE}/gallery`);
     const pets = await res.json();
-    const container = document.getElementById('adminGallery');
 
-    if (!Array.isArray(pets) || pets.length === 0) {
-      container.innerHTML = '<p>No pets found in the gallery.</p>';
-      return;
-    }
-
-    container.innerHTML = pets.map(pet => `
+    container.innerHTML = pets
+      .map(
+        (pet) => `
       <div class="admin-pet-card">
-        <h4>${pet.pet_name}</h4>
-        <p>${pet.story_description || ''}</p>
-        <div class="admin-pet-images">
-          ${pet.images && pet.images.length > 0
-            ? pet.images.map(img => `
-              <div class="admin-image-item">
-                <img src="${img.image_url}" alt="${pet.pet_name}" />
-                <button class="delete-img-btn" onclick="deletePetImage(${pet.id}, ${img.id})">🗑️</button>
-              </div>`).join('')
-            : '<p>No images</p>'}
-        </div>
-        <button class="delete-pet-btn" onclick="deletePet(${pet.id})">Remove Pet</button>
-      </div>
-    `).join('');
+        <h3>${pet.pet_name}</h3>
+        <p>${pet.story_description || ""}</p>
+        ${
+          pet.images && pet.images.length
+            ? `<div class="admin-pet-images">
+                ${pet.images
+                  .map(
+                    (img) => `
+                    <div class="admin-image-wrapper">
+                      <img src="${img.image_url}" alt="${pet.pet_name}">
+                      <button class="delete-image" data-pet="${pet.id}" data-image="${img.id}">🗑️</button>
+                    </div>
+                  `
+                  )
+                  .join("")}
+              </div>`
+            : "<p>No images uploaded.</p>"
+        }
+        <button class="delete-pet" data-pet="${pet.id}">Delete Pet</button>
+      </div>`
+      )
+      .join("");
+
+    // Attach delete handlers
+    document.querySelectorAll(".delete-pet").forEach((btn) =>
+      btn.addEventListener("click", async (e) => {
+        const petId = e.target.dataset.pet;
+        if (confirm("Are you sure you want to delete this pet?")) {
+          await deletePet(petId);
+          loadAdminGallery();
+        }
+      })
+    );
+
+    document.querySelectorAll(".delete-image").forEach((btn) =>
+      btn.addEventListener("click", async (e) => {
+        const { pet, image } = e.target.dataset;
+        if (confirm("Delete this image?")) {
+          await deletePetImage(pet, image);
+          loadAdminGallery();
+        }
+      })
+    );
   } catch (err) {
-    console.error('❌ Failed to load gallery:', err);
+    console.error("Failed to load gallery:", err);
+    container.innerHTML = `<p class="error">Failed to load gallery.</p>`;
+  }
+}
+
+// ---------- GALLERY ACTIONS ----------
+async function deletePet(petId) {
+  try {
+    const res = await fetch(`${ADMIN_API_BASE}/pets/${petId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Delete failed");
+  } catch (err) {
+    console.error("Delete pet error:", err);
   }
 }
 
 async function deletePetImage(petId, imageId) {
-  if (!confirm('Are you sure you want to delete this image?')) return;
   try {
-    const res = await fetch(`/api/pets/${petId}/images/${imageId}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Delete failed');
-    Utils.showSuccess('adminMessage', 'Image deleted');
-    loadAdminGallery();
-  } catch (err) {
-    console.error('❌ Error deleting image:', err);
-    Utils.showError('adminMessage', 'Failed to delete image');
-  }
-}
-
-async function deletePet(petId) {
-  if (!confirm('Delete this pet and all related images?')) return;
-  try {
-    const res = await fetch(`/api/pets/${petId}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Delete failed');
-    Utils.showSuccess('adminMessage', 'Pet deleted');
-    loadAdminGallery();
-  } catch (err) {
-    console.error('❌ Error deleting pet:', err);
-    Utils.showError('adminMessage', 'Failed to delete pet');
-  }
-}
-
-function handleFilePreview(e) {
-  const preview = document.getElementById('filePreview');
-  const files = e.target.files;
-  preview.innerHTML = '';
-  if (files && files.length > 0) {
-    preview.innerHTML = `<p><strong>${files.length}</strong> file(s) selected:</p>`;
-    Array.from(files).forEach(f => {
-      preview.innerHTML += `<p>${f.name}</p>`;
+    const res = await fetch(`${ADMIN_API_BASE}/pets/${petId}/images/${imageId}`, {
+      method: "DELETE",
     });
-  }
-}
-
-// ===================== RATES =====================
-async function loadAdminRates() {
-  try {
-    const res = await fetch('/api/rates');
-    const rates = await res.json();
-    const container = document.getElementById('adminRates');
-
-    if (!Array.isArray(rates) || rates.length === 0) {
-      container.innerHTML = '<p>No rates found.</p>';
-      return;
-    }
-
-    container.innerHTML = rates.map(r => `
-      <div class="rate-card ${r.is_featured ? 'featured' : ''}">
-        <h4>${r.service_type}</h4>
-        <p>$${parseFloat(r.rate_per_unit).toFixed(2)} ${r.unit_type.replace('_', ' ')}</p>
-        <p>${r.description}</p>
-      </div>
-    `).join('');
+    if (!res.ok) throw new Error("Delete failed");
   } catch (err) {
-    console.error('❌ Error loading rates:', err);
+    console.error("Delete image error:", err);
   }
 }
 
-// ===================== LOGOUT =====================
-window.logout = function() {
-  localStorage.removeItem('adminToken');
-  document.getElementById('adminAuth').style.display = 'block';
-  document.getElementById('adminPanel').style.display = 'none';
-  Utils.showSuccess('authMessage', 'You have been logged out.');
-};
+// ---------- INITIALIZATION ----------
+document.addEventListener("DOMContentLoaded", () => {
+  const loginForm = document.getElementById("adminLoginForm");
+  const logoutBtn = document.getElementById("adminLogout");
+  const token = localStorage.getItem("adminToken");
+
+  if (loginForm) loginForm.addEventListener("submit", handleAdminLogin);
+  if (logoutBtn) logoutBtn.addEventListener("click", handleAdminLogout);
+
+  if (token) {
+    document.body.classList.add("admin-logged-in");
+    loadAdminGallery();
+    loadAdminRates();
+    loadAdminContacts();
+  }
+});
