@@ -24,7 +24,7 @@ async function handleAdminLogin(e) {
   const password = document.getElementById('adminPassword').value;
 
   try {
-    const res = await fetch(`/auth`, {
+    const res = await fetch(`/api/admin/auth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
@@ -46,15 +46,6 @@ async function handleAdminLogin(e) {
     console.error('❌ Login failed:', err);
     Utils.showError('authError', 'Network error.');
   }
-}
-
-async function autoRestoreAdminSession() {
-  const token = localStorage.getItem('adminToken');
-  if (!token) return;
-  document.getElementById('adminAuth').style.display = 'none';
-  document.getElementById('adminPanel').style.display = 'block';
-  loadAdminGallery();
-  loadAdminRates();
 }
 
 // ===================== PET MANAGEMENT =====================
