@@ -5,8 +5,41 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Temporary stubs to silence missing references
-function autoRestoreAdminSession() { console.log('Session restore placeholder'); }
 function initializeEditStoryModal() { console.log('Edit story modal placeholder'); }
+
+// ✅ NEW – Ensure Utils won’t throw errors if missing
+if (typeof Utils === 'undefined') {
+  var Utils = {
+    showError: (id, msg) => { const el = document.getElementById(id); if (el) el.innerText = msg; },
+    showSuccess: (id, msg) => { const el = document.getElementById(id); if (el) el.innerText = msg; },
+    hideMessage: (id) => { const el = document.getElementById(id); if (el) el.innerText = ''; }
+  };
+}
+
+// ✅ NEW – Check authentication token in localStorage
+function checkAdminAuth() {
+  const token = localStorage.getItem('adminToken');
+  if (token) {
+    console.log('✅ Admin token found');
+    document.getElementById('adminAuth').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    return true;
+  } else {
+    console.warn('⚠️ No admin token found');
+    document.getElementById('adminAuth').style.display = 'block';
+    document.getElementById('adminPanel').style.display = 'none';
+    return false;
+  }
+}
+
+// ✅ NEW – Restore session on reload
+function autoRestoreAdminSession() {
+  if (checkAdminAuth()) {
+    console.log('🔄 Restoring previous admin session');
+    loadAdminGallery();
+    loadAdminRates();
+  }
+}
 
 function initializeAdminPanel() {
   const authForm = document.getElementById('authForm');
@@ -28,27 +61,37 @@ async function handleAdminLogin(e) {
   const password = document.getElementById('adminPassword').value;
 
   try {
+    console.log('🧩 Attempting admin login...');
     const res = await fetch(`/api/admin/auth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
-    const data = await res.json();
 
-    if (!res.ok || !data.success) {
-      Utils.showError('authError', data.message || 'Login failed');
+    if (!res.ok) {
+      console.error('❌ Login HTTP error:', res.status);
+      Utils.showError('authError', `Server returned ${res.status}`);
       return;
     }
 
+    const data = await res.json();
+
+    if (!data.success) {
+      Utils.showError('authError', data.message || 'Invalid credentials');
+      return;
+    }
+
+    // ✅ Store token + show panel
     localStorage.setItem('adminToken', data.token);
     Utils.hideMessage('authError');
     document.getElementById('adminAuth').style.display = 'none';
     document.getElementById('adminPanel').style.display = 'block';
     loadAdminGallery();
     loadAdminRates();
+    console.log('✅ Admin logged in successfully');
   } catch (err) {
     console.error('❌ Login failed:', err);
-    Utils.showError('authError', 'Network error.');
+    Utils.showError('authError', 'Network error during login.');
   }
 }
 
