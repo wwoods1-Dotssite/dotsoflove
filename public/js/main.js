@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeNavigation();
     loadInitialContent();
     setupDateValidation();
-    initializeEditStoryModal();
+    // initializeEditStoryModal();
 });
 
 function initializeNavigation() {
