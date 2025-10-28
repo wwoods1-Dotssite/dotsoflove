@@ -1,4 +1,4 @@
-// main.js — Fixed and encapsulated version (no duplicate functions)
+// main.js — Final version with feature row, tab fix, and loading cleanup
 (() => {
   if (window.__mainLoaded) return;
   window.__mainLoaded = true;
@@ -50,6 +50,9 @@
       const data = await response.json();
       console.log('[DEBUG] Received rates data:', data);
 
+      // Remove any loading text once data loads
+      document.querySelectorAll('.loading').forEach(el => el.remove());
+
       if (!Array.isArray(data) || data.length === 0) {
         Object.values(endpoints).forEach(el => {
           if (el) el.innerHTML = '<p class="no-data">No current services available.</p>';
@@ -70,15 +73,16 @@
         </div>
       `;
 
-      const allCards = [
-        ...featured.map(r => createCardHTML(r, true)),
-        ...regular.map(r => createCardHTML(r, false))
-      ].join('');
+      const featuredHTML = featured.map(r => createCardHTML(r, true)).join('');
+      const regularHTML = regular.map(r => createCardHTML(r, false)).join('');
 
       Object.entries(endpoints).forEach(([key, container]) => {
         if (container) {
           container.classList.add('rates-grid');
-          container.innerHTML = allCards;
+          container.innerHTML = `
+            <div class="featured-row">${featuredHTML}</div>
+            <div class="regular-row">${regularHTML}</div>
+          `;
         }
       });
 
