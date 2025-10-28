@@ -1,4 +1,4 @@
-// main.js - Updated with SPA-style navigation and hash routing
+// main.js - Final version with SPA-style navigation and lazy data loading
 
 document.addEventListener('DOMContentLoaded', () => {
   loadDualGallery();
@@ -83,7 +83,7 @@ async function loadRates() {
   }
 }
 
-// ============ SIMPLE PAGE ROUTING ============
+// ============ SIMPLE PAGE ROUTING WITH LAZY LOADING ============
 function setupNavigation() {
   document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', e => {
@@ -111,4 +111,20 @@ function handleHashChange() {
   document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
   const activeLink = document.querySelector(`.nav-link[href="#${hash}"]`);
   if (activeLink) activeLink.classList.add('active');
+
+  // 🔁 Lazy-load content when section is viewed
+  switch (hash) {
+    case 'gallery':
+      loadDualGallery();
+      break;
+    case 'rates':
+      loadRates();
+      break;
+    case 'contact':
+      if (typeof loadContacts === 'function') loadContacts();
+      break;
+    case 'about':
+      loadAboutServices();
+      break;
+  }
 }
