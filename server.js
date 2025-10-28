@@ -181,15 +181,15 @@ app.delete('/api/pets/:id', async (req, res) => {
 // =====================================
 app.post('/api/contact', async (req, res) => {
   try {
-    const { name, email, phone, service, startDate, endDate, message } = req.body;
+    const { name, email, phone, best_time, service, pet_info, dates, message, startDate, endDate } = req.body;
 
     await pool.query(
-      `INSERT INTO contacts (name, email, phone, service, start_date, end_date, message)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [name, email, phone, service, startDate, endDate, message]
+      `INSERT INTO contacts (name, email, phone, best_time, service, pet_info, dates, message, start_date, end_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [name, email, phone, best_time, service, pet_info, dates, message, startDate, endDate]
     );
 
-    res.json({ success: true, message: 'Message received!' });
+    res.json({ success: true, message: 'Message received and saved successfully!' });
   } catch (err) {
     console.error('❌ Error saving contact:', err);
     res.status(500).json({ success: false, message: 'Failed to save contact' });
