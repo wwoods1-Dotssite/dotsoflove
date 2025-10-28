@@ -226,26 +226,26 @@ app.delete("/api/pets/:petId", async (req, res) => {
   }
 });
 
-+// ✅ Explicit Admin Auth Route (fixes 404 issue)
-+app.post("/api/admin/auth", (req, res) => {
-+  try {
-+    const { username, password } = req.body;
-+    console.log("🧩 Direct admin auth route hit");
-+
-+    if (username === "dorothy" && password === process.env.ADMIN_PASSWORD) {
-+      return res.json({
-+        success: true,
-+        token: "mock-token-123",
-+        message: "Login successful",
-+      });
-+    }
-+
-+    res.status(401).json({ success: false, message: "Invalid credentials" });
-+  } catch (err) {
-+    console.error("❌ Admin login error:", err);
-+    res.status(500).json({ success: false, message: "Server error" });
-+  }
-+});
+// ✅ Explicit Admin Auth Route (fixes 404 issue)
+app.post("/api/admin/auth", (req, res) => {
+  try {
+    const { username, password } = req.body;
+    console.log("🧩 Direct admin auth route hit");
+
+    if (username === "dorothy" && password === process.env.ADMIN_PASSWORD) {
+      return res.json({
+        success: true,
+        token: "mock-token-123",
+        message: "Login successful",
+      });
+    }
+
+    res.status(401).json({ success: false, message: "Invalid credentials" });
+  } catch (err) {
+    console.error("❌ Admin login error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 
 // ✅ Catch-all (must be last)
