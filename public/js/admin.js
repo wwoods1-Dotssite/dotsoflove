@@ -169,3 +169,19 @@ window.switchAdminTab = function(tabName) {
   const activeButton = document.querySelector(`.admin-nav button[data-tab="${tabName}"]`);
   if (activeButton) activeButton.classList.add('active');
 };
+// ===================== EDIT FILE PREVIEW =====================
+function handleEditFilePreview(event) {
+  const preview = document.getElementById('editFilePreview');
+  const files = event.target.files;
+  preview.innerHTML = '';
+
+  if (files && files.length > 0) {
+    preview.innerHTML = `<p style="color:#667eea;font-weight:bold;">${files.length} file(s) selected:</p>`;
+    Array.from(files).forEach(file => {
+      preview.innerHTML += `<p style="font-size:0.9rem;color:#666;">• ${file.name}</p>`;
+    });
+  } else {
+    preview.innerHTML = '<p style="font-size:0.9rem;color:#999;">No files selected</p>';
+  }
+}
+
