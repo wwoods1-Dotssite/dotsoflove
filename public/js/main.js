@@ -1,207 +1,117 @@
 // ===============================
-// Main Application Script (Final)
+// MAIN.JS (vFinal Patched)
 // ===============================
 
-// ---------- GLOBAL SETUP ----------
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("✅ main.js initialized");
-
-  initializeNavigation();
-  loadInitialContent();
-  setupContactForm();
-
-  // ✅ Support restoring Admin dashboard if logged in
-  const hash = window.location.hash || "";
-  if (hash === "#admin" || window.location.pathname === "/admin") {
-    if (typeof checkAdminAuth === "function") {
-      console.log("🔐 Restoring Admin dashboard...");
-      checkAdminAuth();
-    } else {
-      document.addEventListener("admin:ready", () => checkAdminAuth());
-    }
-  }
+  console.log("💜 main.js initialized");
+  initNavigation();
+  checkAdminAuth?.();
+  loadAbout();
 });
 
-// ---------- NAVIGATION ----------
-function initializeNavigation() {
-  const navButtons = document.querySelectorAll(".nav-link");
+function initNavigation() {
+  const navLinks = document.querySelectorAll(".nav-link");
+  const pages = document.querySelectorAll(".page");
 
-  navButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const target = btn.getAttribute("data-nav");
-      switchPage(target);
+  navLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+      const target = link.getAttribute("data-page");
+      console.log(`🔄 Switching to: ${target}`);
+
+      navLinks.forEach((l) => l.classList.remove("active"));
+      link.classList.add("active");
+
+      pages.forEach((page) => (page.hidden = true));
+      const section = document.getElementById(target);
+      if (section) section.hidden = false;
+
+      if (target === "gallery") loadGallery();
+      if (target === "rates") loadRates();
+      if (target === "contact") loadContact();
+      if (target === "about") loadAbout();
     });
   });
 }
 
-function switchPage(targetId) {
-  console.log(`📄 Switching to: ${targetId}`);
+// ---------- LOAD ABOUT ----------
+async function loadAbout() {
+  const featuredContainer = document.getElementById("featuredRate");
+  if (!featuredContainer) return;
 
-  const pages = document.querySelectorAll(".page");
-  pages.forEach((p) => (p.hidden = true));
+  try {
+    const res = await fetch("/api/rates");
+    const rates = await res.json();
+    const featured = rates.find((r) => r.is_featured);
 
-  const targetPage = document.getElementById(targetId);
-  if (targetPage) targetPage.hidden = false;
-
-  // Highlight active nav button
-  document.querySelectorAll(".nav-link").forEach((b) => {
-    b.classList.toggle("active", b.dataset.nav === targetId);
-  });
-
-  // Update hash (for back/forward navigation)
-  window.history.pushState({}, "", `#${targetId}`);
-
-  // Trigger page-specific loads
-  switch (targetId) {
-    case "gallery":
-      if (typeof loadGallery === "function") loadGallery();
-      break;
-    case "rates":
-      loadRates();
-      break;
-    case "contact":
-      break;
-    case "admin":
-      if (typeof checkAdminAuth === "function") {
-        checkAdminAuth();
-      } else {
-        document.addEventListener("admin:ready", () => checkAdminAuth());
-      }
-      break;
+    featuredContainer.innerHTML = featured
+      ? `
+        <div class="featured-rate-card">
+          <div class="featured-badge">⭐ Featured Service</div>
+          <h3>${featured.service_type}</h3>
+          <p>${featured.description}</p>
+          <strong>$${featured.rate_per_unit} ${featured.unit_type}</strong>
+        </div>`
+      : `<p class="muted">No featured service at the moment.</p>`;
+  } catch (err) {
+    console.error("❌ Failed to load featured rate:", err);
   }
 }
 
-// ---------- INITIAL LOAD ----------
-function loadInitialContent() {
-  const hash = window.location.hash.replace("#", "");
-  const valid = ["about", "gallery", "rates", "contact", "admin"];
-  const pageToShow = valid.includes(hash) ? hash : "about";
-  switchPage(pageToShow);
+// ---------- LOAD RATES ----------
+async function loadRates() {
+  const container = document.getElementById("ratesContainer");
+  if (!container) return;
+
+  try {
+    const res = await fetch("/api/rates");
+    const rates = await res.json();
+
+    container.innerHTML = `
+      <h2>Service Rates</h2>
+      <div class="rates-grid">
+        ${rates
+          .map(
+            (r) => `
+          <div class="rate-card ${r.is_featured ? "featured" : ""}">
+            ${r.is_featured ? `<div class="featured-badge">⭐ Featured Service</div>` : ""}
+            <h3>${r.service_type}</h3>
+            <p>${r.description || ""}</p>
+            <strong>$${r.rate_per_unit} ${r.unit_type}</strong>
+          </div>`
+          )
+          .join("")}
+      </div>
+    `;
+  } catch (err) {
+    console.error("❌ Failed to load rates:", err);
+    container.innerHTML = `<p class="error">Failed to load rates.</p>`;
+  }
 }
 
-// ---------- CONTACT FORM ----------
-function setupContactForm() {
+// ---------- LOAD CONTACT ----------
+async function loadContact() {
   const form = document.getElementById("contactForm");
   if (!form) return;
 
-  const resultBox = document.getElementById("contactResult");
-
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    resultBox.textContent = "Sending...";
-
-    const payload = {
-      name: form.querySelector("#contactName")?.value.trim(),
-      email: form.querySelector("#contactEmail")?.value.trim(),
-      phone: form.querySelector("#contactPhone")?.value.trim(),
-      best_time: form.querySelector("#contactBestTime")?.value || "",
-      service: form.querySelector("#contactService")?.value || "",
-      pet_info: form.querySelector("#contactPetInfo")?.value || "",
-      start_date: form.querySelector("#contactStart")?.value || "",
-      end_date: form.querySelector("#contactEnd")?.value || "",
-      message: form.querySelector("#contactMessage")?.value || "",
-    };
+    const formData = Object.fromEntries(new FormData(form));
+    const result = document.getElementById("contactResult");
 
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(formData),
       });
 
-      if (!res.ok) {
-        const msg = `Error ${res.status}: unable to send`;
-        resultBox.textContent = msg;
-        throw new Error(msg);
-      }
-
       const data = await res.json();
-      if (data.success) {
-        resultBox.textContent = "✅ Message sent successfully!";
-        form.reset();
-      } else {
-        resultBox.textContent = "❌ Failed to send message.";
-      }
+      result.textContent = data.message || "Message sent!";
+      result.style.color = "green";
     } catch (err) {
-      console.error("❌ Contact form error:", err);
-      resultBox.textContent = "❌ Network or server issue, please try again.";
+      console.error("❌ Failed to send contact form:", err);
+      result.textContent = "Error sending message.";
+      result.style.color = "red";
     }
   });
 }
-
-// ---------- RATES ----------
-async function loadRates() {
-  const container = document.getElementById("ratesList");
-  if (!container) return;
-
-  try {
-    const res = await fetch("/api/rates");
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const rates = await res.json();
-
-    container.innerHTML = rates
-      .map(
-        (r) => `
-      <div class="rate-card">
-        <h3>${r.service_type}</h3>
-        <p>${r.description || ""}</p>
-        <div class="rate-value">
-          <strong>$${r.rate_per_unit}</strong> <span>${r.unit_type}</span>
-        </div>
-      </div>`
-      )
-      .join("");
-  } catch (err) {
-    console.error("Error loading rates:", err);
-    container.innerHTML = `<p class="error">Failed to load rates.</p>`;
-  }
-}
-
-// ---------- GALLERY (Fallback if gallery.js missing) ----------
-if (typeof loadGallery === "undefined") {
-  async function loadGallery() {
-    console.log("🐾 Loading gallery (fallback)");
-    const dorothyPets = document.getElementById("dorothyPets");
-    const clientPets = document.getElementById("clientPets");
-
-    try {
-      const res = await fetch("/api/gallery");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const pets = await res.json();
-
-      const dorothy = pets.filter((p) => p.owner === "dorothy");
-      const clients = pets.filter((p) => p.owner !== "dorothy");
-
-      dorothyPets.innerHTML = dorothy
-        .map(
-          (p) => `
-        <div class="gallery-card">
-          <img src="${p.images?.[0]?.image_url || ""}" alt="${p.pet_name}">
-          <h4>${p.pet_name}</h4>
-        </div>`
-        )
-        .join("");
-
-      clientPets.innerHTML = clients
-        .map(
-          (p) => `
-        <div class="gallery-card">
-          <img src="${p.images?.[0]?.image_url || ""}" alt="${p.pet_name}">
-          <h4>${p.pet_name}</h4>
-        </div>`
-        )
-        .join("");
-    } catch (err) {
-      console.error("Error loading gallery:", err);
-      dorothyPets.innerHTML = `<p class="error">Failed to load gallery.</p>`;
-    }
-  }
-}
-
-// ---------- POPSTATE (Browser back/forward support) ----------
-window.addEventListener("popstate", () => {
-  const hash = window.location.hash.replace("#", "");
-  const valid = ["about", "gallery", "rates", "contact", "admin"];
-  const pageToShow = valid.includes(hash) ? hash : "about";
-  switchPage(pageToShow);
-});
