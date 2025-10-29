@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (hash === "#admin" || window.location.pathname === "/admin") {
         console.log("🔐 Restoring Admin view...");
         if (typeof checkAdminAuth === "function") {
+             // ✅ Hide other sections and show Admin
+            document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+            document.getElementById('admin')?.style.display = 'block';
             checkAdminAuth();
         }
     } else {
