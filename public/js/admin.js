@@ -18,28 +18,87 @@ document.addEventListener("DOMContentLoaded", () => {
     initDashboard();
   }
 
-  // ==============================
-  // LOGIN HANDLER
-  // ==============================
-  document.getElementById("adminLoginForm")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const username = document.getElementById("adminUsername").value.trim();
-    const password = document.getElementById("adminPassword").value.trim();
-    try {
-      const res = await fetch("/api/admin/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        localStorage.setItem("adminToken", data.token);
-        location.reload();
-      } else alert("Invalid credentials");
-    } catch (err) {
-      console.error("Login error", err);
-    }
-  });
+// ===============================
+// ADMIN LOGIN & DASHBOARD LOGIC
+// ===============================
+
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("⚙️ Admin dashboard loaded");
+
+  const loginSection = document.getElementById("adminLogin");
+  const dashboardSection = document.getElementById("admin");
+  const loginForm = document.getElementById("adminLoginForm");
+
+  // Check token on load
+  if (localStorage.getItem("adminToken")) {
+    loginSection.style.display = "none";
+    dashboardSection.style.display = "block";
+  } else {
+    loginSection.style.display = "block";
+    dashboardSection.style.display = "none";
+  }
+
+  // Handle login submit
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("adminUsername").value.trim();
+      const password = document.getElementById("adminPassword").value.trim();
+      const statusEl = document.getElementById("adminLoginStatus");
+
+      if (!username || !password) {
+        statusEl.textContent = "❌ Enter both fields.";
+        statusEl.className = "error";
+        return;
+      }
+
+      statusEl.textContent = "🔐 Logging in...";
+      statusEl.className = "loading";
+
+      try {
+        const res = await fetch("/api/admin/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+
+        const data = await res.json();
+
+        if (data.success && data.token) {
+          localStorage.setItem("adminToken", data.token);
+          statusEl.textContent = "✅ Login successful!";
+          statusEl.className = "success";
+
+          setTimeout(() => {
+            loginSection.style.display = "none";
+            dashboardSection.style.display = "block";
+            loadPets();
+            loadRates();
+            loadContacts();
+          }, 500);
+        } else {
+          statusEl.textContent = "❌ Invalid credentials.";
+          statusEl.className = "error";
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+        statusEl.textContent = "⚠️ Server error.";
+        statusEl.className = "error";
+      }
+    });
+  }
+
+  // Logout
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("adminToken");
+      loginSection.style.display = "block";
+      dashboardSection.style.display = "none";
+    });
+  }
+});
+
 
   // ==============================
   // INITIALIZE DASHBOARD
