@@ -80,7 +80,7 @@ app.post(["/auth", "/api/auth", "/api/admin/auth"], (req, res) => {
   }
 });
 
-// ✅ Contact Form Handler
+// ✅ Contact Form Handler (public-facing)
 app.post("/api/contact", async (req, res) => {
   try {
     const {
@@ -110,7 +110,18 @@ app.post("/api/contact", async (req, res) => {
   }
 });
 
-// ✅ Rates
+// ✅ Admin: Get Contact Requests
+app.get("/api/contact", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM contacts ORDER BY id DESC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ Fetch contact requests error:", err);
+    res.status(500).json({ success: false, message: "Failed to load contacts" });
+  }
+});
+
+// ✅ Rates (Public)
 app.get("/api/rates", async (req, res) => {
   try {
     const result = await pool.query(
@@ -123,7 +134,37 @@ app.get("/api/rates", async (req, res) => {
   }
 });
 
-// ✅ Gallery
+// ✅ Admin: Add Rate
+app.post("/api/rates", async (req, res) => {
+  try {
+    const { service_type, rate_per_unit, unit_type, description } = req.body;
+    await pool.query(
+      `INSERT INTO service_rates (service_type, rate_per_unit, unit_type, description, is_active, is_featured)
+       VALUES ($1, $2, $3, $4, true, false)`,
+      [service_type, rate_per_unit, unit_type, description]
+    );
+    console.log(`💲 Added new rate: ${service_type}`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Add rate error:", err);
+    res.status(500).json({ success: false, message: "Failed to add rate" });
+  }
+});
+
+// ✅ Admin: Delete Rate
+app.delete("/api/rates/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query("DELETE FROM service_rates WHERE id = $1", [id]);
+    console.log(`🗑️ Deleted rate ${id}`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Delete rate error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// ✅ Gallery (Public)
 app.get("/api/gallery", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -225,28 +266,6 @@ app.delete("/api/pets/:petId", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-
-// ✅ Explicit Admin Auth Route (fixes 404 issue)
-app.post("/api/admin/auth", (req, res) => {
-  try {
-    const { username, password } = req.body;
-    console.log("🧩 Direct admin auth route hit");
-
-    if (username === "dorothy" && password === process.env.ADMIN_PASSWORD) {
-      return res.json({
-        success: true,
-        token: "mock-token-123",
-        message: "Login successful",
-      });
-    }
-
-    res.status(401).json({ success: false, message: "Invalid credentials" });
-  } catch (err) {
-    console.error("❌ Admin login error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-});
-
 
 // ✅ Catch-all (must be last)
 app.get("*", (req, res) => {
