@@ -1,153 +1,150 @@
-// js/gallery.js - Gallery and modal functionality
+// ===============================
+// Gallery Logic (Final Stable Build)
+// ===============================
 
-// Global variables for image carousel
+// ---------- GLOBALS ----------
+const API_BASE = "/api";
+let allPets = [];
+let currentGalleryImages = [];
 let currentImageIndex = 0;
-let currentImages = [];
 
-// Open modal with pet details and image carousel
-window.openModal = function(pet) {
-    const modal = document.getElementById('imageModal');
-    const modalImageContainer = document.getElementById('modalImageContainer');
-    const modalPetName = document.getElementById('modalPetName');
-    const modalPetDate = document.getElementById('modalPetDate');
-    const modalPetStory = document.getElementById('modalPetStory');
-    const modalBadge = document.getElementById('modalBadge');
+// ---------- LOAD GALLERY ----------
+async function loadGallery() {
+  console.log("🐾 Loading gallery...");
+  const dorothyPetsContainer = document.getElementById("dorothyPets");
+  const clientPetsContainer = document.getElementById("clientPets");
 
-    const images = pet.images || [];
-    currentImages = images;
-    currentImageIndex = 0;
+  try {
+    const res = await fetch(`${API_BASE}/gallery`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    // Set modal content based on number of images
-    if (images.length > 1) {
-        modalImageContainer.innerHTML = createImageCarousel(images, pet.pet_name);
-    } else if (images.length === 1) {
-        modalImageContainer.innerHTML = createSingleImage(images[0], pet.pet_name);
-    } else {
-        modalImageContainer.innerHTML = createNoImagePlaceholder();
-    }
+    const pets = await res.json();
+    allPets = pets;
 
-    // Set pet details
-    modalPetName.textContent = pet.pet_name;
-    modalPetDate.textContent = pet.service_date || '';
-    modalPetDate.style.display = pet.service_date ? 'block' : 'none';
-    modalPetStory.textContent = pet.story_description || '';
-    modalPetStory.style.display = pet.story_description ? 'block' : 'none';
-    modalBadge.style.display = pet.is_dorothy_pet ? 'block' : 'none';
+    const dorothyPets = pets.filter((p) => p.owner === "dorothy");
+    const clientPets = pets.filter((p) => p.owner !== "dorothy");
 
-    // Show modal
-    modal.style.display = 'block';
-    document.body.style.overflow = 'hidden';
-};
-
-// Create image carousel HTML
-function createImageCarousel(images, petName) {
-    return `
-        <div class="image-carousel">
-            <div class="carousel-container">
-                ${images.map((img, index) => `
-                    <img src="${img.image_url || img.url}" 
-                         alt="${petName}" 
-                         class="carousel-image ${index === 0 ? 'active' : ''}"
-                         data-index="${index}">
-                `).join('')}
-            </div>
-            <button class="carousel-prev" onclick="prevImage()">&lt;</button>
-            <button class="carousel-next" onclick="nextImage()">&gt;</button>
-            <div class="carousel-dots">
-                ${images.map((_, index) => `
-                    <span class="dot ${index === 0 ? 'active' : ''}" 
-                          onclick="currentImage(${index})"></span>
-                `).join('')}
-            </div>
-        </div>
-    `;
-}
-
-// Create single image HTML
-function createSingleImage(image, petName) {
-    return `<img src="${image.image_url || image.url}" alt="${petName}" class="single-image">`;
-}
-
-// Create no image placeholder
-function createNoImagePlaceholder() {
-    return `
-        <div style="display: flex; align-items: center; justify-content: center; font-size: 4rem; color: #667eea;">
-            🐾
-        </div>
-    `;
-}
-
-// Carousel navigation functions
-window.nextImage = function() {
-    if (currentImages.length <= 1) return;
-    currentImageIndex = (currentImageIndex + 1) % currentImages.length;
-    updateCarousel();
-};
-
-window.prevImage = function() {
-    if (currentImages.length <= 1) return;
-    currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
-    updateCarousel();
-};
-
-window.currentImage = function(index) {
-    currentImageIndex = index;
-    updateCarousel();
-};
-
-// Update carousel display
-function updateCarousel() {
-    const images = document.querySelectorAll('.carousel-image');
-    const dots = document.querySelectorAll('.dot');
-    
-    images.forEach((img, index) => {
-        img.classList.toggle('active', index === currentImageIndex);
-    });
-    
-    dots.forEach((dot, index) => {
-        dot.classList.toggle('active', index === currentImageIndex);
-    });
-}
-
-// Close modal function
-window.closeModal = function() {
-    const modal = document.getElementById('imageModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-};
-
-// Modal event listeners
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('imageModal');
-    const closeBtn = document.querySelector('.close');
-
-    // Close modal when clicking outside
-    modal.addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeModal();
-        }
-    });
-
-    // Close modal when clicking close button
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeModal);
-    }
-
-    // Keyboard support for modal
-    document.addEventListener('keydown', function(e) {
-        const modal = document.getElementById('imageModal');
-        if (modal.style.display === 'block') {
-            switch(e.key) {
-                case 'Escape':
-                    closeModal();
-                    break;
-                case 'ArrowLeft':
-                    prevImage();
-                    break;
-                case 'ArrowRight':
-                    nextImage();
-                    break;
+    dorothyPetsContainer.innerHTML = dorothyPets.length
+      ? dorothyPets
+          .map(
+            (pet) => `
+          <div class="gallery-card" data-pet="${pet.id}">
+            <img src="${pet.images?.[0]?.image_url || ""}" alt="${pet.pet_name}" />
+            <h4>${pet.pet_name}</h4>
+            <p>${pet.story_description || ""}</p>
+            ${
+              pet.images?.length > 1
+                ? `<p class="muted">📸 Click to view more photos</p>`
+                : ""
             }
-        }
+          </div>`
+          )
+          .join("")
+      : `<p class="muted">No pets to display yet.</p>`;
+
+    clientPetsContainer.innerHTML = clientPets.length
+      ? clientPets
+          .map(
+            (pet) => `
+          <div class="gallery-card" data-pet="${pet.id}">
+            <img src="${pet.images?.[0]?.image_url || ""}" alt="${pet.pet_name}" />
+            <h4>${pet.pet_name}</h4>
+            <p>${pet.story_description || ""}</p>
+            ${
+              pet.images?.length > 1
+                ? `<p class="muted">📸 Click to view more photos</p>`
+                : ""
+            }
+          </div>`
+          )
+          .join("")
+      : `<p class="muted">No client pets to show yet.</p>`;
+
+    bindGalleryClicks();
+  } catch (err) {
+    console.error("❌ Failed to load gallery:", err);
+    dorothyPetsContainer.innerHTML = `<p class="error">Error loading gallery. Please try again later.</p>`;
+  }
+}
+
+// ---------- GALLERY CLICK HANDLERS ----------
+function bindGalleryClicks() {
+  const cards = document.querySelectorAll(".gallery-card");
+  cards.forEach((card) => {
+    card.addEventListener("click", () => {
+      const petId = card.dataset.pet;
+      const pet = allPets.find((p) => p.id == petId);
+      if (pet && pet.images?.length) {
+        openImageModal(pet.images);
+      }
     });
-});
+  });
+}
+
+// ---------- MODAL / CAROUSEL ----------
+function openImageModal(images) {
+  currentGalleryImages = images;
+  currentImageIndex = 0;
+
+  const modal = document.getElementById("imageModal");
+  const modalBody = document.getElementById("modalBody");
+  modalBody.innerHTML = `<img src="${images[0].image_url}" alt="Pet photo" />`;
+
+  modal.hidden = false;
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden"; // Prevent scrolling background
+
+  bindModalControls();
+}
+
+function bindModalControls() {
+  const modal = document.getElementById("imageModal");
+  const closeBtn = document.getElementById("modalClose");
+  const prevBtn = document.getElementById("modalPrev");
+  const nextBtn = document.getElementById("modalNext");
+
+  // Close modal
+  closeBtn.onclick = () => closeModal();
+  modal.onclick = (e) => {
+    if (e.target === modal) closeModal();
+  };
+
+  // Navigation
+  prevBtn.onclick = () => showPrevImage();
+  nextBtn.onclick = () => showNextImage();
+
+  // Keyboard controls
+  document.onkeydown = (e) => {
+    if (e.key === "Escape") closeModal();
+    if (e.key === "ArrowLeft") showPrevImage();
+    if (e.key === "ArrowRight") showNextImage();
+  };
+}
+
+function closeModal() {
+  const modal = document.getElementById("imageModal");
+  modal.hidden = true;
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  document.onkeydown = null;
+}
+
+function showPrevImage() {
+  if (!currentGalleryImages.length) return;
+  currentImageIndex =
+    (currentImageIndex - 1 + currentGalleryImages.length) %
+    currentGalleryImages.length;
+  updateModalImage();
+}
+
+function showNextImage() {
+  if (!currentGalleryImages.length) return;
+  currentImageIndex = (currentImageIndex + 1) % currentGalleryImages.length;
+  updateModalImage();
+}
+
+function updateModalImage() {
+  const modalBody = document.getElementById("modalBody");
+  const current = currentGalleryImages[currentImageIndex];
+  modalBody.innerHTML = `<img src="${current.image_url}" alt="Pet photo" />`;
+}
