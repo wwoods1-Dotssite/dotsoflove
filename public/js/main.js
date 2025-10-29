@@ -1,246 +1,207 @@
-/* Main app controller: navigation, routing, and screen boot.
-   Keeps gallery.js (modal/carousel) and admin.js (auth & dashboard) intact. */
+// ===============================
+// Main Application Script (Final)
+// ===============================
 
-(function () {
-  const PAGES = ["about", "gallery", "rates", "contact", "admin"];
-  const DEFAULT_PAGE = "about";
-  const API_BASE = "/api";
+// ---------- GLOBAL SETUP ----------
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("✅ main.js initialized");
 
-  // --------- Navigation helpers ---------
-  function setActiveNav(page) {
-    document.querySelectorAll(".site-nav .nav-link").forEach(btn => {
-      btn.classList.toggle("active", btn.dataset.nav === page);
-    });
-  }
+  initializeNavigation();
+  loadInitialContent();
+  setupContactForm();
 
-  function showOnly(page) {
-    PAGES.forEach(p => {
-      const el = document.getElementById(p);
-      if (!el) return;
-      if (p === page) {
-        el.hidden = false;
-      } else {
-        el.hidden = true;
-      }
-    });
-    setActiveNav(page);
-  }
-
-  // --------- Page loaders (lightweight, keep your existing endpoints) ---------
-  async function loadRates() {
-    const container = document.getElementById("ratesList");
-    if (!container) return;
-    try {
-      const res = await fetch(`${API_BASE}/rates`);
-      const rates = await res.json();
-      container.innerHTML = rates
-        .map(r => `
-          <article class="rate-card">
-            <h3>${r.service_type}${r.is_featureed ? " ⭐" : ""}</h3>
-            ${r.description ? `<p>${r.description}</p>` : ""}
-            <p class="price"><strong>$${(+r.rate_per_unit).toFixed(2)}</strong> ${r.unit_type}</p>
-          </article>
-        `)
-        .join("");
-    } catch (err) {
-      console.error("Rates error:", err);
-      container.innerHTML = `<p class="error">Failed to load rates.</p>`;
-    }
-  }
-
-  async function loadGallery() {
-    // Use your existing gallery.js wiring. We only call the public functions if present.
-    if (typeof window.loadDualGallery === "function") {
-      try {
-        await window.loadDualGallery(); // fills #dorothyPets and #clientPets
-      } catch (e) {
-        console.error("loadDualGallery failed:", e);
-      }
-      return;
-    }
-
-    // Fallback (rarely used if gallery.js present)
-    const dorothy = document.getElementById("dorothyPets");
-    const clients = document.getElementById("clientPets");
-    try {
-      const res = await fetch(`${API_BASE}/gallery`);
-      const pets = await res.json();
-      const isDorothy = p => !!p.is_dorothy_pet;
-
-      const html = p => `
-        <div class="gallery-item" data-pet='${JSON.stringify(p).replace(/"/g, "&quot;")}'>
-          <div class="gallery-image">
-            ${p.images?.length ? `<img src="${p.images[0].image_url}" alt="${p.pet_name}">` : "🐾"}
-          </div>
-          <div class="gallery-content">
-            ${p.is_dorothy_pet ? `<div class="dorothy-pet-badge">Dorothy's Pet</div>` : ""}
-            <div class="pet-name">${p.pet_name}</div>
-            ${p.service_date ? `<div class="pet-date">${p.service_date}</div>` : ""}
-            ${p.story_description ? `<div class="pet-story">${p.story_description}</div>` : ""}
-          </div>
-        </div>`;
-
-      dorothy.innerHTML = pets.filter(isDorothy).map(html).join("") || "<p>No pets yet.</p>";
-      clients.innerHTML  = pets.filter(p => !isDorothy(p)).map(html).join("") || "<p>Client pet photos coming soon!</p>";
-    } catch (err) {
-      console.error("Gallery error:", err);
-      dorothy.innerHTML = clients.innerHTML = `<p class="error">Failed to load gallery.</p>`;
-    }
-  }
-
-  // --------- Contact form ----------
-  function wireContactForm() {
-    const form = document.getElementById("contactForm");
-    if (!form) return;
-
-    const status = document.getElementById("contactResult");
-    const start = document.getElementById("contactStart");
-    const end   = document.getElementById("contactEnd");
-
-    // basic date validation
-    function validateDates() {
-      if (start.value && end.value && end.value < start.value) {
-        end.setCustomValidity("End date cannot be before start date.");
-      } else {
-        end.setCustomValidity("");
-      }
-    }
-    start.addEventListener("change", validateDates);
-    end.addEventListener("change", validateDates);
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      validateDates();
-      if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-      }
-
-      const payload = {
-        name:       document.getElementById("contactName").value.trim(),
-        email:      document.getElementById("contactEmail").value.trim(),
-        phone:      document.getElementById("contactPhone").value.trim(),
-        best_time:  document.getElementById("contactBestTime").value,
-        service:    document.getElementById("contactService").value,
-        pet_info:   document.getElementById("contactPetInfo").value.trim(),
-        start_date: document.getElementById("contactStart").value,
-        end_date:   document.getElementById("contactEnd").value,
-        message:    document.getElementById("contactMessage").value.trim(),
-      };
-
-      try {
-        const res = await fetch(`${API_BASE}/contact`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        status.textContent = data?.message || "Message received!";
-        form.reset();
-      } catch (err) {
-        console.error("Contact error:", err);
-        status.textContent = "Sorry, something went wrong. Please try again.";
-      }
-    });
-  }
-
-  // --------- Admin helpers ----------
-  function ensureAdminVisibility() {
-    // Always call the global helper if admin.js is loaded.
-    if (typeof window.checkAdminAuth === "function") {
-      window.checkAdminAuth(); // shows login vs panel + sets banner
+  // ✅ Support restoring Admin dashboard if logged in
+  const hash = window.location.hash || "";
+  if (hash === "#admin" || window.location.pathname === "/admin") {
+    if (typeof checkAdminAuth === "function") {
+      console.log("🔐 Restoring Admin dashboard...");
+      checkAdminAuth();
     } else {
-      // If admin.js hasn't loaded for some reason, at least show the login section.
-      const login = document.getElementById("adminLogin");
-      const panel = document.getElementById("adminPanel");
-      if (login) login.style.display = "block";
-      if (panel) panel.style.display = "none";
+      document.addEventListener("admin:ready", () => checkAdminAuth());
     }
   }
+});
 
-  // --------- Router ----------
-  function routeTo(page) {
-    switch (page) {
-      case "gallery":
-        showOnly("gallery");
-        loadGallery();
-        break;
+// ---------- NAVIGATION ----------
+function initializeNavigation() {
+  const navButtons = document.querySelectorAll(".nav-link");
 
-      case "rates":
-        showOnly("rates");
-        loadRates();
-        break;
-
-      case "contact":
-        showOnly("contact");
-        wireContactForm();
-        break;
-
-      case "admin":
-        showOnly("admin");
-        ensureAdminVisibility();
-        break;
-
-      default:
-        showOnly("about");
-    }
-  }
-
-  function getInitialPageFromURL() {
-    const hash = (window.location.hash || "").replace("#", "").trim().toLowerCase();
-    if (hash && PAGES.includes(hash)) return hash;
-
-    // support pretty URL /admin
-    const path = window.location.pathname.replace(/^\//, "").toLowerCase();
-    if (PAGES.includes(path)) return path;
-
-    return DEFAULT_PAGE;
-  }
-
-  function updateURL(page) {
-    // keep nice hash for SPA, and pretty path for /admin
-    if (page === "admin") {
-      if (window.location.pathname !== "/admin") {
-        window.history.pushState({}, "", "/admin");
-      }
-    } else {
-      const want = `/#${page}`;
-      if (window.location.hash !== `#${page}` || window.location.pathname !== "/") {
-        window.history.pushState({}, "", want);
-      }
-    }
-  }
-
-  function handleNavClick(e) {
-    const btn = e.target.closest("[data-nav]");
-    if (!btn) return;
-
-    const page = btn.dataset.nav;
-    updateURL(page);
-    routeTo(page);
-  }
-
-  function handlePopState() {
-    routeTo(getInitialPageFromURL());
-  }
-
-  // --------- Boot ----------
-  document.addEventListener("DOMContentLoaded", () => {
-    // Wire nav clicks
-    document.querySelector(".site-nav")?.addEventListener("click", handleNavClick);
-
-    // Initial route (never override admin)
-    const initial = getInitialPageFromURL();
-    routeTo(initial);
-
-    // Allow in-place back/forward
-    window.addEventListener("popstate", handlePopState);
-
-    // If user lands on /admin or #admin and admin.js is slow to load, re-check once it arrives.
-    document.addEventListener("admin:ready", () => {
-      if (getInitialPageFromURL() === "admin") ensureAdminVisibility();
+  navButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const target = btn.getAttribute("data-nav");
+      switchPage(target);
     });
   });
+}
 
-})();
+function switchPage(targetId) {
+  console.log(`📄 Switching to: ${targetId}`);
+
+  const pages = document.querySelectorAll(".page");
+  pages.forEach((p) => (p.hidden = true));
+
+  const targetPage = document.getElementById(targetId);
+  if (targetPage) targetPage.hidden = false;
+
+  // Highlight active nav button
+  document.querySelectorAll(".nav-link").forEach((b) => {
+    b.classList.toggle("active", b.dataset.nav === targetId);
+  });
+
+  // Update hash (for back/forward navigation)
+  window.history.pushState({}, "", `#${targetId}`);
+
+  // Trigger page-specific loads
+  switch (targetId) {
+    case "gallery":
+      if (typeof loadGallery === "function") loadGallery();
+      break;
+    case "rates":
+      loadRates();
+      break;
+    case "contact":
+      break;
+    case "admin":
+      if (typeof checkAdminAuth === "function") {
+        checkAdminAuth();
+      } else {
+        document.addEventListener("admin:ready", () => checkAdminAuth());
+      }
+      break;
+  }
+}
+
+// ---------- INITIAL LOAD ----------
+function loadInitialContent() {
+  const hash = window.location.hash.replace("#", "");
+  const valid = ["about", "gallery", "rates", "contact", "admin"];
+  const pageToShow = valid.includes(hash) ? hash : "about";
+  switchPage(pageToShow);
+}
+
+// ---------- CONTACT FORM ----------
+function setupContactForm() {
+  const form = document.getElementById("contactForm");
+  if (!form) return;
+
+  const resultBox = document.getElementById("contactResult");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    resultBox.textContent = "Sending...";
+
+    const payload = {
+      name: form.querySelector("#contactName")?.value.trim(),
+      email: form.querySelector("#contactEmail")?.value.trim(),
+      phone: form.querySelector("#contactPhone")?.value.trim(),
+      best_time: form.querySelector("#contactBestTime")?.value || "",
+      service: form.querySelector("#contactService")?.value || "",
+      pet_info: form.querySelector("#contactPetInfo")?.value || "",
+      start_date: form.querySelector("#contactStart")?.value || "",
+      end_date: form.querySelector("#contactEnd")?.value || "",
+      message: form.querySelector("#contactMessage")?.value || "",
+    };
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const msg = `Error ${res.status}: unable to send`;
+        resultBox.textContent = msg;
+        throw new Error(msg);
+      }
+
+      const data = await res.json();
+      if (data.success) {
+        resultBox.textContent = "✅ Message sent successfully!";
+        form.reset();
+      } else {
+        resultBox.textContent = "❌ Failed to send message.";
+      }
+    } catch (err) {
+      console.error("❌ Contact form error:", err);
+      resultBox.textContent = "❌ Network or server issue, please try again.";
+    }
+  });
+}
+
+// ---------- RATES ----------
+async function loadRates() {
+  const container = document.getElementById("ratesList");
+  if (!container) return;
+
+  try {
+    const res = await fetch("/api/rates");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const rates = await res.json();
+
+    container.innerHTML = rates
+      .map(
+        (r) => `
+      <div class="rate-card">
+        <h3>${r.service_type}</h3>
+        <p>${r.description || ""}</p>
+        <div class="rate-value">
+          <strong>$${r.rate_per_unit}</strong> <span>${r.unit_type}</span>
+        </div>
+      </div>`
+      )
+      .join("");
+  } catch (err) {
+    console.error("Error loading rates:", err);
+    container.innerHTML = `<p class="error">Failed to load rates.</p>`;
+  }
+}
+
+// ---------- GALLERY (Fallback if gallery.js missing) ----------
+if (typeof loadGallery === "undefined") {
+  async function loadGallery() {
+    console.log("🐾 Loading gallery (fallback)");
+    const dorothyPets = document.getElementById("dorothyPets");
+    const clientPets = document.getElementById("clientPets");
+
+    try {
+      const res = await fetch("/api/gallery");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const pets = await res.json();
+
+      const dorothy = pets.filter((p) => p.owner === "dorothy");
+      const clients = pets.filter((p) => p.owner !== "dorothy");
+
+      dorothyPets.innerHTML = dorothy
+        .map(
+          (p) => `
+        <div class="gallery-card">
+          <img src="${p.images?.[0]?.image_url || ""}" alt="${p.pet_name}">
+          <h4>${p.pet_name}</h4>
+        </div>`
+        )
+        .join("");
+
+      clientPets.innerHTML = clients
+        .map(
+          (p) => `
+        <div class="gallery-card">
+          <img src="${p.images?.[0]?.image_url || ""}" alt="${p.pet_name}">
+          <h4>${p.pet_name}</h4>
+        </div>`
+        )
+        .join("");
+    } catch (err) {
+      console.error("Error loading gallery:", err);
+      dorothyPets.innerHTML = `<p class="error">Failed to load gallery.</p>`;
+    }
+  }
+}
+
+// ---------- POPSTATE (Browser back/forward support) ----------
+window.addEventListener("popstate", () => {
+  const hash = window.location.hash.replace("#", "");
+  const valid = ["about", "gallery", "rates", "contact", "admin"];
+  const pageToShow = valid.includes(hash) ? hash : "about";
+  switchPage(pageToShow);
+});
