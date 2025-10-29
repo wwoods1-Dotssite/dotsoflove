@@ -3,10 +3,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const formStatus = document.getElementById("formStatus");
   const serviceDropdown = document.getElementById("service");
 
-  // ✅ Populate services dynamically (if API available)
+  if (!form) {
+    console.warn("Contact form not found in DOM.");
+    return;
+  }
+
+  // ✅ Populate services dynamically
   fetch("/api/rates")
     .then(res => res.json())
     .then(data => {
+      if (!Array.isArray(data)) throw new Error("Invalid JSON structure");
       data.forEach(rate => {
         const option = document.createElement("option");
         option.value = rate.service_type;
@@ -14,14 +20,13 @@ document.addEventListener("DOMContentLoaded", () => {
         serviceDropdown.appendChild(option);
       });
     })
-    .catch(() => {
-      console.warn("⚠️ Could not fetch rates for dropdown.");
+    .catch(err => {
+      console.warn("⚠️ Could not fetch rates for dropdown:", err);
     });
 
   // ✅ Handle form submission
   form.addEventListener("submit", async e => {
     e.preventDefault();
-
     const formData = Object.fromEntries(new FormData(form).entries());
     formStatus.textContent = "Sending...";
     formStatus.className = "form-status";
@@ -33,9 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify(formData)
       });
 
-      if (!res.ok) throw new Error(`Server returned ${res.status}`);
       const data = await res.json();
-
       if (data.success) {
         formStatus.textContent = "✅ Message sent successfully!";
         formStatus.classList.add("success");
