@@ -1,178 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dot’s of Love Pet Sitting</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dot’s of Love Pet Sitting</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- ========================= -->
+  <!--         NAV BAR           -->
+  <!-- ========================= -->
+  <header>
+    <nav class="navbar">
+      <div class="logo">
+        <span class="paw">🐾</span>
+        <span>Dot's of Love Pet Sitting</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#about" class="active">About</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#rates">Rates</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="#admin">Admin</a></li>
+      </ul>
+    </nav>
+  </header>
 
-    <!-- Stylesheets -->
-    <link rel="stylesheet" href="css/main.css" />
-    <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/admin.css" />
-    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-  </head>
+  <!-- ========================= -->
+  <!--         ABOUT             -->
+  <!-- ========================= -->
+  <section id="about">
+    <h2>Hi, I'm Dorothy!</h2>
+    <p>Your trusted neighborhood pet sitter (call me Dot or Dotty!)</p>
 
-  <body>
-    <!-- ===============================
-         HEADER & NAVIGATION
-    =============================== -->
-    <header>
-      <h1>
-        🐾 Dot's of Love Pet Sitting
-      </h1>
+    <div class="card">
+      <h3>About Me</h3>
+      <p>
+        I’ve cared for dogs, cats, and all sorts of pets for years — from energetic puppies
+        to dignified seniors. I offer loving care that keeps your companions happy and relaxed
+        while you’re away.
+      </p>
+      <ul>
+        <li>Experienced with dogs, cats, and small animals</li>
+        <li>Daily photo and message updates</li>
+        <li>Flexible scheduling and overnight stays</li>
+      </ul>
+    </div>
 
-      <nav class="navbar">
-        <button class="nav-link active" data-page="about">About</button>
-        <button class="nav-link" data-page="gallery">Gallery</button>
-        <button class="nav-link" data-page="rates">Rates</button>
-        <button class="nav-link" data-page="contact">Contact</button>
-        <button class="nav-link" data-page="admin">Admin</button>
-      </nav>
-    </header>
+    <div class="featured-rate-card">
+      <div class="featured-badge">⭐ Featured Service</div>
+      <h3>Dog Walking</h3>
+      <p>30–45 minute walks to keep your dog happy and healthy</p>
+      <strong>$15.00 per walk</strong>
+    </div>
+  </section>
 
-    <main>
-      <!-- ===============================
-           ABOUT PAGE
-      =============================== -->
-      <section id="about" class="page">
-        <h2>Hi, I'm Dorothy!</h2>
-        <p>Your trusted neighborhood pet sitter (call me Dot or Dotty!)</p>
+  <!-- ========================= -->
+  <!--         FOOTER            -->
+  <!-- ========================= -->
+  <footer>
+    <p>© <span id="year"></span> Dot’s of Love Pet Sitting. All rights reserved.</p>
+  </footer>
 
-        <div class="card">
-          <h3>About Me</h3>
-          <p>
-            I’ve cared for dogs, cats, and all sorts of pets for years — from energetic puppies to dignified seniors.
-            I offer loving care that keeps your companions happy and relaxed while you’re away.
-          </p>
-          <ul>
-            <li>Experienced with dogs, cats, and small animals</li>
-            <li>Daily photo and message updates</li>
-            <li>Flexible scheduling and overnight stays</li>
-          </ul>
-        </div>
-
-        <div id="featuredRate" class="featured-rate-container"></div>
-      </section>
-
-      <!-- ===============================
-           GALLERY PAGE
-      =============================== -->
-      <section id="gallery" class="page" hidden>
-        <div id="galleryContainer">
-          <p>Loading gallery...</p>
-        </div>
-
-        <!-- Modal for Image View -->
-        <div id="imageModal" class="modal" hidden>
-          <div class="modal-content">
-            <button id="modalClose" title="Close">&times;</button>
-            <img id="modalImage" src="" alt="Pet Image" />
-          </div>
-        </div>
-      </section>
-
-      <!-- ===============================
-           RATES PAGE
-      =============================== -->
-      <section id="rates" class="page" hidden>
-        <div id="ratesContainer">
-          <p>Loading service rates...</p>
-        </div>
-      </section>
-
-      <!-- ===============================
-           CONTACT PAGE
-      =============================== -->
-      <section id="contact" class="page" hidden>
-        <h2>Let’s Connect!</h2>
-        <p>
-          Ready to give your pet the best care possible? Fill out the form below!
-        </p>
-
-        <form id="contactForm" class="contact-form">
-          <input name="name" type="text" placeholder="Your Name *" required />
-          <input name="email" type="email" placeholder="Email Address *" required />
-          <input name="phone" type="tel" placeholder="(555) 555-5555" />
-          <select name="best_time">
-            <option value="">Best Time to Reach You</option>
-            <option value="Any time">Any time</option>
-            <option value="Morning">Morning</option>
-            <option value="Afternoon">Afternoon</option>
-            <option value="Evening">Evening</option>
-          </select>
-
-          <select name="service">
-            <option value="">Service Needed</option>
-            <option value="Dog Walking">Dog Walking</option>
-            <option value="Pet Sitting">Pet Sitting</option>
-            <option value="Overnight Stay">Overnight Stay</option>
-          </select>
-
-          <input name="start_date" type="date" placeholder="Start Date *" required />
-          <input name="end_date" type="date" placeholder="End Date" />
-          <textarea name="pet_info" placeholder="Tell me about your pet(s)..."></textarea>
-          <textarea name="message" placeholder="Additional Message"></textarea>
-          <button type="submit">Send Request</button>
-
-          <div id="contactResult"></div>
-        </form>
-      </section>
-
-      <!-- ===============================
-           ADMIN DASHBOARD
-      =============================== -->
-      <section id="admin" class="page" hidden>
-        <div id="adminLogin" class="admin-login">
-          <h2>Admin Login</h2>
-          <form id="adminLoginForm">
-            <input id="adminUsername" type="text" placeholder="Username" required />
-            <input id="adminPassword" type="password" placeholder="Password" required />
-            <button type="submit">Login</button>
-          </form>
-          <div id="adminError" class="error-text"></div>
-        </div>
-
-        <div id="adminPanel" class="admin-panel" style="display:none;">
-          <div id="adminStatusBanner" class="admin-banner"></div>
-          <div class="hero">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <h2>Admin Dashboard</h2>
-              <button id="adminLogout" class="btn btn-danger">Logout</button>
-            </div>
-          </div>
-
-          <div class="card">
-            <h3>Gallery Management</h3>
-            <div id="adminGallery"></div>
-          </div>
-
-          <div class="card">
-            <h3>Rates Management</h3>
-            <div id="adminRates"></div>
-          </div>
-
-          <div class="card">
-            <h3>Contact Requests</h3>
-            <div id="adminContacts"></div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <p>&copy; <span id="year"></span> Dot's of Love Pet Sitting. All rights reserved.</p>
-    </footer>
-
-    <script>
-      // Auto-update footer year
-      document.getElementById("year").textContent = new Date().getFullYear();
-    </script>
-
-    <!-- ===============================
-         JS FILES
-    =============================== -->
-    <script src="js/gallery.js"></script>
-    <script src="js/admin.js"></script>
-    <script src="js/main.js"></script>
-  </body>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
 </html>
