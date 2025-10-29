@@ -1,225 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dot's of Love Pet Sitting</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dot’s of Love Pet Sitting</title>
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/components.css">
-  <link rel="stylesheet" href="/css/admin.css">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/admin.css" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  </head>
 
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-</head>
+  <body>
+    <!-- ===============================
+         HEADER & NAVIGATION
+    =============================== -->
+    <header>
+      <h1>
+        🐾 Dot's of Love Pet Sitting
+      </h1>
 
-<body>
-  <!-- Header -->
-  <header class="site-header">
-    <div class="brand">
-      <span class="logo-paws">🐾</span>
-      <h1>Dot's of Love Pet Sitting</h1>
-    </div>
-    <nav class="site-nav">
-      <button class="nav-link" data-nav="about">About</button>
-      <button class="nav-link" data-nav="gallery">Gallery</button>
-      <button class="nav-link" data-nav="rates">Rates</button>
-      <button class="nav-link" data-nav="contact">Contact</button>
-      <button class="nav-link nav-admin" data-nav="admin">Admin</button>
-    </nav>
-  </header>
+      <nav class="navbar">
+        <button class="nav-link active" data-page="about">About</button>
+        <button class="nav-link" data-page="gallery">Gallery</button>
+        <button class="nav-link" data-page="rates">Rates</button>
+        <button class="nav-link" data-page="contact">Contact</button>
+        <button class="nav-link" data-page="admin">Admin</button>
+      </nav>
+    </header>
 
-  <!-- App -->
-  <main id="app">
-
-    <!-- ABOUT -->
-    <section id="about" class="page">
-      <div class="hero">
+    <main>
+      <!-- ===============================
+           ABOUT PAGE
+      =============================== -->
+      <section id="about" class="page">
         <h2>Hi, I'm Dorothy!</h2>
         <p>Your trusted neighborhood pet sitter (call me Dot or Dotty!)</p>
-      </div>
 
-      <section class="card">
-        <h3>About Me</h3>
+        <div class="card">
+          <h3>About Me</h3>
+          <p>
+            I’ve cared for dogs, cats, and all sorts of pets for years — from energetic puppies to dignified seniors.
+            I offer loving care that keeps your companions happy and relaxed while you’re away.
+          </p>
+          <ul>
+            <li>Experienced with dogs, cats, and small animals</li>
+            <li>Daily photo and message updates</li>
+            <li>Flexible scheduling and overnight stays</li>
+          </ul>
+        </div>
+
+        <div id="featuredRate" class="featured-rate-container"></div>
+      </section>
+
+      <!-- ===============================
+           GALLERY PAGE
+      =============================== -->
+      <section id="gallery" class="page" hidden>
+        <div id="galleryContainer">
+          <p>Loading gallery...</p>
+        </div>
+
+        <!-- Modal for Image View -->
+        <div id="imageModal" class="modal" hidden>
+          <div class="modal-content">
+            <button id="modalClose" title="Close">&times;</button>
+            <img id="modalImage" src="" alt="Pet Image" />
+          </div>
+        </div>
+      </section>
+
+      <!-- ===============================
+           RATES PAGE
+      =============================== -->
+      <section id="rates" class="page" hidden>
+        <div id="ratesContainer">
+          <p>Loading service rates...</p>
+        </div>
+      </section>
+
+      <!-- ===============================
+           CONTACT PAGE
+      =============================== -->
+      <section id="contact" class="page" hidden>
+        <h2>Let’s Connect!</h2>
         <p>
-          I’ve cared for dogs, cats, and all sorts of pets for years — from energetic
-          puppies to dignified seniors. I offer loving care that keeps your companions
-          happy and relaxed while you’re away.
+          Ready to give your pet the best care possible? Fill out the form below!
         </p>
-        <ul>
-          <li>Experienced with dogs, cats, and small animals</li>
-          <li>Daily photo and message updates</li>
-          <li>Flexible scheduling and overnight stays</li>
-        </ul>
-      </section>
-    </section>
 
-    <!-- GALLERY -->
-    <section id="gallery" class="page" hidden>
-      <div class="hero">
-        <h2>Pet Gallery</h2>
-        <p>Meet my fur family and some of the wonderful pets I've cared for!</p>
-      </div>
-
-      <section class="card">
-        <h3>🐾 Dorothy's Pet Family</h3>
-        <p>These are my own pets — the heart and inspiration for Dot's of Love!</p>
-        <div id="dorothyPets" class="gallery-grid"></div>
-      </section>
-
-      <section class="card">
-        <h3>⭐ Happy Clients</h3>
-        <div id="clientPets" class="gallery-grid"></div>
-      </section>
-    </section>
-
-    <!-- RATES -->
-    <section id="rates" class="page" hidden>
-      <div class="hero">
-        <h2>Service Rates</h2>
-      </div>
-      <div id="ratesList" class="rates-grid"></div>
-    </section>
-
-    <!-- CONTACT -->
-    <section id="contact" class="page" hidden>
-      <div class="hero">
-        <h2>Let's Connect!</h2>
-        <p>Ready to give your pet the best care possible? Fill out the form below!</p>
-      </div>
-
-      <section class="card">
-        <h3>Request Pet Sitting Services</h3>
         <form id="contactForm" class="contact-form">
-          <div class="form-row">
-            <label>Your Name *</label>
-            <input id="contactName" name="name" required placeholder="Your Name" />
-          </div>
+          <input name="name" type="text" placeholder="Your Name *" required />
+          <input name="email" type="email" placeholder="Email Address *" required />
+          <input name="phone" type="tel" placeholder="(555) 555-5555" />
+          <select name="best_time">
+            <option value="">Best Time to Reach You</option>
+            <option value="Any time">Any time</option>
+            <option value="Morning">Morning</option>
+            <option value="Afternoon">Afternoon</option>
+            <option value="Evening">Evening</option>
+          </select>
 
-          <div class="form-row">
-            <label>Email Address *</label>
-            <input id="contactEmail" name="email" type="email" required placeholder="name@email.com" />
-          </div>
+          <select name="service">
+            <option value="">Service Needed</option>
+            <option value="Dog Walking">Dog Walking</option>
+            <option value="Pet Sitting">Pet Sitting</option>
+            <option value="Overnight Stay">Overnight Stay</option>
+          </select>
 
-          <div class="form-row">
-            <label>Phone Number</label>
-            <input id="contactPhone" name="phone" placeholder="(555) 555-5555" />
-          </div>
+          <input name="start_date" type="date" placeholder="Start Date *" required />
+          <input name="end_date" type="date" placeholder="End Date" />
+          <textarea name="pet_info" placeholder="Tell me about your pet(s)..."></textarea>
+          <textarea name="message" placeholder="Additional Message"></textarea>
+          <button type="submit">Send Request</button>
 
-          <div class="form-row">
-            <label>Best Time to Reach You</label>
-            <select id="contactBestTime" name="best_time">
-              <option value="">Any time</option>
-              <option>Morning</option>
-              <option>Afternoon</option>
-              <option>Evening</option>
-            </select>
-          </div>
-
-          <div class="form-row">
-            <label>Service Needed</label>
-            <select id="contactService" name="service">
-              <option value="">Select a service...</option>
-              <option>Dog Walking</option>
-              <option>Pet Visits</option>
-              <option>Overnight Sitting</option>
-              <option>Holiday/Weekend Care</option>
-            </select>
-          </div>
-
-          <div class="form-row">
-            <label>Tell me about your pet(s)</label>
-            <textarea id="contactPetInfo" name="pet_info" rows="3" placeholder="Pet's name, breed, age, special needs, etc."></textarea>
-          </div>
-
-          <div class="form-row two-col">
-            <div>
-              <label>Start Date *</label>
-              <input id="contactStart" name="start_date" type="date" required />
-            </div>
-            <div>
-              <label>End Date</label>
-              <input id="contactEnd" name="end_date" type="date" />
-            </div>
-          </div>
-
-          <div class="form-row">
-            <label>Additional Message</label>
-            <textarea id="contactMessage" name="message" rows="3"></textarea>
-          </div>
-
-          <button type="submit" class="btn btn-primary">Send Request</button>
-          <p id="contactResult" class="muted" aria-live="polite"></p>
-        </form>
-      </section>
-    </section>
-
-    <!-- ADMIN -->
-    <section id="admin" class="page" hidden>
-      <div class="hero">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <h2>Admin Dashboard</h2>
-            <div id="adminStatusBanner" class="admin-banner" style="display:none;"></div>
-          </div>
-          <button id="adminLogout" class="btn btn-danger">Logout</button>
-        </div>
-      </div>
-
-      <!-- Login -->
-      <section id="adminLogin" class="card">
-        <h3>Admin Login</h3>
-        <form id="adminLoginForm" class="admin-form">
-          <div class="form-row">
-            <label>Username</label>
-            <input id="adminUsername" autocomplete="username" placeholder="dorothy" />
-          </div>
-          <div class="form-row">
-            <label>Password</label>
-            <input id="adminPassword" type="password" autocomplete="current-password" placeholder="••••••••" />
-          </div>
-          <button class="btn btn-primary" type="submit">Login</button>
-          <p id="adminError" class="error" aria-live="assertive"></p>
+          <div id="contactResult"></div>
         </form>
       </section>
 
-      <!-- Panel -->
-      <section id="adminPanel" class="card" style="display:none;">
-        <div class="tabs">
-          <button class="admin-tab active" data-tab="tab-gallery">Gallery Management</button>
-          <button class="admin-tab" data-tab="tab-rates">Rates Management</button>
-          <button class="admin-tab" data-tab="tab-contacts">Contact Requests</button>
+      <!-- ===============================
+           ADMIN DASHBOARD
+      =============================== -->
+      <section id="admin" class="page" hidden>
+        <div id="adminLogin" class="admin-login">
+          <h2>Admin Login</h2>
+          <form id="adminLoginForm">
+            <input id="adminUsername" type="text" placeholder="Username" required />
+            <input id="adminPassword" type="password" placeholder="Password" required />
+            <button type="submit">Login</button>
+          </form>
+          <div id="adminError" class="error-text"></div>
         </div>
 
-        <div id="tab-gallery" class="admin-section" style="display:block;">
-          <div id="adminGallery" class="admin-gallery-grid"></div>
-        </div>
+        <div id="adminPanel" class="admin-panel" style="display:none;">
+          <div id="adminStatusBanner" class="admin-banner"></div>
+          <div class="hero">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <h2>Admin Dashboard</h2>
+              <button id="adminLogout" class="btn btn-danger">Logout</button>
+            </div>
+          </div>
 
-        <div id="tab-rates" class="admin-section" hidden>
-          <div id="adminRates" class="rates-grid"></div>
-        </div>
+          <div class="card">
+            <h3>Gallery Management</h3>
+            <div id="adminGallery"></div>
+          </div>
 
-        <div id="tab-contacts" class="admin-section" hidden>
-          <div id="adminContacts" class="contacts-table"></div>
+          <div class="card">
+            <h3>Rates Management</h3>
+            <div id="adminRates"></div>
+          </div>
+
+          <div class="card">
+            <h3>Contact Requests</h3>
+            <div id="adminContacts"></div>
+          </div>
         </div>
       </section>
-    </section>
+    </main>
 
-  </main>
+    <footer>
+      <p>&copy; <span id="year"></span> Dot's of Love Pet Sitting. All rights reserved.</p>
+    </footer>
 
-  <!-- Gallery modal -->
-  <div id="imageModal" class="modal" aria-hidden="true" hidden>
-    <div class="modal-content">
-      <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
-      <div id="modalBody"></div>
-      <button class="carousel-prev" id="modalPrev" aria-label="Previous">&lt;</button>
-      <button class="carousel-next" id="modalNext" aria-label="Next">&gt;</button>
-    </div>
-  </div>
+    <script>
+      // Auto-update footer year
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
 
-  <!-- Scripts -->
-  <script src="/js/gallery.js"></script>
-  <script src="/js/admin.js"></script>
-  <script src="/js/main.js"></script>
-</body>
+    <!-- ===============================
+         JS FILES
+    =============================== -->
+    <script src="js/gallery.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/main.js"></script>
+  </body>
 </html>
