@@ -1,12 +1,12 @@
-// server.js (updated for Dot’s of Love)
-import express from "express";
-import multer from "multer";
-import pkg from "pg";
-import cors from "cors";
-import fs from "fs";
-import path from "path";
-import dotenv from "dotenv";
-import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+// CommonJS version for Node 18+ on Railway
+const express = require("express");
+const multer = require("multer");
+const pkg = require("pg");
+const cors = require("cors");
+const fs = require("fs");
+const path = require("path");
+const dotenv = require("dotenv");
+const { S3Client, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 
 dotenv.config();
 const { Pool } = pkg;
