@@ -7,8 +7,15 @@
   padding: 4rem 1rem;
   min-height: 100vh;
   text-align: center;
+  animation: fadeIn 0.5s ease;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Header ---------- */
 .admin-header {
   display: flex;
   justify-content: space-between;
@@ -35,11 +42,13 @@
   background: #ef4444;
 }
 
+/* ---------- Tabs ---------- */
 .admin-tabs {
   display: flex;
   justify-content: center;
   gap: 1rem;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
 }
 
 .tab-btn {
@@ -64,7 +73,7 @@
   transform: translateY(-2px);
 }
 
-/* ---------- Content ---------- */
+/* ---------- Tab Content ---------- */
 .admin-content {
   max-width: 1000px;
   margin: 0 auto;
@@ -77,6 +86,7 @@
 
 .admin-tab.active {
   display: block;
+  animation: fadeIn 0.4s ease;
 }
 
 /* ---------- Cards ---------- */
@@ -86,11 +96,12 @@
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .admin-card:hover {
   transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
 
 .admin-card h4 {
@@ -126,11 +137,17 @@
   position: absolute;
   top: 4px;
   right: 4px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: 50%;
   cursor: pointer;
   font-size: 0.8rem;
+  padding: 2px 6px;
+  transition: background 0.2s;
+}
+.image-thumb .btn-delete:hover {
+  background: rgba(255, 0, 0, 0.8);
+  color: #fff;
 }
 
 /* ---------- Buttons ---------- */
@@ -142,7 +159,7 @@
   padding: 0.5rem 1rem;
   cursor: pointer;
   font-weight: 600;
-  margin-right: 0.5rem;
+  margin: 0.5rem 0.5rem 0 0;
   transition: all 0.2s ease;
 }
 
@@ -167,6 +184,7 @@
   opacity: 0.9;
   transform: translateY(-2px);
 }
+
 /* ---------- Admin Login ---------- */
 #adminLogin {
   background: linear-gradient(180deg, #a19bff, #c5c4ff);
@@ -227,4 +245,3 @@
 .form-status.error {
   color: #ef4444;
 }
-
