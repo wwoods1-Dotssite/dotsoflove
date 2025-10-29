@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Fetch pets from backend
   async function loadGallery() {
     try {
-      const res = await fetch("/api/gallery");
+      const res = await fetch("/api/pets");
       const pets = await res.json();
 
       // Separate Dorothy’s pets from clients
