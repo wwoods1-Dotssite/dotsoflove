@@ -61,9 +61,33 @@
   <footer>
     <p>© <span id="year"></span> Dot’s of Love Pet Sitting. All rights reserved.</p>
   </footer>
+  
+<section id="gallery" class="page-section hidden">
+  <h2 class="section-title">Pet Gallery</h2>
+  <p class="section-subtitle">Meet my fur family and some of the wonderful pets I've cared for!</p>
 
+  <div class="gallery-section">
+    <h3 class="gallery-heading">🐾 Dorothy's Pet Family</h3>
+    <div id="dorothyGallery" class="gallery-grid"></div>
+  </div>
+
+  <div class="gallery-section">
+    <h3 class="gallery-heading">⭐ Happy Clients</h3>
+    <div id="clientGallery" class="gallery-grid"></div>
+  </div>
+
+  <div id="imageModal" class="modal">
+    <span class="close">&times;</span>
+    <img id="modalImage" class="modal-content" />
+    <div id="caption"></div>
+    <button id="prevBtn" class="nav-btn prev">❮</button>
+    <button id="nextBtn" class="nav-btn next">❯</button>
+  </div>
+</section>
+  
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
   </script>
+  
 </body>
 </html>
