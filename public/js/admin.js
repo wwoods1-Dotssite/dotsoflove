@@ -4,6 +4,55 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("🧩 Admin dashboard loaded");
+/* ---------- ADMIN LOGIN ---------- */
+const loginSection = document.getElementById("adminLogin");
+const dashboardSection = document.getElementById("admin");
+const loginForm = document.getElementById("adminLoginForm");
+
+if (!localStorage.getItem("adminToken")) {
+  loginSection.classList.remove("hidden");
+  dashboardSection.classList.add("hidden");
+} else {
+  loginSection.classList.add("hidden");
+  dashboardSection.classList.remove("hidden");
+}
+
+if (loginForm) {
+  loginForm.addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const username = document.getElementById("adminUsername").value.trim();
+    const password = document.getElementById("adminPassword").value.trim();
+    const statusEl = document.getElementById("adminLoginStatus");
+
+    statusEl.textContent = "Logging in...";
+    statusEl.className = "form-status";
+
+    try {
+      const res = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.token) {
+        localStorage.setItem("adminToken", data.token);
+        statusEl.textContent = "✅ Login successful! Loading dashboard...";
+        statusEl.classList.add("success");
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        statusEl.textContent = "❌ Invalid credentials.";
+        statusEl.classList.add("error");
+      }
+    } catch (err) {
+      console.error("❌ Login error:", err);
+      statusEl.textContent = "Server error.";
+      statusEl.classList.add("error");
+    }
+  });
+}
+
 
   const token = localStorage.getItem("adminToken");
   if (!token) {
