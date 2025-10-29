@@ -2,22 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dot's of Love Pet Sitting</title>
+
+  <!-- Styles -->
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/components.css">
-  <link rel="stylesheet" href="/css/gallery.css">
   <link rel="stylesheet" href="/css/admin.css">
 
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 </head>
+
 <body>
-  <!-- Header / Nav -->
+  <!-- Header -->
   <header class="site-header">
     <div class="brand">
       <span class="logo-paws">🐾</span>
       <h1>Dot's of Love Pet Sitting</h1>
     </div>
-
     <nav class="site-nav">
       <button class="nav-link" data-nav="about">About</button>
       <button class="nav-link" data-nav="gallery">Gallery</button>
@@ -27,29 +29,27 @@
     </nav>
   </header>
 
+  <!-- App -->
   <main id="app">
 
     <!-- ABOUT -->
     <section id="about" class="page">
       <div class="hero">
         <h2>Hi, I'm Dorothy!</h2>
-        <p class="lead">
-          Your trusted neighborhood pet sitter (call me Dot or Dotty!)
-        </p>
+        <p>Your trusted neighborhood pet sitter (call me Dot or Dotty!)</p>
       </div>
 
-      <!-- Dorothy Bio -->
       <section class="card">
         <h3>About Me</h3>
         <p>
           I’ve cared for dogs, cats, and all sorts of pets for years — from energetic
-          puppies to dignified seniors. I offer dedicated, loving care that keeps
-          your companions happy and relaxed while you’re away.
+          puppies to dignified seniors. I offer loving care that keeps your companions
+          happy and relaxed while you’re away.
         </p>
         <ul>
-          <li>CPR/First Aid aware for pets</li>
-          <li>Daily updates & photos by request</li>
-          <li>Walks, feedings, meds, playtime and snuggles</li>
+          <li>Experienced with dogs, cats, and small animals</li>
+          <li>Daily photo and message updates</li>
+          <li>Flexible scheduling and overnight stays</li>
         </ul>
       </section>
     </section>
@@ -61,14 +61,12 @@
         <p>Meet my fur family and some of the wonderful pets I've cared for!</p>
       </div>
 
-      <!-- Dorothy family -->
       <section class="card">
         <h3>🐾 Dorothy's Pet Family</h3>
-        <p>My beloved fur babies — the heart and soul of Dot's of Love Pet Sitting!</p>
+        <p>These are my own pets — the heart and inspiration for Dot's of Love!</p>
         <div id="dorothyPets" class="gallery-grid"></div>
       </section>
 
-      <!-- Client pets -->
       <section class="card">
         <h3>⭐ Happy Clients</h3>
         <div id="clientPets" class="gallery-grid"></div>
@@ -80,17 +78,14 @@
       <div class="hero">
         <h2>Service Rates</h2>
       </div>
-
-      <div id="ratesList" class="rates-grid">
-        <!-- filled by JS -->
-      </div>
+      <div id="ratesList" class="rates-grid"></div>
     </section>
 
     <!-- CONTACT -->
     <section id="contact" class="page" hidden>
       <div class="hero">
         <h2>Let's Connect!</h2>
-        <p>Ready to give your pet the best care possible?</p>
+        <p>Ready to give your pet the best care possible? Fill out the form below!</p>
       </div>
 
       <section class="card">
@@ -98,17 +93,17 @@
         <form id="contactForm" class="contact-form">
           <div class="form-row">
             <label>Your Name *</label>
-            <input id="contactName" name="name" required placeholder="Your Name">
+            <input id="contactName" name="name" required placeholder="Your Name" />
           </div>
 
           <div class="form-row">
             <label>Email Address *</label>
-            <input id="contactEmail" name="email" type="email" required placeholder="name@email.com">
+            <input id="contactEmail" name="email" type="email" required placeholder="name@email.com" />
           </div>
 
           <div class="form-row">
             <label>Phone Number</label>
-            <input id="contactPhone" name="phone" placeholder="(555) 555-5555">
+            <input id="contactPhone" name="phone" placeholder="(555) 555-5555" />
           </div>
 
           <div class="form-row">
@@ -127,25 +122,24 @@
               <option value="">Select a service...</option>
               <option>Dog Walking</option>
               <option>Pet Visits</option>
-              <option>Pet Sitting (Overnight)</option>
-              <option>Holiday/Weekend Rate</option>
+              <option>Overnight Sitting</option>
+              <option>Holiday/Weekend Care</option>
             </select>
           </div>
 
           <div class="form-row">
             <label>Tell me about your pet(s)</label>
-            <textarea id="contactPetInfo" name="pet_info" rows="3"
-              placeholder="Pet's name, breed, age, special needs, etc."></textarea>
+            <textarea id="contactPetInfo" name="pet_info" rows="3" placeholder="Pet's name, breed, age, special needs, etc."></textarea>
           </div>
 
           <div class="form-row two-col">
             <div>
               <label>Start Date *</label>
-              <input id="contactStart" name="start_date" type="date" required>
+              <input id="contactStart" name="start_date" type="date" required />
             </div>
             <div>
               <label>End Date</label>
-              <input id="contactEnd" name="end_date" type="date">
+              <input id="contactEnd" name="end_date" type="date" />
             </div>
           </div>
 
@@ -163,10 +157,10 @@
     <!-- ADMIN -->
     <section id="admin" class="page" hidden>
       <div class="hero">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
             <h2>Admin Dashboard</h2>
-            <div id="adminStatusBanner" class="admin-banner" style="display:none"></div>
+            <div id="adminStatusBanner" class="admin-banner" style="display:none;"></div>
           </div>
           <button id="adminLogout" class="btn btn-danger">Logout</button>
         </div>
@@ -178,11 +172,11 @@
         <form id="adminLoginForm" class="admin-form">
           <div class="form-row">
             <label>Username</label>
-            <input id="adminUsername" autocomplete="username" placeholder="dorothy">
+            <input id="adminUsername" autocomplete="username" placeholder="dorothy" />
           </div>
           <div class="form-row">
             <label>Password</label>
-            <input id="adminPassword" type="password" autocomplete="current-password" placeholder="••••••••">
+            <input id="adminPassword" type="password" autocomplete="current-password" placeholder="••••••••" />
           </div>
           <button class="btn btn-primary" type="submit">Login</button>
           <p id="adminError" class="error" aria-live="assertive"></p>
@@ -190,14 +184,14 @@
       </section>
 
       <!-- Panel -->
-      <section id="adminPanel" class="card" style="display:none">
+      <section id="adminPanel" class="card" style="display:none;">
         <div class="tabs">
           <button class="admin-tab active" data-tab="tab-gallery">Gallery Management</button>
           <button class="admin-tab" data-tab="tab-rates">Rates Management</button>
           <button class="admin-tab" data-tab="tab-contacts">Contact Requests</button>
         </div>
 
-        <div id="tab-gallery" class="admin-section" style="display:block">
+        <div id="tab-gallery" class="admin-section" style="display:block;">
           <div id="adminGallery" class="admin-gallery-grid"></div>
         </div>
 
@@ -210,19 +204,20 @@
         </div>
       </section>
     </section>
+
   </main>
 
-  <!-- Gallery modal (used by gallery.js for carousel) -->
+  <!-- Gallery modal -->
   <div id="imageModal" class="modal" aria-hidden="true" hidden>
     <div class="modal-content">
       <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
-      <div id="modalBody"><!-- populated by gallery.js --></div>
+      <div id="modalBody"></div>
       <button class="carousel-prev" id="modalPrev" aria-label="Previous">&lt;</button>
       <button class="carousel-next" id="modalNext" aria-label="Next">&gt;</button>
     </div>
   </div>
 
-  <!-- Scripts (order matters: gallery/admin rely on DOM elements) -->
+  <!-- Scripts -->
   <script src="/js/gallery.js"></script>
   <script src="/js/admin.js"></script>
   <script src="/js/main.js"></script>
