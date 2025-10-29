@@ -1,0 +1,118 @@
+/* =========================================
+   RATES PAGE — Clean 2-Row Layout
+   ========================================= */
+
+#rates {
+  background: linear-gradient(180deg, #c5c4ff, #a19bff);
+  padding: 4rem 1.5rem;
+  text-align: center;
+  min-height: 100vh;
+}
+
+#rates .section-title {
+  font-size: 2rem;
+  color: #4b3fb6;
+  margin-bottom: 0.5rem;
+}
+
+#rates .section-subtitle {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 2.5rem;
+}
+
+/* ---------- Featured Row ---------- */
+.rates-featured {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.rate-card.featured {
+  background: #fffdf3;
+  border: 2px solid #ffd54f;
+  border-radius: 20px;
+  padding: 2rem 3rem;
+  max-width: 900px;
+  width: 100%;
+  box-shadow: 0 6px 20px rgba(255, 214, 94, 0.3);
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.rate-card.featured:hover {
+  transform: translateY(-5px);
+}
+
+.featured-badge {
+  background: linear-gradient(90deg, #fbc02d, #ffa000);
+  color: #fff;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  display: inline-block;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+/* ---------- Standard Row ---------- */
+.rates-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  justify-items: center;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.rate-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  width: 100%;
+}
+
+.rate-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.rate-card h3 {
+  color: #4b3fb6;
+  margin-bottom: 0.5rem;
+}
+
+.rate-card p {
+  color: #555;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  min-height: 3rem;
+}
+
+.rate-card strong {
+  font-weight: 700;
+  color: #333;
+  font-size: 1.05rem;
+}
+
+/* ---------- Responsive Layout ---------- */
+@media (max-width: 900px) {
+  .rates-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 700px;
+  }
+}
+
+@media (max-width: 600px) {
+  .rate-card.featured {
+    padding: 1.5rem;
+  }
+  .rates-grid {
+    grid-template-columns: 1fr;
+  }
+}
