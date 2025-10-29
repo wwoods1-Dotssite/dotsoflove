@@ -165,6 +165,43 @@
     <p id="formStatus" class="form-status"></p>
   </form>
 </section>
+<!-- ========================= -->
+<!--         ADMIN             -->
+<!-- ========================= -->
+<section id="admin" class="page-section hidden">
+  <div class="admin-header">
+    <h2>Admin Dashboard</h2>
+    <button id="logoutBtn" class="btn-danger">Logout</button>
+  </div>
+
+  <div class="admin-tabs">
+    <button data-tab="pets" class="tab-btn active">🐾 Pets</button>
+    <button data-tab="rates" class="tab-btn">💲 Rates</button>
+    <button data-tab="contacts" class="tab-btn">📩 Contacts</button>
+  </div>
+
+  <div id="adminContent" class="admin-content">
+    <!-- Pets Section -->
+    <div id="tab-pets" class="admin-tab active">
+      <h3>Manage Pets</h3>
+      <div id="petList" class="admin-list"></div>
+      <button id="addPetBtn" class="btn-primary">Add New Pet</button>
+    </div>
+
+    <!-- Rates Section -->
+    <div id="tab-rates" class="admin-tab">
+      <h3>Manage Rates</h3>
+      <div id="rateList" class="admin-list"></div>
+      <button id="addRateBtn" class="btn-primary">Add New Rate</button>
+    </div>
+
+    <!-- Contacts Section -->
+    <div id="tab-contacts" class="admin-tab">
+      <h3>Contact Requests</h3>
+      <div id="contactList" class="admin-list"></div>
+    </div>
+  </div>
+</section>
 
     
   </main>
