@@ -24,6 +24,12 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+console.log("🔍 Loaded Admin ENV:", {
+  ADMIN_USER: process.env.ADMIN_USER,
+  ADMIN_PASS: process.env.ADMIN_PASS ? "********" : "undefined",
+});
+
+
 // ✅ Admin login
 app.post("/api/admin/auth", async (req, res) => {
   const { username, password } = req.body;
