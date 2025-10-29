@@ -542,37 +542,6 @@
     <script src="js/contact.js"></script>
     <script src="js/main.js?v=2"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', async function() {
-  const token = localStorage.getItem('adminToken');
-  if (token && window.API && window.API.auth && window.API.auth.validate) {
-    try {
-      const valid = await API.auth.validate();
-      if (valid) {
-        // Hide all public pages
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-
-        // Show the admin page
-        document.getElementById('admin').classList.add('active');
-
-        // Show admin panel instead of login
-        document.getElementById('adminAuth').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'block';
-
-        // Load admin data
-        if (typeof loadAdminGallery === 'function') loadAdminGallery();
-        if (typeof loadAdminRates === 'function') loadAdminRates();
-        if (typeof loadAdminContacts === 'function') loadAdminContacts();
-      } else {
-        localStorage.removeItem('adminToken');
-      }
-    } catch (err) {
-      console.error('Admin session restore failed:', err);
-      localStorage.removeItem('adminToken');
-    }
-  }
-});
-</script>
 
 </body>
 </html>
