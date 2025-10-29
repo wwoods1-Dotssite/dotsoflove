@@ -269,5 +269,11 @@ if (typeof window.checkAdminAuth === "undefined") {
       }
       console.log("🔒 Admin authentication required");
     }
+
+    // ✅ Ensure Admin login section is visible when no token exists
+    if (!token && loginSection && panelSection) {
+      loginSection.style.display = "block";
+      panelSection.style.display = "none";
+    }
   };
 }
