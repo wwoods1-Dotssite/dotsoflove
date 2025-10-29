@@ -1,250 +1,153 @@
-/* =========================================
-   ADMIN DASHBOARD — FULL CRUD MANAGEMENT
-   ========================================= */
-
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("🧩 Admin dashboard loaded");
-
-  // ---------- ADMIN LOGIN ----------
+  console.log("⚙️ Admin dashboard loaded");
+  const token = localStorage.getItem("adminToken");
   const loginSection = document.getElementById("adminLogin");
-  const dashboardSection = document.getElementById("admin");
-  const loginForm = document.getElementById("adminLoginForm");
+  const dashboard = document.getElementById("admin");
 
-  // Check for existing token
-  if (!localStorage.getItem("adminToken")) {
+  if (!token) {
     loginSection.classList.remove("hidden");
-    dashboardSection.classList.add("hidden");
+    dashboard.classList.add("hidden");
   } else {
     loginSection.classList.add("hidden");
-    dashboardSection.classList.remove("hidden");
-    initAdminDashboard(); // 👈 Run the dashboard setup once logged in
+    dashboard.classList.remove("hidden");
+    initDashboard();
   }
 
-  // Login submission
-  if (loginForm) {
-    loginForm.addEventListener("submit", async e => {
-      e.preventDefault();
-
-      const username = document.getElementById("adminUsername").value.trim();
-      const password = document.getElementById("adminPassword").value.trim();
-      const statusEl = document.getElementById("adminLoginStatus");
-
-      statusEl.textContent = "Logging in...";
-      statusEl.className = "form-status";
-
-      try {
-        const res = await fetch("/api/admin/auth", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password }),
-        });
-
-        const data = await res.json();
-        if (data.success && data.token) {
-          localStorage.setItem("adminToken", data.token);
-          statusEl.textContent = "✅ Login successful! Loading dashboard...";
-          statusEl.classList.add("success");
-          setTimeout(() => location.reload(), 1000);
-        } else {
-          statusEl.textContent = "❌ Invalid credentials.";
-          statusEl.classList.add("error");
-        }
-      } catch (err) {
-        console.error("❌ Login error:", err);
-        statusEl.textContent = "Server error.";
-        statusEl.classList.add("error");
-      }
+  document.getElementById("adminLoginForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = document.getElementById("adminUsername").value.trim();
+    const password = document.getElementById("adminPassword").value.trim();
+    const res = await fetch("/api/admin/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
     });
+    const data = await res.json();
+    if (data.success) {
+      localStorage.setItem("adminToken", data.token);
+      location.reload();
+    } else alert("Invalid credentials");
+  });
+
+  function initDashboard() {
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("adminToken");
+      location.reload();
+    });
+    loadPets();
+    loadRates();
+    loadContacts();
+  }
+
+  async function loadPets() {
+    const res = await fetch("/api/gallery");
+    const pets = await res.json();
+    const container = document.getElementById("adminPetsContainer");
+    container.innerHTML = "";
+    pets.forEach((p) => {
+      const petDiv = document.createElement("div");
+      petDiv.className = "pet-card";
+      petDiv.innerHTML = `
+        <h4>${p.pet_name}</h4>
+        <p>${p.story_description || ""}</p>
+        <div class="images">
+          ${p.images.map(i => `<div class='img-wrapper'><img src='${i.image_url}' /><button class='btn-delete-img' data-id='${i.id}'>🗑</button></div>`).join("")}
+        </div>
+        <button class="btn-delete-pet" data-id="${p.id}">Delete Pet</button>`;
+      container.appendChild(petDiv);
+    });
+
+    document.querySelectorAll(".btn-delete-pet").forEach(btn => btn.addEventListener("click", async e => {
+      await fetch(`/api/pets/${e.target.dataset.id}`, { method: "DELETE" });
+      loadPets();
+    }));
+
+    document.querySelectorAll(".btn-delete-img").forEach(btn => btn.addEventListener("click", async e => {
+      const id = e.target.dataset.id;
+      const petId = e.target.closest(".pet-card").querySelector(".btn-delete-pet").dataset.id;
+      await fetch(`/api/pets/${petId}/images/${id}`, { method: "DELETE" });
+      loadPets();
+    }));
+
+    document.getElementById("addPetBtn")?.addEventListener("click", async () => {
+      const name = prompt("Pet name:");
+      const desc = prompt("Story description:");
+      await fetch("/api/pets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pet_name: name, story_description: desc, is_dorothy_pet: false }),
+      });
+      loadPets();
+    });
+  }
+
+  async function loadRates() {
+    const res = await fetch("/api/rates");
+    const rates = await res.json();
+    const container = document.getElementById("adminRatesContainer");
+    container.innerHTML = "";
+    rates.forEach(r => {
+      const div = document.createElement("div");
+      div.className = "rate-card";
+      div.innerHTML = `
+        <h4>${r.service_type}</h4>
+        <p>${r.description}</p>
+        <strong>$${r.rate_per_unit} ${r.unit_type}</strong>
+        <div class="actions">
+          <button class="btn-edit" data-id="${r.id}">Edit</button>
+          <button class="btn-delete" data-id="${r.id}">Delete</button>
+        </div>`;
+      container.appendChild(div);
+    });
+
+    document.querySelectorAll(".btn-delete").forEach(btn => btn.addEventListener("click", async e => {
+      await fetch(`/api/rates/${e.target.dataset.id}`, { method: "DELETE" });
+      loadRates();
+    }));
+
+    document.querySelectorAll(".btn-edit").forEach(btn => btn.addEventListener("click", async e => {
+      const id = e.target.dataset.id;
+      const type = prompt("Service type:");
+      const price = prompt("Rate per unit:");
+      const unit = prompt("Unit type:");
+      const desc = prompt("Description:");
+      await fetch(`/api/rates/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ service_type: type, rate_per_unit: price, unit_type: unit, description: desc }),
+      });
+      loadRates();
+    }));
+
+    document.getElementById("addRateBtn")?.addEventListener("click", async () => {
+      const type = prompt("Service type:");
+      const price = prompt("Rate per unit:");
+      const unit = prompt("Unit type:");
+      const desc = prompt("Description:");
+      await fetch("/api/rates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ service_type: type, rate_per_unit: price, unit_type: unit, description: desc }),
+      });
+      loadRates();
+    });
+  }
+
+  async function loadContacts() {
+    const res = await fetch("/api/contact");
+    const contacts = await res.json();
+    const container = document.getElementById("adminContactsContainer");
+    container.innerHTML = "";
+    contacts.forEach(c => {
+      const div = document.createElement("div");
+      div.className = "contact-card";
+      div.innerHTML = `<h4>${c.name}</h4><p>${c.email}</p><p>${c.message}</p><button class="btn-delete-contact" data-id="${c.id}">Delete</button>`;
+      container.appendChild(div);
+    });
+
+    document.querySelectorAll(".btn-delete-contact").forEach(btn => btn.addEventListener("click", async e => {
+      await fetch(`/api/contact/${e.target.dataset.id}`, { method: "DELETE" });
+      loadContacts();
+    }));
   }
 });
-
-/* =========================================
-   DASHBOARD INITIALIZER — post-login setup
-   ========================================= */
-function initAdminDashboard() {
-  console.log("✅ Admin authenticated — initializing dashboard...");
-
-  const token = localStorage.getItem("adminToken");
-
-  // ---------- TAB SWITCHING ----------
-  const tabButtons = document.querySelectorAll(".tab-btn");
-  const tabs = document.querySelectorAll(".admin-tab");
-
-  tabButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      tabButtons.forEach(b => b.classList.remove("active"));
-      tabs.forEach(t => t.classList.remove("active"));
-
-      btn.classList.add("active");
-      const target = btn.dataset.tab;
-      document.getElementById(`tab-${target}`).classList.add("active");
-
-      if (target === "pets") loadPets();
-      if (target === "rates") loadRates();
-      if (target === "contacts") loadContacts();
-    });
-  });
-
-  // ---------- LOGOUT ----------
-  document.getElementById("logoutBtn")?.addEventListener("click", () => {
-    localStorage.removeItem("adminToken");
-    location.reload();
-  });
-
-  // ---------- INITIAL LOAD ----------
-  loadPets();
-
-  /* =========================================
-     PETS MANAGEMENT
-     ========================================= */
-  async function loadPets() {
-    const container = document.getElementById("petList");
-    container.innerHTML = "<p>Loading pets...</p>";
-
-    try {
-      const res = await fetch("/api/gallery", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const pets = await res.json();
-
-      if (!Array.isArray(pets)) throw new Error("Invalid data format.");
-
-      container.innerHTML = pets
-        .map(
-          p => `
-        <div class="admin-card">
-          <h4>${p.pet_name}</h4>
-          <p>${p.story_description || ""}</p>
-          <div class="admin-images">
-            ${
-              (p.images || [])
-                .map(
-                  img => `
-              <div class="image-thumb">
-                <img src="${img.image_url}" alt="${p.pet_name}" />
-                <button class="btn-delete" data-pet="${p.id}" data-img="${img.id}">🗑</button>
-              </div>
-            `
-                )
-                .join("") || "<p>No images</p>"
-            }
-          </div>
-          <button class="btn-delete" data-pet="${p.id}">Delete Pet</button>
-        </div>
-      `
-        )
-        .join("");
-
-      // Bind delete actions
-      document.querySelectorAll(".btn-delete[data-img]").forEach(btn =>
-        btn.addEventListener("click", async e => {
-          const { pet, img } = e.target.dataset;
-          if (!confirm("Delete this image?")) return;
-          await fetch(`/api/pets/${pet}/images/${img}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          loadPets();
-        })
-      );
-
-      document.querySelectorAll(".btn-delete:not([data-img])").forEach(btn =>
-        btn.addEventListener("click", async e => {
-          const { pet } = e.target.dataset;
-          if (!confirm("Delete this pet?")) return;
-          await fetch(`/api/pets/${pet}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          loadPets();
-        })
-      );
-    } catch (err) {
-      console.error("❌ loadPets error:", err);
-      container.innerHTML = `<p class="error">Failed to load pets.</p>`;
-    }
-  }
-
-  /* =========================================
-     RATES MANAGEMENT
-     ========================================= */
-  async function loadRates() {
-    const container = document.getElementById("rateList");
-    container.innerHTML = "<p>Loading rates...</p>";
-
-    try {
-      const res = await fetch("/api/rates", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const rates = await res.json();
-
-      if (!Array.isArray(rates)) throw new Error("Invalid data format.");
-
-      container.innerHTML = rates
-        .map(
-          r => `
-        <div class="admin-card">
-          <h4>${r.service_type}</h4>
-          <p>${r.description || ""}</p>
-          <p><strong>$${parseFloat(r.rate_per_unit).toFixed(2)} ${
-            r.unit_type
-          }</strong></p>
-          <div class="admin-actions">
-            <button class="btn-edit" data-id="${r.id}">✏️ Edit</button>
-            <button class="btn-delete" data-id="${r.id}">🗑 Delete</button>
-          </div>
-        </div>`
-        )
-        .join("");
-
-      document.querySelectorAll(".btn-delete").forEach(btn =>
-        btn.addEventListener("click", async e => {
-          const id = e.target.dataset.id;
-          if (!confirm("Delete this rate?")) return;
-          await fetch(`/api/rates/${id}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          loadRates();
-        })
-      );
-    } catch (err) {
-      console.error("❌ loadRates error:", err);
-      container.innerHTML = `<p class="error">Failed to load rates.</p>`;
-    }
-  }
-
-  /* =========================================
-     CONTACT MANAGEMENT
-     ========================================= */
-  async function loadContacts() {
-    const container = document.getElementById("contactList");
-    container.innerHTML = "<p>Loading contact requests...</p>";
-
-    try {
-      const res = await fetch("/api/contact", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const contacts = await res.json();
-
-      if (!Array.isArray(contacts)) throw new Error("Invalid data format.");
-
-      container.innerHTML = contacts
-        .map(
-          c => `
-        <div class="admin-card">
-          <h4>${c.name}</h4>
-          <p><strong>Email:</strong> ${c.email}</p>
-          <p><strong>Phone:</strong> ${c.phone || "N/A"}</p>
-          <p><strong>Service:</strong> ${c.service || "N/A"}</p>
-          <p><strong>Dates:</strong> ${c.start_date || ""} – ${c.end_date || ""}</p>
-          <p><strong>Message:</strong> ${c.message || ""}</p>
-        </div>`
-        )
-        .join("");
-    } catch (err) {
-      console.error("❌ loadContacts error:", err);
-      container.innerHTML = `<p class="error">Failed to load contact requests.</p>`;
-    }
-  }
-}
