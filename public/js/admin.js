@@ -282,5 +282,8 @@ if (typeof window.checkAdminAuth === "undefined") {
       loginSection.style.display = "block";
       panelSection.style.display = "none";
     }
+
+    // ✅ Notify main.js that admin.js is ready
+    document.dispatchEvent(new Event("admin:ready"));
   };
 }
