@@ -1,115 +1,181 @@
+/* =========================================
+   GALLERY STYLES
+   ========================================= */
+
+/* Section layout */
+#gallery {
+  text-align: center;
+  padding: 4rem 1rem;
+  background: linear-gradient(180deg, #c5c4ff, #a19bff);
+  min-height: 100vh;
+}
+
+.section-title {
+  font-size: 2rem;
+  color: #4b3fb6;
+  margin-bottom: 0.5rem;
+}
+
+.section-subtitle {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 2rem;
+}
+
+/* Gallery containers */
 .gallery-section {
+  background: #f6f4ff;
+  border-radius: 1rem;
   margin: 2rem auto;
-  max-width: 1000px;
-  background: #f9f8ff;
-  border-radius: 20px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem 2rem;
+  padding: 2rem;
+  max-width: 1100px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .gallery-heading {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #5a54e0;
+  font-size: 1.25rem;
+  color: #5b4ce0;
   margin-bottom: 1rem;
+  text-align: left;
+  padding-left: 0.5rem;
 }
 
+/* Grid layout */
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.5rem;
+  justify-items: center;
 }
 
 .gallery-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
+  width: 100%;
+  max-width: 300px;
 }
 
 .gallery-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
 }
 
-.gallery-card img {
+.gallery-thumb {
   width: 100%;
-  height: 200px;
+  height: 220px;
   object-fit: cover;
+  display: block;
 }
 
-.gallery-card-content {
-  padding: 1rem;
+.gallery-info {
+  padding: 0.75rem 1rem;
 }
 
-.gallery-card h4 {
-  margin: 0.5rem 0 0.25rem;
+.gallery-info h4 {
   font-size: 1.1rem;
-  font-weight: 600;
-  color: #3e3a8c;
+  color: #4b3fb6;
+  margin: 0.3rem 0;
 }
 
-.gallery-card p {
-  color: #555;
+.gallery-info p {
+  color: #444;
   font-size: 0.9rem;
-  line-height: 1.4;
 }
 
+/* Empty state */
+.empty-msg {
+  color: #666;
+  font-style: italic;
+  margin-top: 1rem;
+}
+
+/* Modal styles */
 .modal {
   display: none;
   position: fixed;
-  z-index: 2000;
-  padding-top: 60px;
+  z-index: 1000;
+  padding-top: 5vh;
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
+  background-color: rgba(15, 15, 15, 0.9);
   overflow: hidden;
-  background-color: rgba(0, 0, 0, 0.9);
 }
 
 .modal-content {
   margin: auto;
   display: block;
-  max-width: 80%;
-  max-height: 80%;
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  max-width: 90%;
+  max-height: 75vh;
+  border-radius: 0.75rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+#caption {
+  color: #fff;
+  font-size: 1rem;
+  text-align: center;
+  margin-top: 1rem;
 }
 
 .close {
   position: absolute;
-  top: 20px;
+  top: 15px;
   right: 35px;
-  color: white;
-  font-size: 30px;
+  color: #fff;
+  font-size: 2rem;
   font-weight: bold;
   cursor: pointer;
+  transition: 0.3s;
 }
 
+.close:hover {
+  color: #ffbcbc;
+}
+
+/* Modal navigation buttons */
 .nav-btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  color: white;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.3);
+  color: #fff;
   border: none;
   font-size: 2rem;
-  cursor: pointer;
-  padding: 0.3rem 0.7rem;
+  padding: 0.5rem 1rem;
   border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s;
 }
 
 .nav-btn:hover {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(255, 255, 255, 0.6);
 }
 
-.prev {
-  left: 20px;
+.nav-btn.prev {
+  left: 40px;
 }
 
-.next {
-  right: 20px;
+.nav-btn.next {
+  right: 40px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  .gallery-thumb {
+    height: 180px;
+  }
+
+  .gallery-card {
+    max-width: 90%;
+  }
+
+  .nav-btn {
+    font-size: 1.5rem;
+  }
 }
