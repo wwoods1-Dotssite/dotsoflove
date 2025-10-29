@@ -1,18 +1,15 @@
 // ===============================
-// Admin Dashboard Script (Final Release)
+// Admin Dashboard Logic (Final Stable Build)
 // ===============================
 
-console.log("✅ admin.js initialized safely (vFinal)");
-
 // ---------- GLOBAL ----------
-// Prevent redeclaration if script reloaded by dynamic navigation
 if (typeof window.adminToken === "undefined") {
-  window.adminToken = null;
+  window.adminToken = localStorage.getItem("adminToken") || null;
 }
+
 const ADMIN_API_BASE = "/api";
 
 // ---------- AUTH ----------
-
 async function handleAdminLogin(event) {
   event.preventDefault();
 
@@ -26,7 +23,7 @@ async function handleAdminLogin(event) {
   }
 
   try {
-    console.log("Attempting admin login...");
+    console.log("🔐 Attempting admin login...");
     const res = await fetch(`${ADMIN_API_BASE}/admin/auth`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -34,52 +31,46 @@ async function handleAdminLogin(event) {
     });
 
     if (!res.ok) {
-      const text = await res.text();
-      console.error("Login HTTP error:", res.status, text);
-      if (errorBox) errorBox.textContent = "Server returned " + res.status;
-      return;
+      const msg = `Server returned ${res.status}`;
+      if (errorBox) errorBox.textContent = msg;
+      throw new Error(msg);
     }
 
     const data = await res.json();
     if (data.success) {
-     console.log("✅ Admin logged in successfully");
-    //  localStorage.setItem("adminToken", data.token);
-// ✅ Store token and navigate directly to Admin section
-localStorage.setItem("adminToken", data.token);
-console.log("🔐 Redirecting to Admin dashboard...");
-if (window.location.pathname !== "/admin") {
-  window.history.pushState({}, "", "/admin");
-}
-checkAdminAuth(); // show Admin UI immediately
+      console.log("✅ Admin login successful");
+      localStorage.setItem("adminToken", data.token);
+      window.adminToken = data.token;
 
+      // ✅ Navigate directly to the admin dashboard
+      if (window.location.pathname !== "/admin") {
+        window.history.pushState({}, "", "/admin");
+      }
+
+      checkAdminAuth(); // Immediately show dashboard
     } else {
       if (errorBox) errorBox.textContent = "Invalid credentials.";
     }
   } catch (err) {
-    console.error("Login failed:", err);
-    if (errorBox) errorBox.textContent = "Network error.";
+    console.error("❌ Login failed:", err);
+    if (errorBox) errorBox.textContent = "Network or server error.";
   }
 }
 
 function handleAdminLogout() {
   localStorage.removeItem("adminToken");
-  location.reload();
+  window.adminToken = null;
+  window.location.reload();
 }
 
-// ---------- TAB HANDLING ----------
+// ---------- TAB SWITCHING ----------
 function switchAdminTab(tabId) {
   document.querySelectorAll(".admin-tab").forEach((tab) => {
-    tab.classList.remove("active");
+    tab.classList.toggle("active", tab.dataset.tab === tabId);
   });
   document.querySelectorAll(".admin-section").forEach((section) => {
-    section.style.display = "none";
+    section.style.display = section.id === tabId ? "block" : "none";
   });
-
-  const targetTab = document.getElementById(tabId);
-  if (targetTab) {
-    targetTab.style.display = "block";
-    document.querySelector(`[data-tab="${tabId}"]`)?.classList.add("active");
-  }
 }
 
 // ---------- LOAD RATES ----------
@@ -89,16 +80,17 @@ async function loadAdminRates() {
 
   try {
     const res = await fetch(`${ADMIN_API_BASE}/rates`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const rates = await res.json();
 
     container.innerHTML = rates
       .map(
         (r) => `
-      <div class="rate-item">
-        <h3>${r.service_type}</h3>
-        <p>${r.description || ""}</p>
-        <strong>$${r.rate_per_unit} ${r.unit_type}</strong>
-      </div>`
+        <div class="rate-item">
+          <h3>${r.service_type}</h3>
+          <p>${r.description || ""}</p>
+          <strong>$${r.rate_per_unit} ${r.unit_type}</strong>
+        </div>`
       )
       .join("");
   } catch (err) {
@@ -114,34 +106,45 @@ async function loadAdminContacts() {
 
   try {
     const res = await fetch(`${ADMIN_API_BASE}/contact`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error("Server returned non-JSON response");
+    }
+
     const data = await res.json();
+    if (!Array.isArray(data) || !data.length) {
+      container.innerHTML = `<p class="muted">No contact requests yet.</p>`;
+      return;
+    }
 
     container.innerHTML = data
       .map(
         (c) => `
-      <div class="contact-item">
-        <h4>${c.name}</h4>
-        <p><strong>Email:</strong> ${c.email}</p>
-        <p><strong>Phone:</strong> ${c.phone}</p>
-        <p><strong>Service:</strong> ${c.service}</p>
-        <p><strong>Dates:</strong> ${c.start_date || ""} – ${c.end_date || ""}</p>
-        <p><strong>Message:</strong> ${c.message || ""}</p>
-      </div>`
+        <div class="contact-item">
+          <h4>${c.name}</h4>
+          <p><strong>Email:</strong> ${c.email}</p>
+          <p><strong>Phone:</strong> ${c.phone || "—"}</p>
+          <p><strong>Service:</strong> ${c.service || "—"}</p>
+          <p><strong>Dates:</strong> ${c.start_date || ""} – ${c.end_date || ""}</p>
+          <p><strong>Message:</strong> ${c.message || ""}</p>
+        </div>`
       )
       .join("");
   } catch (err) {
-    console.error("Error loading contacts:", err);
+    console.error("❌ Error loading contacts:", err);
     container.innerHTML = `<p class="error">Failed to load contact requests.</p>`;
   }
 }
 
-// ---------- GALLERY MANAGEMENT ----------
+// ---------- LOAD GALLERY ----------
 async function loadAdminGallery() {
   const container = document.getElementById("adminGallery");
   if (!container) return;
 
   try {
     const res = await fetch(`${ADMIN_API_BASE}/gallery`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const pets = await res.json();
 
     container.innerHTML = pets
@@ -170,7 +173,7 @@ async function loadAdminGallery() {
       )
       .join("");
 
-    // Event bindings
+    // Bind delete actions
     document.querySelectorAll(".delete-pet").forEach((btn) =>
       btn.addEventListener("click", async (e) => {
         const petId = e.target.dataset.pet;
@@ -191,7 +194,7 @@ async function loadAdminGallery() {
       })
     );
   } catch (err) {
-    console.error("Failed to load gallery:", err);
+    console.error("❌ Failed to load gallery:", err);
     container.innerHTML = `<p class="error">Failed to load gallery.</p>`;
   }
 }
@@ -199,9 +202,7 @@ async function loadAdminGallery() {
 // ---------- GALLERY ACTIONS ----------
 async function deletePet(petId) {
   try {
-    const res = await fetch(`${ADMIN_API_BASE}/pets/${petId}`, {
-      method: "DELETE",
-    });
+    const res = await fetch(`${ADMIN_API_BASE}/pets/${petId}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Delete failed");
   } catch (err) {
     console.error("Delete pet error:", err);
@@ -210,46 +211,12 @@ async function deletePet(petId) {
 
 async function deletePetImage(petId, imageId) {
   try {
-    const res = await fetch(`${ADMIN_API_BASE}/pets/${petId}/images/${imageId}`, {
-      method: "DELETE",
-    });
+    const res = await fetch(`${ADMIN_API_BASE}/pets/${petId}/images/${imageId}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Delete failed");
   } catch (err) {
     console.error("Delete image error:", err);
   }
 }
-
-// ---------- INITIALIZATION ----------
-document.addEventListener("DOMContentLoaded", () => {
-  const loginForm = document.getElementById("adminLoginForm");
-  const logoutBtn = document.getElementById("adminLogout");
-  const token = localStorage.getItem("adminToken");
-  const banner = document.getElementById("adminStatusBanner");
-
-  if (loginForm) loginForm.addEventListener("submit", handleAdminLogin);
-  if (logoutBtn) logoutBtn.addEventListener("click", handleAdminLogout);
-
-  // Always run auth check on load
-  checkAdminAuth();
-
-  // If token exists, load admin data immediately
-  if (token) {
-    adminToken = token;
-    document.body.classList.add("admin-logged-in");
-
-    if (banner) {
-      banner.textContent = "🔐 Logged in as Dorothy";
-      banner.style.display = "block";
-    }
-
-    loadAdminGallery();
-    loadAdminRates();
-    loadAdminContacts();
-  } else if (banner) {
-    banner.style.display = "none";
-  }
-});
-
 
 // ---------- GLOBAL AUTH STATE ----------
 if (typeof window.checkAdminAuth === "undefined") {
@@ -287,3 +254,29 @@ if (typeof window.checkAdminAuth === "undefined") {
     document.dispatchEvent(new Event("admin:ready"));
   };
 }
+
+// ---------- INITIALIZATION ----------
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("✅ admin.js initialized safely (vFinal)");
+
+  const loginForm = document.getElementById("adminLoginForm");
+  const logoutBtn = document.getElementById("adminLogout");
+
+  if (loginForm) loginForm.addEventListener("submit", handleAdminLogin);
+  if (logoutBtn) logoutBtn.addEventListener("click", handleAdminLogout);
+
+  // When tabs clicked
+  document.querySelectorAll(".admin-tab").forEach((tab) => {
+    tab.addEventListener("click", () => switchAdminTab(tab.dataset.tab));
+  });
+
+  // Run authentication check
+  checkAdminAuth();
+
+  // Load content if logged in
+  if (window.adminToken) {
+    loadAdminGallery();
+    loadAdminRates();
+    loadAdminContacts();
+  }
+});
