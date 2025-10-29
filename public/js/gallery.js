@@ -21,8 +21,9 @@ async function loadGallery() {
     const pets = await res.json();
     allPets = pets;
 
-    const dorothyPets = pets.filter((p) => p.owner === "dorothy");
-    const clientPets = pets.filter((p) => p.owner !== "dorothy");
+    const dorothyPets = pets.filter((p) => p.is_dorothy_pet);
+    const clientPets = pets.filter((p) => !p.is_dorothy_pet);
+
 
     dorothyPetsContainer.innerHTML = dorothyPets.length
       ? dorothyPets
