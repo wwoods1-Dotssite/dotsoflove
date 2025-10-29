@@ -94,6 +94,78 @@
       <p class="section-subtitle">Affordable, caring options for every pet</p>
     </section>
 
+<!-- ========================= -->
+<!--         CONTACT           -->
+<!-- ========================= -->
+<section id="contact" class="page-section">
+  <h2 class="section-title">Let's Connect!</h2>
+  <p class="section-subtitle">
+    Ready to give your pet the best care possible? Fill out the form below!
+  </p>
+
+  <form id="contactForm" class="contact-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="name">Your Name *</label>
+        <input type="text" id="name" name="name" placeholder="Your Name" required />
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address *</label>
+        <input type="email" id="email" name="email" placeholder="name@email.com" required />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" name="phone" placeholder="(555) 555-5555" />
+      </div>
+      <div class="form-group">
+        <label for="best_time">Best Time to Reach You</label>
+        <select id="best_time" name="best_time">
+          <option>Any time</option>
+          <option>Morning</option>
+          <option>Afternoon</option>
+          <option>Evening</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="service">Service Needed</label>
+        <select id="service" name="service">
+          <option value="">Select a service...</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="start_date">Start Date *</label>
+        <input type="date" id="start_date" name="start_date" required />
+      </div>
+      <div class="form-group">
+        <label for="end_date">End Date *</label>
+        <input type="date" id="end_date" name="end_date" required />
+      </div>
+    </div>
+
+    <div class="form-group full-width">
+      <label for="pet_info">Tell me about your pet(s)</label>
+      <textarea id="pet_info" name="pet_info" rows="3" placeholder="Pet's name, breed, age, special needs, etc."></textarea>
+    </div>
+
+    <div class="form-group full-width">
+      <label for="message">Additional Message</label>
+      <textarea id="message" name="message" rows="3"></textarea>
+    </div>
+
+    <button type="submit" class="btn-primary">Send Request</button>
+    <p id="formStatus" class="form-status"></p>
+  </form>
+</section>
+
     
   </main>
 
