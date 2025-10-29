@@ -1,96 +1,108 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const API_URL = "/api/gallery";
-  const dorothyContainer = document.getElementById("dorothyGallery");
-  const clientContainer = document.getElementById("clientGallery");
+/* =========================================
+   gallery.js — Responsive Gallery with Modal
+   ========================================= */
 
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("📸 Initializing Gallery...");
+
+  const dorothyGallery = document.getElementById("dorothyGallery");
+  const clientGallery = document.getElementById("clientGallery");
   const modal = document.getElementById("imageModal");
   const modalImg = document.getElementById("modalImage");
-  const captionText = document.getElementById("caption");
+  const caption = document.getElementById("caption");
   const prevBtn = document.getElementById("prevBtn");
   const nextBtn = document.getElementById("nextBtn");
   const closeBtn = document.querySelector(".close");
 
-  let currentImages = [];
+  let allImages = [];
   let currentIndex = 0;
 
+  // Fetch pets from backend
   async function loadGallery() {
     try {
-      const res = await fetch(API_URL);
+      const res = await fetch("/api/gallery");
       const pets = await res.json();
 
-      if (!Array.isArray(pets)) throw new Error("Invalid gallery data");
+      // Separate Dorothy’s pets from clients
+      const dorothyPets = pets.filter(p => p.is_dorothy_pet);
+      const clientPets = pets.filter(p => !p.is_dorothy_pet);
 
-      const dorothyPets = pets.filter((p) => p.is_dorothy_pet);
-      const clientPets = pets.filter((p) => !p.is_dorothy_pet);
-
-      renderPets(dorothyPets, dorothyContainer);
-      renderPets(clientPets, clientContainer);
+      renderPets(dorothyPets, dorothyGallery);
+      renderPets(clientPets, clientGallery);
     } catch (err) {
-      console.error("Failed to load gallery:", err);
+      console.error("❌ Error loading gallery:", err);
     }
   }
 
+  // Render each pet card
   function renderPets(pets, container) {
     if (!container) return;
+    container.innerHTML = "";
+
     if (!pets.length) {
-      container.innerHTML = `<p>No pets to display yet.</p>`;
+      container.innerHTML = `<p class="empty-msg">No pets to display yet.</p>`;
       return;
     }
 
-    container.innerHTML = pets
-      .map((pet) => {
-        const imgUrl =
-          (pet.images && pet.images[0]?.image_url) ||
-          "https://placehold.co/400x300?text=No+Image";
-        return `
-          <div class="gallery-card" data-images='${JSON.stringify(
-            pet.images || []
-          )}'>
-            <img src="${imgUrl}" alt="${pet.pet_name}" />
-            <div class="gallery-card-content">
-              <h4>${pet.pet_name}</h4>
-              <p>${pet.story_description || ""}</p>
-            </div>
-          </div>
-        `;
-      })
-      .join("");
+    pets.forEach(pet => {
+      const images = pet.images || [];
+      if (!images.length) return;
 
-    container.querySelectorAll(".gallery-card").forEach((card) => {
-      card.addEventListener("click", () => {
-        const images = JSON.parse(card.dataset.images || "[]");
-        if (images.length > 0) {
-          currentImages = images;
-          currentIndex = 0;
-          showModalImage();
-          modal.style.display = "block";
-        }
-      });
+      const primaryImage =
+        images.find(img => img.is_primary) || images[0];
+
+      const card = document.createElement("div");
+      card.classList.add("gallery-card");
+
+      card.innerHTML = `
+        <img src="${primaryImage.image_url}" alt="${pet.pet_name}" class="gallery-thumb" />
+        <div class="gallery-info">
+          <h4>${pet.pet_name}</h4>
+          <p>${pet.story_description || "A lovely companion"}</p>
+        </div>
+      `;
+
+      container.appendChild(card);
+
+      // Bind click to open modal carousel
+      card.addEventListener("click", () => openModal(images, pet.pet_name));
     });
   }
 
-  function showModalImage() {
-    if (!currentImages.length) return;
-    modalImg.src = currentImages[currentIndex].image_url;
-    captionText.innerText = `${currentIndex + 1} of ${currentImages.length}`;
+  // Open modal carousel
+  function openModal(images, petName) {
+    if (!images.length) return;
+
+    allImages = images;
+    currentIndex = 0;
+
+    modal.style.display = "block";
+    updateModalImage(petName);
   }
 
+  // Update modal image
+  function updateModalImage(petName) {
+    const imgData = allImages[currentIndex];
+    if (!imgData) return;
+
+    modalImg.src = imgData.image_url;
+    caption.textContent = `${petName} — ${imgData.is_primary ? "Primary" : "Gallery Image"}`;
+  }
+
+  // Navigation
   prevBtn.addEventListener("click", () => {
-    if (currentIndex > 0) {
-      currentIndex--;
-      showModalImage();
-    }
+    currentIndex = (currentIndex - 1 + allImages.length) % allImages.length;
+    updateModalImage();
   });
 
   nextBtn.addEventListener("click", () => {
-    if (currentIndex < currentImages.length - 1) {
-      currentIndex++;
-      showModalImage();
-    }
+    currentIndex = (currentIndex + 1) % allImages.length;
+    updateModalImage();
   });
 
+  // Close modal
   closeBtn.addEventListener("click", () => (modal.style.display = "none"));
-  window.addEventListener("click", (e) => {
+  modal.addEventListener("click", e => {
     if (e.target === modal) modal.style.display = "none";
   });
 
