@@ -113,7 +113,7 @@ async function loadAdminContacts() {
   if (!container) return;
 
   try {
-    const res = await fetch(`${ADMIN_API_BASE}/contacts`);
+    const res = await fetch(`${ADMIN_API_BASE}/contact`);
     const data = await res.json();
 
     container.innerHTML = data
