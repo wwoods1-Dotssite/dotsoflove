@@ -26,34 +26,65 @@
     </nav>
   </header>
 
-  <!-- ========================= -->
-  <!--         ABOUT             -->
-  <!-- ========================= -->
-  <section id="about">
-    <h2>Hi, I'm Dorothy!</h2>
-    <p>Your trusted neighborhood pet sitter (call me Dot or Dotty!)</p>
+  <main>
+    <!-- ========================= -->
+    <!--         ABOUT             -->
+    <!-- ========================= -->
+    <section id="about">
+      <h2>Hi, I'm Dorothy!</h2>
+      <p>Your trusted neighborhood pet sitter (call me Dot or Dotty!)</p>
 
-    <div class="card">
-      <h3>About Me</h3>
-      <p>
-        I’ve cared for dogs, cats, and all sorts of pets for years — from energetic puppies
-        to dignified seniors. I offer loving care that keeps your companions happy and relaxed
-        while you’re away.
+      <div class="card">
+        <h3>About Me</h3>
+        <p>
+          I’ve cared for dogs, cats, and all sorts of pets for years — from energetic puppies
+          to dignified seniors. I offer loving care that keeps your companions happy and relaxed
+          while you’re away.
+        </p>
+        <ul>
+          <li>Experienced with dogs, cats, and small animals</li>
+          <li>Daily photo and message updates</li>
+          <li>Flexible scheduling and overnight stays</li>
+        </ul>
+      </div>
+
+      <div class="featured-rate-card">
+        <div class="featured-badge">⭐ Featured Service</div>
+        <h3>Dog Walking</h3>
+        <p>30–45 minute walks to keep your dog happy and healthy</p>
+        <strong>$15.00 per walk</strong>
+      </div>
+    </section>
+
+    <!-- ========================= -->
+    <!--         GALLERY           -->
+    <!-- ========================= -->
+    <section id="gallery" class="page-section hidden">
+      <h2 class="section-title">Pet Gallery</h2>
+      <p class="section-subtitle">
+        Meet my fur family and some of the wonderful pets I've cared for!
       </p>
-      <ul>
-        <li>Experienced with dogs, cats, and small animals</li>
-        <li>Daily photo and message updates</li>
-        <li>Flexible scheduling and overnight stays</li>
-      </ul>
-    </div>
 
-    <div class="featured-rate-card">
-      <div class="featured-badge">⭐ Featured Service</div>
-      <h3>Dog Walking</h3>
-      <p>30–45 minute walks to keep your dog happy and healthy</p>
-      <strong>$15.00 per walk</strong>
-    </div>
-  </section>
+      <div class="gallery-section">
+        <h3 class="gallery-heading">🐾 Dorothy's Pet Family</h3>
+        <div id="dorothyGallery" class="gallery-grid"></div>
+      </div>
+
+      <div class="gallery-section">
+        <h3 class="gallery-heading">⭐ Happy Clients</h3>
+        <div id="clientGallery" class="gallery-grid"></div>
+      </div>
+
+      <!-- Modal for image carousel -->
+      <div id="imageModal" class="modal">
+        <span class="close">&times;</span>
+        <img id="modalImage" class="modal-content" />
+        <div id="caption"></div>
+        <button id="prevBtn" class="nav-btn prev">❮</button>
+        <button id="nextBtn" class="nav-btn next">❯</button>
+      </div>
+    </section>
+  </main>
 
   <!-- ========================= -->
   <!--         FOOTER            -->
@@ -61,33 +92,13 @@
   <footer>
     <p>© <span id="year"></span> Dot’s of Love Pet Sitting. All rights reserved.</p>
   </footer>
-  
-<section id="gallery" class="page-section hidden">
-  <h2 class="section-title">Pet Gallery</h2>
-  <p class="section-subtitle">Meet my fur family and some of the wonderful pets I've cared for!</p>
 
-  <div class="gallery-section">
-    <h3 class="gallery-heading">🐾 Dorothy's Pet Family</h3>
-    <div id="dorothyGallery" class="gallery-grid"></div>
-  </div>
-
-  <div class="gallery-section">
-    <h3 class="gallery-heading">⭐ Happy Clients</h3>
-    <div id="clientGallery" class="gallery-grid"></div>
-  </div>
-
-  <div id="imageModal" class="modal">
-    <span class="close">&times;</span>
-    <img id="modalImage" class="modal-content" />
-    <div id="caption"></div>
-    <button id="prevBtn" class="nav-btn prev">❮</button>
-    <button id="nextBtn" class="nav-btn next">❯</button>
-  </div>
-</section>
-  
+  <!-- ========================= -->
+  <!--         SCRIPTS           -->
+  <!-- ========================= -->
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
   </script>
-  
+  <script src="js/gallery.js"></script>
 </body>
 </html>
