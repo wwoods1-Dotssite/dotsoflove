@@ -112,6 +112,7 @@ app.delete("/api/pets/:petId/images/:imageId", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+app.get("/api/rates", (req, res) => res.json([]));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
