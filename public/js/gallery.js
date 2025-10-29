@@ -1,79 +1,98 @@
-// ===============================
-// GALLERY.JS (vFinal Patched)
-// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  const API_URL = "/api/gallery";
+  const dorothyContainer = document.getElementById("dorothyGallery");
+  const clientContainer = document.getElementById("clientGallery");
 
-console.log("🐾 Loading gallery...");
+  const modal = document.getElementById("imageModal");
+  const modalImg = document.getElementById("modalImage");
+  const captionText = document.getElementById("caption");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const closeBtn = document.querySelector(".close");
 
-async function loadGallery() {
-  const container = document.getElementById("galleryContainer");
-  if (!container) return;
+  let currentImages = [];
+  let currentIndex = 0;
 
-  try {
-    const res = await fetch("/api/gallery");
-    const pets = await res.json();
+  async function loadGallery() {
+    try {
+      const res = await fetch(API_URL);
+      const pets = await res.json();
 
-    // Split pets by owner type
-    const dorothyPets = pets.filter((p) => p.is_dorothy_pet);
-    const clientPets = pets.filter((p) => !p.is_dorothy_pet);
+      if (!Array.isArray(pets)) throw new Error("Invalid gallery data");
 
-    // Helper to create pet card HTML
-    const createPetCard = (pet) => `
-      <div class="gallery-card" data-pet="${pet.id}">
-        <img src="${pet.images?.[0]?.image_url || '/img/placeholder.jpg'}" 
-             alt="${pet.pet_name}" class="gallery-thumb">
-        <h4>${pet.pet_name}</h4>
-        <p>${pet.story_description || ""}</p>
-      </div>
-    `;
+      const dorothyPets = pets.filter((p) => p.is_dorothy_pet);
+      const clientPets = pets.filter((p) => !p.is_dorothy_pet);
 
-    container.innerHTML = `
-      <h2>Pet Gallery</h2>
-      <p>Meet my fur family and some of the wonderful pets I've cared for!</p>
+      renderPets(dorothyPets, dorothyContainer);
+      renderPets(clientPets, clientContainer);
+    } catch (err) {
+      console.error("Failed to load gallery:", err);
+    }
+  }
 
-      <div class="card">
-        <h3>🐾 Dorothy's Pet Family</h3>
-        <p>These are my own pets — the heart and inspiration for Dot’s of Love!</p>
-        <div class="gallery-grid">
-          ${
-            dorothyPets.length
-              ? dorothyPets.map(createPetCard).join("")
-              : `<p>No pets to display yet.</p>`
-          }
-        </div>
-      </div>
+  function renderPets(pets, container) {
+    if (!container) return;
+    if (!pets.length) {
+      container.innerHTML = `<p>No pets to display yet.</p>`;
+      return;
+    }
 
-      <div class="card">
-        <h3>⭐ Happy Clients</h3>
-        <div class="gallery-grid">
-          ${
-            clientPets.length
-              ? clientPets.map(createPetCard).join("")
-              : `<p>No client photos yet.</p>`
-          }
-        </div>
-      </div>
-    `;
+    container.innerHTML = pets
+      .map((pet) => {
+        const imgUrl =
+          (pet.images && pet.images[0]?.image_url) ||
+          "https://placehold.co/400x300?text=No+Image";
+        return `
+          <div class="gallery-card" data-images='${JSON.stringify(
+            pet.images || []
+          )}'>
+            <img src="${imgUrl}" alt="${pet.pet_name}" />
+            <div class="gallery-card-content">
+              <h4>${pet.pet_name}</h4>
+              <p>${pet.story_description || ""}</p>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
 
-    // Handle modal image viewing
-    const modal = document.getElementById("imageModal");
-    const modalImg = document.getElementById("modalImage");
-    const closeModal = document.getElementById("modalClose");
-
-    document.querySelectorAll(".gallery-card img").forEach((img) => {
-      img.addEventListener("click", () => {
-        modalImg.src = img.src;
-        modal.removeAttribute("hidden");
+    container.querySelectorAll(".gallery-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const images = JSON.parse(card.dataset.images || "[]");
+        if (images.length > 0) {
+          currentImages = images;
+          currentIndex = 0;
+          showModalImage();
+          modal.style.display = "block";
+        }
       });
     });
-
-    closeModal.addEventListener("click", () => modal.setAttribute("hidden", ""));
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) modal.setAttribute("hidden", "");
-    });
-
-    console.log(`✅ Gallery loaded: ${dorothyPets.length} Dorothy pets, ${clientPets.length} client pets`);
-  } catch (err) {
-    console.error("❌ Failed to load gallery:", err);
-    container.innerHTML = `<p class="error">Failed to load pets.</p>`;
   }
-}
+
+  function showModalImage() {
+    if (!currentImages.length) return;
+    modalImg.src = currentImages[currentIndex].image_url;
+    captionText.innerText = `${currentIndex + 1} of ${currentImages.length}`;
+  }
+
+  prevBtn.addEventListener("click", () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      showModalImage();
+    }
+  });
+
+  nextBtn.addEventListener("click", () => {
+    if (currentIndex < currentImages.length - 1) {
+      currentIndex++;
+      showModalImage();
+    }
+  });
+
+  closeBtn.addEventListener("click", () => (modal.style.display = "none"));
+  window.addEventListener("click", (e) => {
+    if (e.target === modal) modal.style.display = "none";
+  });
+
+  loadGallery();
+});
