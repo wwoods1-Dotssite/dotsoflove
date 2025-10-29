@@ -1,86 +1,46 @@
-/* ===============================
-   ADMIN DASHBOARD STYLES
-   =============================== */
+/* ============================
+   ADMIN DASHBOARD STYLING
+============================ */
 
-#admin,
-#adminLogin {
-  background: linear-gradient(180deg, #b9aefb 0%, #8f82e8 100%);
+#admin {
+  padding: 2rem;
+  background: linear-gradient(180deg, #b7a8ff, #a090f7, #897ff5);
   min-height: 100vh;
-  padding: 2rem 1rem;
   color: #222;
 }
 
-/* -------- LOGIN -------- */
-.admin-login-card {
-  max-width: 400px;
-  margin: 2rem auto;
-  background: #fff;
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-.admin-login-card h2 {
-  color: #4b4ac8;
-  margin-bottom: 1rem;
-}
-
-.admin-login-card .form-group {
-  margin-bottom: 1rem;
-  text-align: left;
-}
-
-.admin-login-card input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-}
-
-.admin-login-card button {
-  width: 100%;
-  padding: 0.75rem;
-  background: #7d6bfa;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-/* -------- DASHBOARD -------- */
 .admin-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1000px;
-  margin: 0 auto 2rem;
+  margin-bottom: 2rem;
 }
 
 .admin-header h2 {
-  font-size: 2rem;
+  color: #3f33b3;
+  font-size: 1.8rem;
   font-weight: 700;
-  color: #4b4ac8;
 }
 
-.btn-danger {
-  background: #ff6b6b;
+#logoutBtn {
+  background: #ff6666;
   border: none;
   color: white;
-  border-radius: 8px;
-  padding: 0.6rem 1.25rem;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: bold;
-  transition: background 0.2s;
+  transition: background 0.2s ease;
 }
 
-.btn-danger:hover {
-  background: #e04d4d;
+#logoutBtn:hover {
+  background: #e35555;
 }
 
-/* -------- TAB BUTTONS -------- */
+/* ============================
+   ADMIN TABS
+============================ */
+
 .admin-tabs {
   display: flex;
   justify-content: center;
@@ -89,114 +49,248 @@
 }
 
 .tab-btn {
-  background: #e6e4ff;
+  background: #f0f0ff;
   border: none;
   border-radius: 12px;
-  padding: 0.75rem 1.5rem;
-  font-weight: 600;
+  padding: 0.6rem 1.4rem;
+  font-size: 1rem;
   cursor: pointer;
-  color: #4b4ac8;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  color: #4a42c4;
 }
 
 .tab-btn.active {
-  background: #7d6bfa;
-  color: #fff;
+  background: linear-gradient(90deg, #7e5eff, #9b7fff);
+  color: white;
+  transform: scale(1.03);
 }
 
-/* -------- CONTENT -------- */
-.admin-content {
-  max-width: 1000px;
-  margin: 0 auto;
-}
+/* ============================
+   LIST / CARD STYLES
+============================ */
 
-.admin-tab {
-  display: none;
-}
-
-.admin-tab.active {
-  display: block;
-}
-
-/* -------- LISTS / CARDS -------- */
 .admin-list {
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.admin-card {
+  background: #f9f9ff;
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-card h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #4238b5;
+}
+
+.admin-card p {
+  margin: 0.25rem 0 1rem;
+  color: #333;
+}
+
+/* ============================
+   IMAGE THUMBNAILS
+============================ */
+
+.image-row {
+  display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 1rem;
 }
 
-.admin-card {
-  background: #fff;
+.image-thumb {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
   border-radius: 12px;
-  padding: 1.25rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.admin-card h4 {
-  color: #4b4ac8;
-  margin-bottom: 0.25rem;
+.image-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
 }
 
-.admin-card p {
-  margin-bottom: 0.75rem;
-  font-size: 0.95rem;
+.delete-img {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(255, 90, 90, 0.9);
+  border: none;
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0.3rem;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
 }
 
-.admin-card .actions {
+.delete-img:hover {
+  background: #ff4040;
+}
+
+/* ============================
+   ACTION BUTTONS
+============================ */
+
+.actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.8rem;
+  margin-top: 1rem;
 }
 
 .btn-primary,
 .btn-edit,
 .btn-delete {
   border: none;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
 }
 
 .btn-primary {
-  background: #7d6bfa;
-  color: #fff;
+  background: linear-gradient(90deg, #7e5eff, #9b7fff);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(90deg, #684ef0, #8369ff);
 }
 
 .btn-edit {
-  background: #4caf50;
-  color: #fff;
+  background: #5a88ff;
+  color: white;
+}
+
+.btn-edit:hover {
+  background: #4878f2;
 }
 
 .btn-delete {
-  background: #ff6b6b;
-  color: #fff;
-}
-
-/* -------- IMAGES -------- */
-.image-thumb {
-  display: inline-block;
-  position: relative;
-  margin-right: 10px;
-}
-
-.image-thumb img {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.image-thumb button {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  background: rgba(255, 0, 0, 0.8);
+  background: #ff6666;
   color: white;
-  border: none;
-  border-radius: 50%;
-  width: 22px;
-  height: 22px;
-  font-size: 0.8rem;
+}
+
+.btn-delete:hover {
+  background: #e35555;
+}
+
+/* ============================
+   MODAL STYLING
+============================ */
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9999;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 95%;
+  max-width: 480px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  position: relative;
+  animation: modalFade 0.3s ease;
+}
+
+@keyframes modalFade {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 1.4rem;
+  color: #777;
   cursor: pointer;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: #3f33b3;
+}
+
+.form-group input,
+.form-group textarea {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.6rem;
+  font-size: 1rem;
+}
+
+.form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.form-status {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.form-status::before {
+  content: "💾 ";
+}
+
+/* ============================
+   RESPONSIVE
+============================ */
+@media (max-width: 640px) {
+  .admin-header h2 {
+    font-size: 1.4rem;
+  }
+  .admin-card {
+    padding: 1rem;
+  }
+  .image-thumb {
+    width: 80px;
+    height: 80px;
+  }
 }
