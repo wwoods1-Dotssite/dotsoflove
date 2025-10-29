@@ -229,12 +229,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (loginForm) loginForm.addEventListener("submit", handleAdminLogin);
   if (logoutBtn) logoutBtn.addEventListener("click", handleAdminLogout);
 
+  // Always run auth check on load
+  checkAdminAuth();
+
+  // If token exists, load admin data immediately
   if (token) {
     adminToken = token;
     document.body.classList.add("admin-logged-in");
 
-    if (banner) banner.textContent = "🔐 Logged in as Dorothy";
-    if (banner) banner.style.display = "block";
+    if (banner) {
+      banner.textContent = "🔐 Logged in as Dorothy";
+      banner.style.display = "block";
+    }
 
     loadAdminGallery();
     loadAdminRates();
@@ -243,6 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
     banner.style.display = "none";
   }
 });
+
 
 // ---------- GLOBAL AUTH STATE ----------
 if (typeof window.checkAdminAuth === "undefined") {
