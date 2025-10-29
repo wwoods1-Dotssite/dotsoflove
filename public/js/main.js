@@ -1,23 +1,23 @@
 // js/main.js - Full navigation and app logic with gallery + services fixes (production ready)
 
 document.addEventListener('DOMContentLoaded', function() {
-    initializeNavigation();
-    setupDateValidation();
-    // initializeEditStoryModal();
+  initializeNavigation();
+  setupDateValidation();
 
-    const hash = window.location.hash || "";
-    // ✅ If admin path, skip loading default About and open Admin directly
-    if (hash === "#admin" || window.location.pathname === "/admin") {
-        console.log("🔐 Restoring Admin view...");
-        if (typeof checkAdminAuth === "function") {
-             // ✅ Hide other sections and show Admin
-            document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-            document.getElementById('admin')?.style.display = 'block';
-            checkAdminAuth();
-        }
-    } else {
-        loadInitialContent(); // load normal About/Gallery/etc only if NOT admin
+  const hash = window.location.hash || "";
+  const isAdminPath = (hash === "#admin" || window.location.pathname === "/admin");
+
+  if (isAdminPath) {
+    console.log("🔐 Restoring Admin view...");
+    if (typeof checkAdminAuth === "function") {
+      // Hide all public pages and show admin
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('admin')?.classList.add('active');
+      checkAdminAuth();
     }
+  } else {
+    loadInitialContent(); // only load public pages if not admin
+  }
 });
 
 
