@@ -1,0 +1,122 @@
+/* ---------- CONTACT SECTION ---------- */
+#contact {
+  background: linear-gradient(180deg, #bfb7ff, #a98eff);
+  padding: 4rem 1rem;
+  text-align: center;
+  color: #222;
+}
+
+#contact .section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4b50d1;
+  margin-bottom: 0.5rem;
+}
+
+#contact .section-subtitle {
+  color: #333;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* ---------- FORM CARD ---------- */
+.contact-form {
+  background: #fdfdff;
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  text-align: left;
+}
+
+/* ---------- FORM LAYOUT ---------- */
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  width: 100%;
+}
+
+/* ---------- INPUTS ---------- */
+label {
+  font-weight: 600;
+  color: #4b50d1;
+  margin-bottom: 0.4rem;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #7365e3;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(115, 101, 227, 0.15);
+}
+
+/* ---------- BUTTON ---------- */
+.btn-primary {
+  background: linear-gradient(90deg, #7365e3, #9b7bff);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  padding: 0.9rem 2rem;
+  cursor: pointer;
+  display: block;
+  margin: 2rem auto 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(115, 101, 227, 0.3);
+}
+
+/* ---------- STATUS MESSAGE ---------- */
+.form-status {
+  text-align: center;
+  margin-top: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.form-status.success {
+  color: #1aaf5d;
+}
+
+.form-status.error {
+  color: #d9534f;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+  }
+
+  .contact-form {
+    padding: 1.5rem;
+  }
+}
