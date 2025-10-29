@@ -167,3 +167,64 @@
   opacity: 0.9;
   transform: translateY(-2px);
 }
+/* ---------- Admin Login ---------- */
+#adminLogin {
+  background: linear-gradient(180deg, #a19bff, #c5c4ff);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.admin-login-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem 3rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  text-align: center;
+}
+
+.admin-login-card h2 {
+  color: #4b3fb6;
+  margin-bottom: 1.5rem;
+}
+
+.admin-login-card .form-group {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.admin-login-card label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.admin-login-card input {
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+#adminLoginForm .btn-primary {
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.form-status {
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.form-status.success {
+  color: #10b981;
+}
+
+.form-status.error {
+  color: #ef4444;
+}
+
