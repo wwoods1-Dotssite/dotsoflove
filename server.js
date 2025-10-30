@@ -253,17 +253,47 @@ app.get("/api/rates", async (_req, res) => {
 });
 
 // ---------- CONTACT ----------
-app.get("/api/contact", async (_req, res) => {
+// app.get("/api/contact", async (_req, res) => {
+//  try {
+//    const result = await pool.query(
+//      "SELECT id,name,email,phone,best_time,service,pet_info,dates,start_date,end_date,message FROM contacts ORDER BY id DESC"
+//    );
+//    res.json(result.rows);
+//  } catch (err) {
+//    console.error("❌ GET /api/contact:", err);
+//    res.status(500).json({ error: "Server error loading contacts" });
+//  }
+// });
+
+// =========================
+// Contacts (Admin Enhancements)
+// =========================
+
+// Get all uncontacted contacts sorted oldest -> newest
+app.get("/api/contacts", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT id,name,email,phone,best_time,service,pet_info,dates,start_date,end_date,message FROM contacts ORDER BY id DESC"
+      `SELECT * FROM contacts WHERE contacted = false ORDER BY created_at ASC`
     );
     res.json(result.rows);
   } catch (err) {
-    console.error("❌ GET /api/contact:", err);
-    res.status(500).json({ error: "Server error loading contacts" });
+    console.error("❌ Fetch contacts:", err);
+    res.status(500).json({ success: false });
   }
 });
+
+// Mark contact as contacted
+app.put("/api/contacts/:id/contacted", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query(`UPDATE contacts SET contacted = true WHERE id = $1`, [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Update contacted:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
 
 // ---------- START ----------
 const PORT = process.env.PORT || 3000;
