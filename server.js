@@ -190,24 +190,39 @@ app.post("/api/pets/:id/images/reorder", async (req, res) => {
   }
 });
 
-// Signed upload URL for S3
+// ---------- S3 UPLOAD PRESIGN ----------
 app.post("/api/s3/upload-url", async (req, res) => {
-  const { fileName, fileType } = req.body;
   try {
-    const Key = `${Date.now()}_${fileName}`;
+    const { fileName, fileType } = req.body;
+
+    if (!fileName || !fileType) {
+      return res.status(400).json({ error: "Missing fileName or fileType" });
+    }
+
+    // Use a consistent folder structure for organization
+    const Key = `pets/${Date.now()}-${fileName}`;
+
     const command = new PutObjectCommand({
       Bucket: process.env.S3_BUCKET_NAME,
       Key,
       ContentType: fileType,
     });
-    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 60 });
+
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 }); // 5 min
+
     const publicUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${Key}`;
-    res.json({ uploadUrl, publicUrl, s3_key: Key });
+
+    res.json({
+      uploadUrl,
+      publicUrl,
+      key: Key,
+    });
   } catch (err) {
-    console.error("❌ Signed URL:", err);
-    res.status(500).json({ success: false });
+    console.error("❌ S3 Upload Error:", err);
+    res.status(500).json({ error: "Failed to generate upload URL" });
   }
 });
+
 
 // Record uploaded image
 app.post("/api/pets/:id/images", async (req, res) => {
