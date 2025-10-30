@@ -12,7 +12,7 @@ const {
   PutObjectCommand,
   DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 dotenv.config();
 
@@ -189,7 +189,6 @@ app.post("/api/pets/:id/images/reorder", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-
 // ---------- S3 UPLOAD PRESIGN ----------
 app.post("/api/s3/upload-url", async (req, res) => {
   try {
@@ -199,7 +198,6 @@ app.post("/api/s3/upload-url", async (req, res) => {
       return res.status(400).json({ error: "Missing fileName or fileType" });
     }
 
-    // Use a consistent folder structure for organization
     const Key = `pets/${Date.now()}-${fileName}`;
 
     const command = new PutObjectCommand({
@@ -208,14 +206,14 @@ app.post("/api/s3/upload-url", async (req, res) => {
       ContentType: fileType,
     });
 
-    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 }); // 5 min
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
 
     const publicUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${Key}`;
 
     res.json({
       uploadUrl,
       publicUrl,
-      key: Key,
+      s3_key: Key, // <-- fixed field name
     });
   } catch (err) {
     console.error("❌ S3 Upload Error:", err);
