@@ -1,344 +1,272 @@
-// ======================================================
-//  Dots of Love Pet Sitting - Admin Dashboard
-//  Unified Add/Edit Pet Modal + S3 Uploads + Reordering
-// ======================================================
+// ===============================
+// ADMIN DASHBOARD SCRIPT (CommonJS)
+// ===============================
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("✅ Admin dashboard initialized");
+  console.log("⚙️ Admin dashboard initialized");
 
-  const token = localStorage.getItem("adminToken");
-  const loginSection = document.getElementById("adminLogin");
-  const dashboardSection = document.getElementById("admin");
-  const loginForm = document.getElementById("adminLoginForm");
-  const petList = document.getElementById("petList");
-  const addPetBtn = document.getElementById("addPetBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  const tabs = document.querySelectorAll(".admin-tab");
 
-  // ---------- LOGIN ----------
-  if (!token) {
-    if (loginSection) loginSection.style.display = "block";
-    if (dashboardSection) dashboardSection.style.display = "none";
-  } else {
-    if (loginSection) loginSection.style.display = "none";
-    if (dashboardSection) dashboardSection.style.display = "block";
-    loadPets();
-    loadRates();
-    loadContacts();
-  }
+  // Tabs Switching
+  tabButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      tabButtons.forEach((b) => b.classList.remove("active"));
+      tabs.forEach((t) => t.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
 
-  if (loginForm) {
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const username = document.getElementById("adminUsername").value.trim();
-      const password = document.getElementById("adminPassword").value.trim();
-      const statusEl = document.getElementById("adminLoginStatus");
+      if (btn.dataset.tab === "pets") loadPets();
+      if (btn.dataset.tab === "rates") loadRates();
+      if (btn.dataset.tab === "contacts") loadContacts();
+    });
+  });
 
-      try {
-        const res = await fetch("/api/admin/auth", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password }),
-        });
-        const data = await res.json();
-        if (data.success) {
-          localStorage.setItem("adminToken", data.token);
-          statusEl.textContent = "✅ Login successful";
-          setTimeout(() => location.reload(), 800);
-        } else statusEl.textContent = "❌ Invalid credentials";
-      } catch {
-        statusEl.textContent = "Server error";
-      }
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("adminToken");
+      location.reload();
     });
   }
 
-  // ---------- LOAD PETS ----------
-  async function loadPets() {
-    if (!petList) return;
-    petList.innerHTML = "Loading pets...";
-    try {
-      const res = await fetch("/api/pets");
-      const pets = await res.json();
-      renderPets(pets);
-    } catch (err) {
-      console.error("Error loading pets:", err);
-      petList.innerHTML = "Error loading pets";
-    }
-  }
+  // Initialize with Pets
+  loadPets();
+});
 
-  // ---------- RENDER PETS ----------
-  function renderPets(pets) {
+// ===============================
+// PET MANAGEMENT
+// ===============================
+async function loadPets() {
+  const petList = document.getElementById("petList");
+  petList.innerHTML = "<p>Loading pets...</p>";
+
+  try {
+    const res = await fetch("/api/pets");
+    const pets = await res.json();
     petList.innerHTML = "";
-    if (!Array.isArray(pets)) return;
 
     pets.forEach((pet) => {
       const card = document.createElement("div");
       card.className = "admin-card";
+
+      const imagesHTML =
+        pet.images && pet.images.length
+          ? pet.images
+              .map(
+                (img) => `
+            <div class="pet-img-wrapper">
+              <img src="${img.image_url}" alt="${pet.pet_name}" />
+              <button class="btn-icon delete-img" data-id="${img.id}">🗑️</button>
+            </div>`
+              )
+              .join("")
+          : "<p>No images uploaded.</p>";
+
       card.innerHTML = `
         <h4>${pet.pet_name}</h4>
         <p>${pet.story_description || ""}</p>
-        <div class="pet-images">
-          ${
-            pet.images?.length
-              ? pet.images
-                  .map(
-                    (img) => `
-                <div class="pet-image-chip" draggable="true" data-id="${img.id}">
-                  <img src="${img.image_url}" alt="${pet.pet_name}">
-                  <button class="delete-image" data-pet="${pet.id}" data-image="${img.id}">🗑</button>
-                </div>`
-                  )
-                  .join("")
-              : "<p>No images uploaded.</p>"
-          }
-        </div>
-        <div class="admin-actions">
-          <button class="btn-secondary edit-pet" data-id="${pet.id}">Edit</button>
+        <div class="pet-images">${imagesHTML}</div>
+        <div class="btn-group">
+          <button class="btn-primary edit-pet" data-id="${pet.id}">Edit</button>
           <button class="btn-danger delete-pet" data-id="${pet.id}">Delete</button>
         </div>
       `;
+
       petList.appendChild(card);
     });
 
-    attachHandlers();
-  }
-
-  // ---------- ATTACH BUTTON HANDLERS ----------
-  function attachHandlers() {
     document.querySelectorAll(".delete-pet").forEach((btn) =>
       btn.addEventListener("click", async (e) => {
         const id = e.target.dataset.id;
-        openConfirm("Delete Pet?", async () => {
-          const res = await fetch(`/api/pets/${id}`, { method: "DELETE" });
-          if (res.ok) loadPets();
-        });
+        if (!confirm("Delete this pet?")) return;
+        const res = await fetch(`/api/pets/${id}`, { method: "DELETE" });
+        if (res.ok) loadPets();
+      })
+    );
+
+    document.querySelectorAll(".delete-img").forEach((btn) =>
+      btn.addEventListener("click", async (e) => {
+        const id = e.target.dataset.id;
+        if (!confirm("Delete this image?")) return;
+        const res = await fetch(`/api/pets/images/${id}`, { method: "DELETE" });
+        if (res.ok) loadPets();
       })
     );
 
     document.querySelectorAll(".edit-pet").forEach((btn) =>
-      btn.addEventListener("click", () => openPetModal(btn.dataset.id))
-    );
-
-    document.querySelectorAll(".delete-image").forEach((btn) =>
       btn.addEventListener("click", async (e) => {
-        const pet = e.target.dataset.pet;
-        const img = e.target.dataset.image;
-        const res = await fetch(`/api/pets/${pet}/images/${img}`, {
-          method: "DELETE",
-        });
-        if (res.ok) loadPets();
+        const id = e.target.dataset.id;
+        const petRes = await fetch(`/api/pets/${id}`);
+        const pet = await petRes.json();
+        openPetModal(pet);
       })
     );
+
+    document.getElementById("addPetBtn").onclick = () =>
+      openPetModal({ id: null, pet_name: "", story_description: "", is_dorothy_pet: false });
+  } catch (err) {
+    console.error("❌ loadPets error:", err);
+    petList.innerHTML = "<p>Error loading pets.</p>";
   }
+}
 
-  // ---------- ADD / EDIT PET ----------
-  if (addPetBtn)
-    addPetBtn.addEventListener("click", () => openPetModal(null));
+// Pet Modal (Add/Edit)
+function openPetModal(pet) {
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay";
+  modal.innerHTML = `
+    <div class="modal-content">
+      <h3>${pet.id ? `Edit Pet: ${pet.pet_name}` : "Add New Pet"}</h3>
+      <form id="petForm">
+        <label>Pet Name</label>
+        <input type="text" id="petName" value="${pet.pet_name || ""}" required />
+        
+        <label>Story Description</label>
+        <textarea id="petStory">${pet.story_description || ""}</textarea>
+        
+        <label>
+          <input type="checkbox" id="isDorothyPet" ${pet.is_dorothy_pet ? "checked" : ""} />
+          Dorothy's Pet
+        </label>
 
-  async function openPetModal(petId) {
-    const editing = Boolean(petId);
-    let pet = { pet_name: "", story_description: "", is_dorothy_pet: false, images: [] };
-    if (editing) {
-      const res = await fetch(`/api/pets`);
-      const data = await res.json();
-      pet = data.find((p) => p.id == petId);
+        <label>Upload Photos</label>
+        <input type="file" id="petImages" multiple accept="image/*" />
+
+        <div class="modal-actions">
+          <button type="submit" class="btn-primary">Save Changes</button>
+          <button type="button" class="btn-secondary cancel">Cancel</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  modal.querySelector(".cancel").onclick = () => modal.remove();
+
+  modal.querySelector("#petForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const name = form.petName.value.trim();
+    const story = form.petStory.value.trim();
+    const isDorothy = form.isDorothyPet.checked;
+
+    const method = pet.id ? "PUT" : "POST";
+    const url = pet.id ? `/api/pets/${pet.id}` : "/api/pets";
+
+    const petRes = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pet_name: name, story_description: story, is_dorothy_pet: isDorothy }),
+    });
+
+    if (!petRes.ok) {
+      alert("Failed to save pet");
+      return;
     }
 
-    const overlay = document.createElement("div");
-    overlay.className = "admin-modal-overlay";
-    overlay.innerHTML = `
-      <div class="admin-modal">
-        <div class="admin-modal-header">
-          <h3>${editing ? `Edit Pet: ${pet.pet_name}` : "Add New Pet"}</h3>
-        </div>
-        <div class="admin-modal-body">
-          <label>Pet Name</label>
-          <input id="petNameInput" value="${pet.pet_name || ""}" />
-          <label>Story Description</label>
-          <textarea id="petStoryInput">${pet.story_description || ""}</textarea>
-          <label><input type="checkbox" id="petDorothyInput" ${pet.is_dorothy_pet ? "checked" : ""}/> Dorothy's Pet</label>
-          <label>Upload Photos</label>
-          <input type="file" id="petPhotosInput" multiple accept="image/*" />
-          <div id="currentPhotos" class="photo-list">
-            ${
-              pet.images?.length
-                ? pet.images
-                    .map(
-                      (img) => `
-                <div class="pet-image-chip" draggable="true" data-id="${img.id}">
-                  <img src="${img.image_url}">
-                  <button class="delete-image" data-pet="${pet.id}" data-image="${img.id}">🗑</button>
-                </div>`
-                    )
-                    .join("")
-                : ""
-            }
-          </div>
-        </div>
-        <div class="admin-modal-footer">
-          <button id="savePetBtn" class="btn-primary">${editing ? "Save Changes" : "Add Pet"}</button>
-          <button id="cancelPetBtn" class="btn-secondary">Cancel</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    document.getElementById("cancelPetBtn").onclick = () => overlay.remove();
-    document.getElementById("savePetBtn").onclick = () =>
-      savePet(editing, petId, overlay);
-
-    enableDragReorder(overlay);
-  }
-
-  async function savePet(editing, id, overlay) {
-    const name = document.getElementById("petNameInput").value.trim();
-    const story = document.getElementById("petStoryInput").value.trim();
-    const isDorothy = document.getElementById("petDorothyInput").checked;
-    const files = document.getElementById("petPhotosInput").files;
-    const btn = document.getElementById("savePetBtn");
-    if (!name) return alert("Name required");
-    btn.disabled = true;
-
-    try {
-      let petId = id;
-      if (!editing) {
-        const res = await fetch("/api/pets", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pet_name: name, story_description: story, is_dorothy_pet: isDorothy }),
-        });
-        const data = await res.json();
-        petId = data.pet.id;
-      } else {
-        await fetch(`/api/pets/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pet_name: name, story_description: story, is_dorothy_pet: isDorothy }),
-        });
-      }
-
-      // upload files
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const upRes = await fetch("/api/s3/upload-url", {
+    const files = form.petImages.files;
+    if (files.length) {
+      for (const file of files) {
+        const uploadRes = await fetch("/api/s3/upload-url", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ fileName: file.name, fileType: file.type }),
         });
-        const up = await upRes.json();
-        await fetch(up.uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
-        await fetch(`/api/pets/${petId}/images`, {
+        const { uploadUrl, publicUrl } = await uploadRes.json();
+        await fetch(uploadUrl, { method: "PUT", body: file });
+        await fetch(`/api/pets/${pet.id || (await petRes.json()).id}/images`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image_url: up.publicUrl, s3_key: up.s3_key }),
+          body: JSON.stringify({ image_url: publicUrl }),
         });
       }
-
-      overlay.remove();
-      loadPets();
-    } catch (err) {
-      console.error("❌ savePet:", err);
-    } finally {
-      btn.disabled = false;
     }
-  }
 
-  // ---------- DRAG REORDER ----------
-  function enableDragReorder(overlay) {
-    const chips = overlay.querySelectorAll(".pet-image-chip");
-    let dragSrc;
-    chips.forEach((chip) => {
-      chip.addEventListener("dragstart", (e) => {
-        dragSrc = chip;
-        chip.classList.add("dragging");
-        e.dataTransfer.effectAllowed = "move";
-      });
-      chip.addEventListener("dragend", () => chip.classList.remove("dragging"));
-      chip.addEventListener("dragover", (e) => e.preventDefault());
-      chip.addEventListener("drop", async (e) => {
-        e.preventDefault();
-        if (dragSrc === chip) return;
-        const list = chip.parentNode;
-        list.insertBefore(dragSrc, chip);
-        const ordered = Array.from(list.querySelectorAll(".pet-image-chip")).map(
-          (c, i) => ({ id: c.dataset.id, display_order: i })
-        );
-        const petId =
-          document.querySelector(".delete-image")?.dataset.pet ||
-          document.querySelector(".edit-pet")?.dataset.id;
-        await fetch(`/api/pets/${petId}/images/reorder`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ images: ordered }),
-        });
-      });
-    });
-  }
+    modal.remove();
+    loadPets();
+  };
+}
 
-  // ---------- CONFIRM ----------
-  function openConfirm(msg, onConfirm) {
-    const o = document.createElement("div");
-    o.className = "admin-modal-overlay";
-    o.innerHTML = `
-      <div class="admin-modal small">
-        <div class="admin-modal-header"><h3>${msg}</h3></div>
-        <div class="admin-modal-footer">
-          <button id="okConfirm" class="btn-danger">Yes</button>
-          <button id="cancelConfirm" class="btn-secondary">Cancel</button>
+// ===============================
+// RATES MANAGEMENT
+// ===============================
+async function loadRates() {
+  const rateList = document.getElementById("rateList");
+  rateList.innerHTML = "Loading rates...";
+  try {
+    const res = await fetch("/api/rates");
+    const rates = await res.json();
+    rateList.innerHTML = "";
+
+    rates.forEach((rate) => {
+      const card = document.createElement("div");
+      card.className = "admin-card";
+      card.innerHTML = `
+        <h4>${rate.service_type}</h4>
+        <p>${rate.description}</p>
+        <p><strong>$${rate.rate_per_unit}</strong> ${rate.unit_type}</p>
+        <div class="btn-group">
+          <button class="btn-primary edit-rate" data-id="${rate.id}">Edit</button>
+          <button class="btn-danger delete-rate" data-id="${rate.id}">Delete</button>
         </div>
-      </div>`;
-    document.body.appendChild(o);
-    document.getElementById("okConfirm").onclick = () => {
-      o.remove();
-      onConfirm();
-    };
-    document.getElementById("cancelConfirm").onclick = () => o.remove();
+      `;
+      rateList.appendChild(card);
+    });
+  } catch (err) {
+    rateList.innerHTML = "Error loading rates.";
   }
+}
 
-  // ---------- LOAD RATES ----------
-  async function loadRates() {
-    const c = document.getElementById("rateList");
-    if (!c) return;
-    try {
-      const res = await fetch("/api/rates");
-      const rates = await res.json();
-      c.innerHTML = rates
-        .map(
-          (r) => `
-        <div class="admin-card">
-          <h4>${r.service_type}</h4>
-          <p>${r.description || ""}</p>
-          <strong>$${r.rate_per_unit} ${r.unit_type}</strong>
-        </div>`
-        )
-        .join("");
-    } catch (err) {
-      c.innerHTML = "Error loading rates.";
-    }
-  }
+// ===============================
+// CONTACT MANAGEMENT
+// ===============================
+async function loadContacts() {
+  const contactList = document.getElementById("contactList");
+  contactList.innerHTML = "Loading contacts...";
 
-  // ---------- LOAD CONTACTS ----------
-  async function loadContacts() {
-    const c = document.getElementById("contactList");
-    if (!c) return;
-    try {
-      const res = await fetch("/api/contact");
-      const data = await res.json();
-      c.innerHTML = data
-        .map(
-          (ct) => `
-        <div class="admin-card">
-          <h4>${ct.name}</h4>
-          <p><strong>Email:</strong> ${ct.email}</p>
-          <p><strong>Phone:</strong> ${ct.phone}</p>
-          <p><strong>Service:</strong> ${ct.service}</p>
-          <p><strong>Dates:</strong> ${ct.start_date || ""} - ${
-            ct.end_date || ""
-          }</p>
-          <p><strong>Message:</strong> ${ct.message || ""}</p>
-        </div>`
-        )
-        .join("");
-    } catch {
-      c.innerHTML = "Error loading contact requests.";
+  try {
+    const res = await fetch("/api/contacts");
+    const contacts = await res.json();
+    contactList.innerHTML = "";
+
+    if (!contacts.length) {
+      contactList.innerHTML = "<p>🎉 All contacts have been handled!</p>";
+      return;
     }
+
+    contacts.forEach((contact) => {
+      const card = document.createElement("div");
+      card.className = "admin-card";
+
+      const createdDate = new Date(contact.created_at).toLocaleDateString();
+
+      card.innerHTML = `
+        <div class="contact-header">
+          <strong>${contact.name}</strong>
+          <span class="contact-date">${createdDate}</span>
+        </div>
+        <p><strong>Email:</strong> ${contact.email || ""}</p>
+        <p><strong>Phone:</strong> ${contact.phone || ""}</p>
+        <p><strong>Service:</strong> ${contact.service || ""}</p>
+        <p><strong>Dates:</strong> ${contact.dates || "-"}</p>
+        <p><strong>Message:</strong> ${contact.message || ""}</p>
+        <button class="btn-contacted" data-id="${contact.id}">Mark Contacted ✅</button>
+      `;
+
+      contactList.appendChild(card);
+    });
+
+    document.querySelectorAll(".btn-contacted").forEach((btn) =>
+      btn.addEventListener("click", async (e) => {
+        const id = e.target.dataset.id;
+        if (!confirm("Mark this contact as contacted?")) return;
+        const res = await fetch(`/api/contacts/${id}/contacted`, { method: "PUT" });
+        if (res.ok) e.target.closest(".admin-card").remove();
+      })
+    );
+  } catch (err) {
+    console.error("❌ loadContacts:", err);
+    contactList.innerHTML = "Error loading contacts.";
   }
-});
+}
