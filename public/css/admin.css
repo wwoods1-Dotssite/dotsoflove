@@ -1,24 +1,172 @@
+/* ===============================
+   Dots of Love Pet Sitting Admin
+   =============================== */
+
+#admin {
+  padding: 1rem;
+  color: #333;
+  font-family: "Segoe UI", sans-serif;
+}
 
 .admin-card {
   background: #fff;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 1rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 0.75rem 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
-.admin-card h4 { color: #4a3aff; }
-.pet-images {
+
+.admin-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: #6a4bd8;
+  color: #fff;
+}
+
+.btn-secondary {
+  background: #eee;
+  color: #333;
+}
+
+.btn-danger {
+  background: #e74c3c;
+  color: #fff;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ----- Modal Overlay ----- */
+.admin-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.admin-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.admin-modal.small {
+  max-width: 400px;
+}
+
+.admin-modal-header h3 {
+  margin: 0 0 1rem 0;
+  color: #6a4bd8;
+}
+
+.admin-modal-body label {
+  display: block;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.admin-modal-body input[type="text"],
+.admin-modal-body input[type="file"],
+.admin-modal-body textarea {
+  width: 100%;
+  margin-top: 0.25rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+
+.admin-modal-footer {
+  margin-top: 1rem;
+  text-align: right;
+}
+
+.photo-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 10px;
+  margin-top: 0.5rem;
 }
-.img-box { position: relative; }
-.img-box img {
-  width: 120px; height: 120px; object-fit: cover; border-radius: 8px;
+
+.pet-image-chip {
+  position: relative;
+  margin: 4px;
 }
-.delete-image {
-  position: absolute; top: 5px; right: 5px;
-  background: rgba(255, 0, 0, 0.8); color: white;
-  border: none; border-radius: 50%; cursor: pointer; padding: 4px;
+
+.pet-image-chip img {
+  height: 80px;
+  width: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.pet-image-chip button {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  background: #e33;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.dragging {
+  opacity: 0.6;
+  transform: scale(1.05);
+}
+
+/* ----- Tab Buttons ----- */
+.tab-btn {
+  background: #6a4bd8;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  margin: 0.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background: #4b35a8;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .admin-modal {
+    width: 95%;
+    padding: 0.75rem;
+  }
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    padding: 0.4rem 0.75rem;
+  }
 }
