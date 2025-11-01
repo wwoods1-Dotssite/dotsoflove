@@ -346,9 +346,9 @@ app.put("/api/pets/:petId/images/reorder", async (req, res) => {
 });
 
 // ===============================
-// CONTACT FORM SUBMISSION (with SendGrid email + Thank You to sender)
+// CONTACT FORM SUBMISSION (SendGrid with reply handling)
 // ===============================
-import sgMail from "@sendgrid/mail"; // If using CommonJS: const sgMail = require("@sendgrid/mail");
+import sgMail from "@sendgrid/mail"; // or: const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 app.post("/api/contact", async (req, res) => {
@@ -371,7 +371,7 @@ app.post("/api/contact", async (req, res) => {
         .json({ success: false, message: "Missing required fields" });
     }
 
-    // Save submission in DB
+    // Insert into DB
     await pool.query(
       `INSERT INTO contacts (name, email, phone, best_time, service, start_date, end_date, pet_info, message, contacted, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, NOW())`,
@@ -388,14 +388,17 @@ app.post("/api/contact", async (req, res) => {
       ]
     );
 
-    // === Format email details ===
+    // Format dates neatly for the email
     const formattedDates =
       start_date && end_date ? `${start_date} → ${end_date}` : "Not specified";
 
-    // === Admin notification email ===
+    // Admin notification email
     const adminMsg = {
       to: ["wwoods1@gmail.com", "dotty.j.woods@gmail.com"],
-      from: "no-reply@dotsoflovepetsitting.com",
+      from: {
+        email: "no-reply@dotsoflovepetsitting.com",
+        name: "Dot's of Love Pet Sitting 🐾",
+      },
       subject: `🐾 New Contact Request from ${name}`,
       html: `
         <h2>New Contact Request</h2>
@@ -407,30 +410,42 @@ app.post("/api/contact", async (req, res) => {
         <p><strong>Dates:</strong> ${formattedDates}</p>
         <p><strong>Pet Info:</strong> ${pet_info || "N/A"}</p>
         <p><strong>Message:</strong> ${message || "N/A"}</p>
-        <br/>
-        <p style="font-style: italic; color: #666;">This message was automatically sent by Dots of Love Pet Sitting 🐾</p>
+        <hr style="margin: 1rem 0; border: 0; border-top: 1px solid #ccc;" />
+        <p style="font-style: italic; color: #555;">You can reply directly to this message — your response will go to the customer (${email}).</p>
       `,
+      replyTo: {
+        email, // if you hit “reply”, it’ll go to the customer
+        name,
+      },
     };
 
-    // === Thank-you email for sender ===
+    // Thank-you email for the sender
     const thankYouMsg = {
       to: email,
-      from: "no-reply@dotsoflovepetsitting.com",
+      from: {
+        email: "no-reply@dotsoflovepetsitting.com",
+        name: "Dot's of Love Pet Sitting 🐾",
+      },
       subject: "Thanks for contacting Dot’s of Love Pet Sitting!",
       html: `
         <p>Hi ${name},</p>
-        <p>Thank you for reaching out! We’ve received your request and will get back to you soon.</p>
+        <p>Thank you for reaching out to Dot’s of Love Pet Sitting! We’ve received your request and will get back to you soon.</p>
         <p style="font-style: italic;">🐾 Dot & Team</p>
+        <hr />
+        <p style="font-size: 0.9rem; color: #666;">
+          You’re receiving this message because you submitted the contact form on our website.<br/>
+          If this wasn’t you, please ignore this message.
+        </p>
       `,
     };
 
-    // === Send both emails safely ===
+    // Send both in parallel
     try {
       await Promise.all([
         sgMail.sendMultiple(adminMsg),
         sgMail.send(thankYouMsg),
       ]);
-      console.log(`📧 Emails sent successfully for contact: ${name}`);
+      console.log(`📧 Contact email + thank-you sent successfully for ${name}`);
     } catch (emailErr) {
       console.error(
         "⚠️ SendGrid email failed:",
@@ -448,6 +463,7 @@ app.post("/api/contact", async (req, res) => {
     });
   }
 });
+
 // ----------------------
 // Contacts (Admin Enhancements)
 // ----------------------
