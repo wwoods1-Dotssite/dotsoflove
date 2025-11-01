@@ -35,9 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tabs.forEach((t) => t.classList.remove("active"));
     document.getElementById(`tab-${section}`).classList.add("active");
     tabButtons.forEach((b) => b.classList.remove("active"));
-    document
-      .querySelector(`[data-tab="${section}"]`)
-      .classList.add("active");
+    document.querySelector(`[data-tab="${section}"]`).classList.add("active");
   };
 
   // ------------------------------
@@ -60,12 +58,18 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         const data = await res.json();
+
         if (res.ok && data.success) {
+          console.log("✅ Admin authenticated");
           localStorage.setItem("adminToken", data.token);
-          loginSection.classList.add("hidden");
-          adminSection.classList.remove("hidden");
+          loginSection.style.display = "none";
+          adminSection.style.display = "block";
           statusMsg.textContent = "";
+
+          // initialize dashboard
           loadPets();
+          loadRates();
+          loadContacts();
         } else {
           statusMsg.textContent = "❌ Invalid credentials";
         }
@@ -83,8 +87,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!logoutBtn) return;
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("adminToken");
-      adminSection.classList.add("hidden");
-      loginSection.classList.remove("hidden");
+      adminSection.style.display = "none";
+      loginSection.style.display = "block";
     });
   };
 
@@ -104,9 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
         card.innerHTML = `
           <h4>${pet.pet_name}</h4>
           <p>${pet.story_description || ""}</p>
-          <p><strong>Dorothy’s Pet:</strong> ${
-            pet.is_dorothy_pet ? "Yes" : "No"
-          }</p>
+          <p><strong>Dorothy’s Pet:</strong> ${pet.is_dorothy_pet ? "Yes" : "No"}</p>
           ${
             pet.images && pet.images.length
               ? `<div class="admin-image-grid">
@@ -306,12 +308,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // ------------------------------
   const token = localStorage.getItem("adminToken");
   if (token) {
-    loginSection.classList.add("hidden");
-    adminSection.classList.remove("hidden");
+    loginSection.style.display = "none";
+    adminSection.style.display = "block";
     loadPets();
+    loadRates();
+    loadContacts();
   } else {
-    adminSection.classList.add("hidden");
-    loginSection.classList.remove("hidden");
+    adminSection.style.display = "none";
+    loginSection.style.display = "block";
   }
 
   initLogin();
