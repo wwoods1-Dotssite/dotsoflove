@@ -285,6 +285,53 @@ app.put("/api/contacts/:id/contacted", async (req, res) => {
   }
 });
 
+// ===============================
+// SERVICE RATES
+// ===============================
+app.get("/api/rates", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT id, service_type, rate_per_unit, unit_type, description, is_active, is_featured
+      FROM service_rates
+      ORDER BY id ASC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ Error fetching rates:", err);
+    res.status(500).json({ success: false, message: "Error loading rates" });
+  }
+});
+
+// Update rate
+app.put("/api/rates/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { service_type, rate_per_unit, unit_type, description, featured } = req.body;
+    await pool.query(
+      `UPDATE service_rates
+       SET service_type=$1, rate_per_unit=$2, unit_type=$3, description=$4, is_featured=$5, updated_at=NOW()
+       WHERE id=$6`,
+      [service_type, rate_per_unit, unit_type, description, featured, id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Error updating rate:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// Delete rate
+app.delete("/api/rates/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query("DELETE FROM service_rates WHERE id=$1", [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Error deleting rate:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
 // ----------------------
 // Start Server
 // ----------------------
