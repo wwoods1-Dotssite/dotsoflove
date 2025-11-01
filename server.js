@@ -131,28 +131,36 @@ app.get("/api/pets/:id", async (req, res) => {
   }
 });
 
-// Add new pet
+// ===============================
+// ADD NEW PET
+// ===============================
 app.post("/api/pets", upload.array("images"), async (req, res) => {
   try {
-    const { name, story, is_dorothy } = req.body;
+    const { pet_name, story_description, is_dorothy_pet } = req.body;
+
+    // Insert pet record first
     const petResult = await pool.query(
-      "INSERT INTO gallery_pets (name, story, is_dorothy) VALUES ($1, $2, $3) RETURNING id",
-      [name, story, is_dorothy === "true"]
+      `INSERT INTO gallery_pets (pet_name, story_description, is_dorothy_pet, created_at, updated_at)
+       VALUES ($1, $2, $3, NOW(), NOW())
+       RETURNING id`,
+      [pet_name, story_description, is_dorothy_pet === "true"]
     );
+
     const petId = petResult.rows[0].id;
 
-    // Upload files to S3
-    for (const file of req.files) {
+    // Handle image uploads if provided
+    for (const file of req.files || []) {
       const fileStream = fs.createReadStream(file.path);
       const key = `pets/${Date.now()}_${file.originalname}`;
 
-      const uploadParams = {
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: key,
-        Body: fileStream,
-        ContentType: file.mimetype,
-      };
-      await s3.send(new PutObjectCommand(uploadParams));
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: key,
+          Body: fileStream,
+          ContentType: file.mimetype,
+        })
+      );
 
       const publicUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 
@@ -160,13 +168,14 @@ app.post("/api/pets", upload.array("images"), async (req, res) => {
         "INSERT INTO pet_images (pet_id, image_url, s3_key, display_order) VALUES ($1, $2, $3, $4)",
         [petId, publicUrl, key, 0]
       );
+
       fs.unlinkSync(file.path);
     }
 
-    res.json({ success: true });
+    res.json({ success: true, petId });
   } catch (err) {
-    console.error("❌ Error adding pet:", err);
-    res.status(500).json({ success: false });
+    console.error("❌ Error adding new pet:", err);
+    res.status(500).json({ success: false, message: "Server error adding new pet" });
   }
 });
 
