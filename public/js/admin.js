@@ -195,12 +195,6 @@ function openPetModal(pet) {
   };
 }
 
-await fetch(`/api/pets/${petId}/images/reorder`, {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ order: newImageOrderArray }),
-});
-
 // ===============================
 // RATES MANAGEMENT
 // ===============================
