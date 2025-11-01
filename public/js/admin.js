@@ -1,23 +1,57 @@
-// ===============================
-// ADMIN DASHBOARD SCRIPT (CommonJS)
-// ===============================
+// ===================================================
+//  admin.js — Dots of Love Admin Dashboard (CommonJS)
+// ===================================================
 
-// ===============================
-// ADMIN LOGIN HANDLER
-// ===============================
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("⚙️ Admin Dashboard initialized");
+
+  // ------------------------------
+  // DOM ELEMENTS
+  // ------------------------------
   const loginForm = document.getElementById("adminLoginForm");
   const loginSection = document.getElementById("adminLogin");
   const adminSection = document.getElementById("admin");
   const statusMsg = document.getElementById("adminLoginStatus");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  const tabs = document.querySelectorAll(".admin-tab");
 
-  if (loginForm) {
+  // ------------------------------
+  // HELPER FUNCTIONS
+  // ------------------------------
+  const adminFetch = async (url, options = {}) => {
+    const token = localStorage.getItem("adminToken");
+    return fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  };
+
+  const showSection = (section) => {
+    tabs.forEach((t) => t.classList.remove("active"));
+    document.getElementById(`tab-${section}`).classList.add("active");
+    tabButtons.forEach((b) => b.classList.remove("active"));
+    document
+      .querySelector(`[data-tab="${section}"]`)
+      .classList.add("active");
+  };
+
+  // ------------------------------
+  // LOGIN HANDLER
+  // ------------------------------
+  const initLogin = () => {
+    if (!loginForm) return;
+
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const username = document.getElementById("adminUsername").value.trim();
       const password = document.getElementById("adminPassword").value.trim();
-
       statusMsg.textContent = "Authenticating...";
+
       try {
         const res = await fetch("/api/admin/auth", {
           method: "POST",
@@ -26,13 +60,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         const data = await res.json();
-
         if (res.ok && data.success) {
           localStorage.setItem("adminToken", data.token);
           loginSection.classList.add("hidden");
           adminSection.classList.remove("hidden");
           statusMsg.textContent = "";
-          loadPets(); // Initialize dashboard after login
+          loadPets();
         } else {
           statusMsg.textContent = "❌ Invalid credentials";
         }
@@ -41,273 +74,251 @@ document.addEventListener("DOMContentLoaded", () => {
         statusMsg.textContent = "Server error. Try again later.";
       }
     });
-  }
-});
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("⚙️ Admin dashboard initialized");
+  };
 
-  const logoutBtn = document.getElementById("logoutBtn");
-  const tabButtons = document.querySelectorAll(".tab-btn");
-  const tabs = document.querySelectorAll(".admin-tab");
-
-  // Tabs Switching
-  tabButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      tabButtons.forEach((b) => b.classList.remove("active"));
-      tabs.forEach((t) => t.classList.remove("active"));
-      btn.classList.add("active");
-      document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
-
-      if (btn.dataset.tab === "pets") loadPets();
-      if (btn.dataset.tab === "rates") loadRates();
-      if (btn.dataset.tab === "contacts") loadContacts();
-    });
-  });
-
-  if (logoutBtn) {
+  // ------------------------------
+  // LOGOUT HANDLER
+  // ------------------------------
+  const initLogout = () => {
+    if (!logoutBtn) return;
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("adminToken");
-      location.reload();
+      adminSection.classList.add("hidden");
+      loginSection.classList.remove("hidden");
     });
-  }
-
-  // Initialize with Pets
-  loadPets();
-});
-
-// ===============================
-// PET MANAGEMENT
-// ===============================
-async function loadPets() {
-  const petList = document.getElementById("petList");
-  petList.innerHTML = "<p>Loading pets...</p>";
-
-  try {
-    const res = await fetch("/api/pets");
-    const pets = await res.json();
-    petList.innerHTML = "";
-
-    pets.forEach((pet) => {
-      const card = document.createElement("div");
-      card.className = "admin-card";
-
-      const imagesHTML =
-        pet.images && pet.images.length
-          ? pet.images
-              .map(
-                (img) => `
-            <div class="pet-img-wrapper">
-              <img src="${img.image_url}" alt="${pet.pet_name}" />
-              <button class="btn-icon delete-img" data-id="${img.id}">🗑️</button>
-            </div>`
-              )
-              .join("")
-          : "<p>No images uploaded.</p>";
-
-      card.innerHTML = `
-        <h4>${pet.pet_name}</h4>
-        <p>${pet.story_description || ""}</p>
-        <div class="pet-images">${imagesHTML}</div>
-        <div class="btn-group">
-          <button class="btn-primary edit-pet" data-id="${pet.id}">Edit</button>
-          <button class="btn-danger delete-pet" data-id="${pet.id}">Delete</button>
-        </div>
-      `;
-
-      petList.appendChild(card);
-    });
-
-    document.querySelectorAll(".delete-pet").forEach((btn) =>
-      btn.addEventListener("click", async (e) => {
-        const id = e.target.dataset.id;
-        if (!confirm("Delete this pet?")) return;
-        const res = await fetch(`/api/pets/${id}`, { method: "DELETE" });
-        if (res.ok) loadPets();
-      })
-    );
-
-    document.querySelectorAll(".delete-img").forEach((btn) =>
-      btn.addEventListener("click", async (e) => {
-        const id = e.target.dataset.id;
-        if (!confirm("Delete this image?")) return;
-        const res = await fetch(`/api/pets/images/${id}`, { method: "DELETE" });
-        if (res.ok) loadPets();
-      })
-    );
-
-    document.querySelectorAll(".edit-pet").forEach((btn) =>
-      btn.addEventListener("click", async (e) => {
-        const id = e.target.dataset.id;
-        const petRes = await fetch(`/api/pets/${id}`);
-        const pet = await petRes.json();
-        openPetModal(pet);
-      })
-    );
-
-    document.getElementById("addPetBtn").onclick = () =>
-      openPetModal({ id: null, pet_name: "", story_description: "", is_dorothy_pet: false });
-  } catch (err) {
-    console.error("❌ loadPets error:", err);
-    petList.innerHTML = "<p>Error loading pets.</p>";
-  }
-}
-
-// Pet Modal (Add/Edit)
-function openPetModal(pet) {
-  const modal = document.createElement("div");
-  modal.className = "modal-overlay";
-  modal.innerHTML = `
-    <div class="modal-content">
-      <h3>${pet.id ? `Edit Pet: ${pet.pet_name}` : "Add New Pet"}</h3>
-      <form id="petForm">
-        <label>Pet Name</label>
-        <input type="text" id="petName" value="${pet.pet_name || ""}" required />
-        
-        <label>Story Description</label>
-        <textarea id="petStory">${pet.story_description || ""}</textarea>
-        
-        <label>
-          <input type="checkbox" id="isDorothyPet" ${pet.is_dorothy_pet ? "checked" : ""} />
-          Dorothy's Pet
-        </label>
-
-        <label>Upload Photos</label>
-        <input type="file" id="petImages" multiple accept="image/*" />
-
-        <div class="modal-actions">
-          <button type="submit" class="btn-primary">Save Changes</button>
-          <button type="button" class="btn-secondary cancel">Cancel</button>
-        </div>
-      </form>
-    </div>
-  `;
-  document.body.appendChild(modal);
-
-  modal.querySelector(".cancel").onclick = () => modal.remove();
-
-  modal.querySelector("#petForm").onsubmit = async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const name = form.petName.value.trim();
-    const story = form.petStory.value.trim();
-    const isDorothy = form.isDorothyPet.checked;
-
-    const method = pet.id ? "PUT" : "POST";
-    const url = pet.id ? `/api/pets/${pet.id}` : "/api/pets";
-
-    const petRes = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pet_name: name, story_description: story, is_dorothy_pet: isDorothy }),
-    });
-
-    if (!petRes.ok) {
-      alert("Failed to save pet");
-      return;
-    }
-
-    const files = form.petImages.files;
-    if (files.length) {
-      for (const file of files) {
-        const uploadRes = await fetch("/api/s3/upload-url", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fileName: file.name, fileType: file.type }),
-        });
-        const { uploadUrl, publicUrl } = await uploadRes.json();
-        await fetch(uploadUrl, { method: "PUT", body: file });
-        await fetch(`/api/pets/${pet.id || (await petRes.json()).id}/images`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image_url: publicUrl }),
-        });
-      }
-    }
-
-    modal.remove();
-    loadPets();
   };
-}
 
-// ===============================
-// RATES MANAGEMENT
-// ===============================
-async function loadRates() {
-  const rateList = document.getElementById("rateList");
-  rateList.innerHTML = "Loading rates...";
-  try {
-    const res = await fetch("/api/rates");
-    const rates = await res.json();
-    rateList.innerHTML = "";
+  // ------------------------------
+  // PETS CRUD
+  // ------------------------------
+  async function loadPets() {
+    try {
+      const res = await adminFetch("/api/pets");
+      const pets = await res.json();
+      const list = document.getElementById("petList");
+      list.innerHTML = "";
 
-    rates.forEach((rate) => {
-      const card = document.createElement("div");
-      card.className = "admin-card";
-      card.innerHTML = `
-        <h4>${rate.service_type}</h4>
-        <p>${rate.description}</p>
-        <p><strong>$${rate.rate_per_unit}</strong> ${rate.unit_type}</p>
-        <div class="btn-group">
-          <button class="btn-primary edit-rate" data-id="${rate.id}">Edit</button>
-          <button class="btn-danger delete-rate" data-id="${rate.id}">Delete</button>
-        </div>
-      `;
-      rateList.appendChild(card);
-    });
-  } catch (err) {
-    rateList.innerHTML = "Error loading rates.";
-  }
-}
+      pets.forEach((pet) => {
+        const card = document.createElement("div");
+        card.className = "admin-card";
+        card.innerHTML = `
+          <h4>${pet.pet_name}</h4>
+          <p>${pet.story_description || ""}</p>
+          <p><strong>Dorothy’s Pet:</strong> ${
+            pet.is_dorothy_pet ? "Yes" : "No"
+          }</p>
+          ${
+            pet.images && pet.images.length
+              ? `<div class="admin-image-grid">
+                  ${pet.images
+                    .map(
+                      (img) => `
+                    <div class="img-wrap">
+                      <img src="${img.image_url}" alt="Pet Image">
+                      <button class="btn-danger small delete-image" data-id="${img.id}">🗑</button>
+                    </div>`
+                    )
+                    .join("")}
+                </div>`
+              : "<p>No images</p>"
+          }
+          <div class="admin-btn-row">
+            <button class="btn-primary edit-pet" data-id="${pet.id}">✏️ Edit</button>
+            <button class="btn-danger delete-pet" data-id="${pet.id}">🗑 Delete</button>
+          </div>
+        `;
+        list.appendChild(card);
+      });
 
-// ===============================
-// CONTACT MANAGEMENT
-// ===============================
-async function loadContacts() {
-  const contactList = document.getElementById("contactList");
-  contactList.innerHTML = "Loading contacts...";
+      // Delete Pet
+      document.querySelectorAll(".delete-pet").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          const id = e.target.dataset.id;
+          if (!confirm("Delete this pet and its images?")) return;
+          await adminFetch(`/api/pets/${id}`, { method: "DELETE" });
+          loadPets();
+        });
+      });
 
-  try {
-    const res = await fetch("/api/contacts");
-    const contacts = await res.json();
-    contactList.innerHTML = "";
+      // Delete Image
+      document.querySelectorAll(".delete-image").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          const id = e.target.dataset.id;
+          if (!confirm("Delete this image?")) return;
+          await adminFetch(`/api/pets/images/${id}`, { method: "DELETE" });
+          loadPets();
+        });
+      });
 
-    if (!contacts.length) {
-      contactList.innerHTML = "<p>🎉 All contacts have been handled!</p>";
-      return;
+      // Edit Pet
+      document.querySelectorAll(".edit-pet").forEach((btn) => {
+        btn.addEventListener("click", () => openPetModal(btn.dataset.id));
+      });
+    } catch (err) {
+      console.error("❌ Load pets failed:", err);
     }
-
-    contacts.forEach((contact) => {
-      const card = document.createElement("div");
-      card.className = "admin-card";
-
-      const createdDate = new Date(contact.created_at).toLocaleDateString();
-
-      card.innerHTML = `
-        <div class="contact-header">
-          <strong>${contact.name}</strong>
-          <span class="contact-date">${createdDate}</span>
-        </div>
-        <p><strong>Email:</strong> ${contact.email || ""}</p>
-        <p><strong>Phone:</strong> ${contact.phone || ""}</p>
-        <p><strong>Service:</strong> ${contact.service || ""}</p>
-        <p><strong>Dates:</strong> ${contact.dates || "-"}</p>
-        <p><strong>Message:</strong> ${contact.message || ""}</p>
-        <button class="btn-contacted" data-id="${contact.id}">Mark Contacted ✅</button>
-      `;
-
-      contactList.appendChild(card);
-    });
-
-    document.querySelectorAll(".btn-contacted").forEach((btn) =>
-      btn.addEventListener("click", async (e) => {
-        const id = e.target.dataset.id;
-        if (!confirm("Mark this contact as contacted?")) return;
-        const res = await fetch(`/api/contacts/${id}/contacted`, { method: "PUT" });
-        if (res.ok) e.target.closest(".admin-card").remove();
-      })
-    );
-  } catch (err) {
-    console.error("❌ loadContacts:", err);
-    contactList.innerHTML = "Error loading contacts.";
   }
-}
+
+  async function openPetModal(id) {
+    try {
+      const res = await adminFetch(`/api/pets/${id}`);
+      if (!res.ok) throw new Error("Pet not found");
+      const pet = await res.json();
+
+      const name = prompt("Pet Name:", pet.pet_name || "");
+      const story = prompt("Story:", pet.story_description || "");
+      const dorothy = confirm("Is this Dorothy’s pet?");
+
+      const body = JSON.stringify({
+        name,
+        story,
+        is_dorothy: dorothy,
+      });
+
+      const update = await adminFetch(`/api/pets/${id}`, {
+        method: "PUT",
+        body,
+      });
+
+      if (update.ok) loadPets();
+    } catch (err) {
+      console.error("❌ Edit pet failed:", err);
+    }
+  }
+
+  // ------------------------------
+  // RATES CRUD
+  // ------------------------------
+  async function loadRates() {
+    try {
+      const res = await adminFetch("/api/rates");
+      const rates = await res.json();
+      const list = document.getElementById("rateList");
+      list.innerHTML = "";
+
+      rates.forEach((r) => {
+        const div = document.createElement("div");
+        div.className = "admin-card";
+        div.innerHTML = `
+          <h4>${r.service_type}</h4>
+          <p>${r.description || ""}</p>
+          <p><strong>$${r.rate_per_unit}</strong> ${r.unit_type}</p>
+          <div class="admin-btn-row">
+            <button class="btn-primary edit-rate" data-id="${r.id}">✏️ Edit</button>
+            <button class="btn-danger delete-rate" data-id="${r.id}">🗑 Delete</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+
+      // Edit Rate
+      document.querySelectorAll(".edit-rate").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          const rate = rates.find((r) => r.id == id);
+          const type = prompt("Service Type:", rate.service_type);
+          const desc = prompt("Description:", rate.description || "");
+          const amt = prompt("Rate per unit:", rate.rate_per_unit);
+          const unit = prompt("Unit type:", rate.unit_type);
+          const featured = confirm("Is this Featured?");
+          await adminFetch(`/api/rates/${id}`, {
+            method: "PUT",
+            body: JSON.stringify({
+              service_type: type,
+              description: desc,
+              rate_per_unit: amt,
+              unit_type: unit,
+              featured,
+            }),
+          });
+          loadRates();
+        });
+      });
+
+      // Delete Rate
+      document.querySelectorAll(".delete-rate").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          const id = e.target.dataset.id;
+          if (!confirm("Delete this rate?")) return;
+          await adminFetch(`/api/rates/${id}`, { method: "DELETE" });
+          loadRates();
+        });
+      });
+    } catch (err) {
+      console.error("❌ Load rates failed:", err);
+    }
+  }
+
+  // ------------------------------
+  // CONTACT REQUESTS
+  // ------------------------------
+  async function loadContacts() {
+    try {
+      const res = await adminFetch("/api/contacts");
+      const contacts = await res.json();
+      const list = document.getElementById("contactList");
+      list.innerHTML = "";
+
+      contacts.forEach((c) => {
+        const div = document.createElement("div");
+        div.className = "admin-card";
+        div.innerHTML = `
+          <h4>${c.name}</h4>
+          <p><strong>Email:</strong> ${c.email}</p>
+          <p><strong>Phone:</strong> ${c.phone}</p>
+          <p><strong>Service:</strong> ${c.service}</p>
+          <p><strong>Dates:</strong> ${c.start_date || ""} → ${c.end_date || ""}</p>
+          <p><strong>Message:</strong> ${c.message || ""}</p>
+          <p><em>Created: ${new Date(c.created_at).toLocaleDateString()}</em></p>
+          <div class="admin-btn-row">
+            <button class="btn-success mark-contacted" data-id="${c.id}">✅ Mark Contacted</button>
+            <button class="btn-danger delete-contact" data-id="${c.id}">🗑 Delete</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+
+      // Mark Contacted
+      document.querySelectorAll(".mark-contacted").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          const id = e.target.dataset.id;
+          await adminFetch(`/api/contacts/${id}/contacted`, { method: "PUT" });
+          loadContacts();
+        });
+      });
+
+      // Delete Contact
+      document.querySelectorAll(".delete-contact").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          const id = e.target.dataset.id;
+          if (!confirm("Delete this contact?")) return;
+          await adminFetch(`/api/contacts/${id}`, { method: "DELETE" });
+          loadContacts();
+        });
+      });
+    } catch (err) {
+      console.error("❌ Load contacts failed:", err);
+    }
+  }
+
+  // ------------------------------
+  // INITIALIZATION
+  // ------------------------------
+  const token = localStorage.getItem("adminToken");
+  if (token) {
+    loginSection.classList.add("hidden");
+    adminSection.classList.remove("hidden");
+    loadPets();
+  } else {
+    adminSection.classList.add("hidden");
+    loginSection.classList.remove("hidden");
+  }
+
+  initLogin();
+  initLogout();
+
+  // Default tab
+  if (document.querySelector('[data-tab="pets"]')) {
+    document.querySelector('[data-tab="pets"]').click();
+  }
+});
