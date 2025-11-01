@@ -265,6 +265,51 @@ app.delete("/api/pets/images/:id", async (req, res) => {
   }
 });
 
+// ===============================
+// DELETE SPECIFIC PET IMAGE
+// ===============================
+app.delete("/api/pets/:petId/images/:imageId", async (req, res) => {
+  try {
+    const { petId, imageId } = req.params;
+
+    // Get S3 key before deleting from DB
+    const result = await pool.query(
+      "SELECT s3_key FROM pet_images WHERE id = $1 AND pet_id = $2",
+      [imageId, petId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Image not found" });
+    }
+
+    const s3Key = result.rows[0].s3_key;
+
+    // Delete from S3
+    try {
+      await s3.send(
+        new DeleteObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: s3Key,
+        })
+      );
+      console.log(`🗑 Deleted from S3: ${s3Key}`);
+    } catch (s3Err) {
+      console.warn("⚠️ Failed to delete from S3 (continuing):", s3Err.message);
+    }
+
+    // Delete from DB
+    await pool.query("DELETE FROM pet_images WHERE id = $1 AND pet_id = $2", [
+      imageId,
+      petId,
+    ]);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Error deleting image:", err);
+    res.status(500).json({ success: false, message: "Server error deleting image" });
+  }
+});
+
 // Update image order
 app.put("/api/pets/:petId/images/reorder", async (req, res) => {
   try {
