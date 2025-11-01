@@ -66,16 +66,41 @@ app.post("/api/admin/auth", async (req, res) => {
 // Pets
 // ----------------------
 
-// Get all pets
-app.get("/api/pets", async (_req, res) => {
+// ===============================
+// GET All Pets with Images
+// ===============================
+app.get("/api/pets", async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT * FROM gallery_pets ORDER BY id ASC"
-    );
+    const result = await pool.query(`
+      SELECT 
+        gp.id,
+        gp.pet_name,
+        gp.story_description,
+        gp.is_dorothy_pet,
+        gp.created_at,
+        gp.updated_at,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', pi.id,
+              'image_url', pi.image_url,
+              'is_primary', pi.is_primary,
+              'display_order', pi.display_order
+            )
+            ORDER BY pi.display_order ASC
+          ) FILTER (WHERE pi.id IS NOT NULL),
+          '[]'
+        ) AS images
+      FROM gallery_pets gp
+      LEFT JOIN pet_images pi ON gp.id = pi.pet_id
+      GROUP BY gp.id
+      ORDER BY gp.is_dorothy_pet DESC, gp.id ASC;
+    `);
+
     res.json(result.rows);
   } catch (err) {
-    console.error("❌ Error fetching pets:", err);
-    res.status(500).json({ success: false });
+    console.error("❌ Error fetching pets with images:", err);
+    res.status(500).json({ success: false, message: "Error loading pets" });
   }
 });
 
