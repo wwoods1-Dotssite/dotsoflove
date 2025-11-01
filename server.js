@@ -172,44 +172,58 @@ app.delete("/api/pets/:id", async (req, res) => {
   }
 });
 
-// Delete single image
-app.delete("/api/pets/:petId/images/:imageId", async (req, res) => {
-  const { petId, imageId } = req.params;
+// Delete a single pet image
+app.delete("/api/pets/images/:id", async (req, res) => {
   try {
-    const img = await pool.query(
-      "DELETE FROM pet_images WHERE id=$1 RETURNING s3_key",
-      [imageId]
-    );
-    if (img.rows[0]) {
-      await s3.send(
-        new DeleteObjectCommand({
-          Bucket: process.env.S3_BUCKET_NAME,
-          Key: img.rows[0].s3_key,
-        })
-      );
+    const { id } = req.params;
+
+    // Get the S3 key first (to delete the file from the bucket)
+    const imgQuery = await pool.query("SELECT s3_key FROM pet_images WHERE id = $1", [id]);
+    if (imgQuery.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Image not found" });
     }
-    res.json({ success: true });
+
+    const s3Key = imgQuery.rows[0].s3_key;
+
+    // Delete from S3
+    const deleteCommand = new DeleteObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: s3Key,
+    });
+    await s3.send(deleteCommand);
+
+    // Delete from DB
+    await pool.query("DELETE FROM pet_images WHERE id = $1", [id]);
+
+    res.json({ success: true, message: "Image deleted" });
   } catch (err) {
-    console.error("❌ Delete Image:", err);
-    res.status(500).json({ success: false });
+    console.error("❌ Error deleting pet image:", err);
+    res.status(500).json({ success: false, message: "Server error deleting image" });
   }
 });
 
-// Reorder images
-app.post("/api/pets/:id/images/reorder", async (req, res) => {
-  const { id } = req.params;
-  const { images } = req.body;
+// Update image display order for a pet
+app.put("/api/pets/:petId/images/reorder", async (req, res) => {
   try {
-    const queries = images.map((img) =>
-      pool.query(
-        "UPDATE pet_images SET display_order=$1 WHERE id=$2 AND pet_id=$3",
-        [img.display_order, img.id, id]
-      )
-    );
+    const { petId } = req.params;
+    const { order } = req.body; // Array of image IDs in new order
+
+    if (!Array.isArray(order)) {
+      return res.status(400).json({ success: false, message: "Invalid order format" });
+    }
+
+    const queries = order.map((id, index) => {
+      return pool.query("UPDATE pet_images SET display_order = $1 WHERE id = $2 AND pet_id = $3", [
+        index,
+        id,
+        petId,
+      ]);
+    });
+
     await Promise.all(queries);
     res.json({ success: true });
   } catch (err) {
-    console.error("❌ Reorder:", err);
+    console.error("❌ Error updating image order:", err);
     res.status(500).json({ success: false });
   }
 });
