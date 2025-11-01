@@ -17,53 +17,66 @@ document.addEventListener("DOMContentLoaded", () => {
   let allImages = [];
   let currentIndex = 0;
 
-  // Fetch pets from backend
-  async function loadGallery() {
-    try {
-      const res = await fetch("/api/pets");
-      const pets = await res.json();
+ // ===============================
+// GALLERY INITIALIZATION
+// ===============================
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("Initializing Gallery...");
+  await loadPets();
+});
 
-      // Separate Dorothy’s pets from clients
-      const dorothyPets = pets.filter(p => p.is_dorothy_pet);
-      const clientPets = pets.filter(p => !p.is_dorothy_pet);
+// ===============================
+// LOAD PETS FROM API
+// ===============================
+async function loadPets() {
+  try {
+    const res = await fetch("/api/pets");
+    const pets = await res.json();
+    console.log("Loaded pets:", pets);
 
-      renderPets(dorothyPets, dorothyGallery);
-      renderPets(clientPets, clientGallery);
-    } catch (err) {
-      console.error("❌ Error loading gallery:", err);
-    }
-  }
+    const dorothyContainer = document.getElementById("dorothyPets");
+    const clientContainer = document.getElementById("clientPets");
+    dorothyContainer.innerHTML = "";
+    clientContainer.innerHTML = "";
 
-  // Render each pet card
-  function renderPets(pets, container) {
-    if (!container) return;
-    container.innerHTML = "";
-
-    if (!pets.length) {
-      container.innerHTML = `<p class="empty-msg">No pets to display yet.</p>`;
-      return;
-    }
-
-    pets.forEach(pet => {
-      const images = pet.images || [];
-      if (!images.length) return;
-
-      const primaryImage =
-        images.find(img => img.is_primary) || images[0];
-
+    pets.forEach((pet) => {
       const card = document.createElement("div");
       card.classList.add("gallery-card");
 
+      // Add thumbnail or placeholder 🐾
+      let imageHTML = "";
+      if (pet.images && pet.images.length > 0) {
+        imageHTML = `
+          <img src="${pet.images[0].image_url}" alt="${pet.pet_name}" class="gallery-thumb" />
+        `;
+      } else {
+        imageHTML = `
+          <div class="no-image-placeholder">
+            <div class="placeholder-icon">🐾</div>
+            <div class="placeholder-text">No photo yet</div>
+          </div>
+        `;
+      }
+
+      // Build card HTML
       card.innerHTML = `
-        <img src="${primaryImage.image_url}" alt="${pet.pet_name}" class="gallery-thumb" />
+        ${imageHTML}
         <div class="gallery-info">
-          <h4>${pet.pet_name}</h4>
-          <p>${pet.story_description || "A lovely companion"}</p>
+          <h3>${pet.pet_name}</h3>
+          <p>${pet.story_description || ""}</p>
         </div>
       `;
 
-      container.appendChild(card);
-
+      if (pet.is_dorothy_pet) {
+        dorothyContainer.appendChild(card);
+      } else {
+        clientContainer.appendChild(card);
+      }
+    });
+  } catch (err) {
+    console.error("Error loading gallery pets:", err);
+  }
+}
       // Bind click to open modal carousel
       card.addEventListener("click", () => openModal(images, pet.pet_name));
     });
