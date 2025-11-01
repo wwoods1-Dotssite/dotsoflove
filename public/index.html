@@ -287,5 +287,23 @@
   <script src="js/contact.js"></script>
   <script src="js/admin.js"></script>
 
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const adminToken = localStorage.getItem("adminToken");
+    const adminSection = document.getElementById("admin");
+    const loginSection = document.getElementById("adminLogin");
+
+    if (!adminToken) {
+      // Not logged in → show login, hide dashboard
+      if (adminSection) adminSection.style.display = "none";
+      if (loginSection) loginSection.style.display = "block";
+    } else {
+      // Logged in → show dashboard, hide login
+      if (loginSection) loginSection.style.display = "none";
+      if (adminSection) adminSection.style.display = "block";
+    }
+  });
+</script>
+
 </body>
 </html>
