@@ -325,4 +325,71 @@ document.addEventListener("DOMContentLoaded", () => {
   if (document.querySelector('[data-tab="pets"]')) {
     document.querySelector('[data-tab="pets"]').click();
   }
+
+// ------------------------------
+// LIGHTBOX CAROUSEL FOR PET IMAGES
+// ------------------------------
+let currentImageIndex = 0;
+let currentImages = [];
+
+const lightbox = document.getElementById("adminLightbox");
+const lightboxImg = document.getElementById("lightboxImage");
+const lightboxPrev = document.getElementById("lightboxPrev");
+const lightboxNext = document.getElementById("lightboxNext");
+const lightboxClose = document.getElementById("lightboxClose");
+
+// Open lightbox on image click
+document.addEventListener("click", (e) => {
+  if (e.target.closest(".admin-image-grid img")) {
+    const imgElements = Array.from(
+      e.target.closest(".admin-image-grid").querySelectorAll("img")
+    );
+    currentImages = imgElements.map((img) => img.src);
+    currentImageIndex = imgElements.indexOf(e.target);
+    openLightbox(currentImages[currentImageIndex]);
+  }
+});
+
+function openLightbox(src) {
+  lightbox.classList.remove("hidden");
+  lightboxImg.src = src;
+}
+
+// Close lightbox
+function closeLightbox() {
+  lightbox.classList.add("hidden");
+  lightboxImg.src = "";
+  currentImages = [];
+  currentImageIndex = 0;
+}
+
+if (lightboxClose) lightboxClose.addEventListener("click", closeLightbox);
+if (lightbox) lightbox.addEventListener("click", (e) => {
+  if (e.target === lightbox) closeLightbox();
+});
+
+// Navigate previous / next
+function showPrevImage() {
+  if (currentImages.length === 0) return;
+  currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
+  lightboxImg.src = currentImages[currentImageIndex];
+}
+
+function showNextImage() {
+  if (currentImages.length === 0) return;
+  currentImageIndex = (currentImageIndex + 1) % currentImages.length;
+  lightboxImg.src = currentImages[currentImageIndex];
+}
+
+if (lightboxPrev) lightboxPrev.addEventListener("click", showPrevImage);
+if (lightboxNext) lightboxNext.addEventListener("click", showNextImage);
+
+// Keyboard navigation
+document.addEventListener("keydown", (e) => {
+  if (lightbox.classList.contains("hidden")) return;
+  if (e.key === "ArrowLeft") showPrevImage();
+  if (e.key === "ArrowRight") showNextImage();
+  if (e.key === "Escape") closeLightbox();
+});
+  
 });
