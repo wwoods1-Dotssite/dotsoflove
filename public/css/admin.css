@@ -1,21 +1,18 @@
-/* 
- * DotsofLove Admin Styles - Final
- * Goals:
- *  - Deep purple admin aesthetic (distinct from public pages)
- *  - Uniform thumbnails for pet images
- *  - Clean card layout for Pets, Rates, Contacts
- *  - Instant pop-in modals that visually feel intentional
- *  - Styled tab bar
- *
- * Assumes your HTML structure from index.html:
- *  #adminLogin.page-section
- *  #admin.page-section
- *  .admin-tabs .tab-btn
- *  #tab-pets / #tab-rates / #tab-contacts
- *  #petModal, #rateModal with .modal-content
- */
+/* build: 2025-11-01-v1
+   DotsofLove Admin Styles (final)
+   Goals:
+   - Deep purple admin aesthetic (separate from public site)
+   - Only one tab visible at a time
+   - Uniform thumbnails (120x120)
+   - Hover zoom + shadow
+   - Clean responsive cards
+   - Instant pop-in modal
+*/
 
-/* ---------- Admin section background ---------- */
+/* ---------------------------------
+   ADMIN DASHBOARD WRAPPER
+---------------------------------- */
+
 #admin.page-section {
   background: radial-gradient(circle at 20% 20%, #3a247b 0%, #1a103a 80%);
   border-radius: 16px;
@@ -23,9 +20,10 @@
   color: #fff;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   margin-top: 2rem;
+  border: 1px solid rgba(124, 92, 255, 0.3);
 }
 
-/* Make sure login card stays readable on white/main page */
+/* login card stays white so it's readable before login */
 #adminLogin .admin-login-card {
   background: #fff;
   border-radius: 12px;
@@ -79,7 +77,10 @@
   min-height: 1em;
 }
 
-/* ---------- Dashboard header ---------- */
+
+/* ---------------------------------
+   HEADER + LOGOUT
+---------------------------------- */
 
 .admin-header {
   display: flex;
@@ -110,7 +111,10 @@
   filter: brightness(1.05);
 }
 
-/* ---------- Tab bar ---------- */
+
+/* ---------------------------------
+   TAB BAR
+---------------------------------- */
 
 .admin-tabs {
   display: flex;
@@ -131,17 +135,23 @@
   box-shadow: 0 8px 16px rgba(0,0,0,0.5);
   transition: all 0.15s ease;
 }
+
 .admin-tabs .tab-btn.active {
   background: #7c5cff;
   color: #fff;
   border-color: #7c5cff;
   box-shadow: 0 10px 24px rgba(124,92,255,0.45);
 }
+
 .admin-tabs .tab-btn:hover {
   filter: brightness(1.08);
 }
 
-/* Hide inactive panes by JS using style.display, but ensure base look */
+
+/* ---------------------------------
+   TAB CONTENT SECTIONS
+---------------------------------- */
+
 .admin-content .admin-tab {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.15);
@@ -151,7 +161,6 @@
   color: #fff;
 }
 
-/* Section headings inside tabs */
 .admin-tab h3 {
   color: #fff;
   font-weight: 600;
@@ -162,7 +171,7 @@
   gap: .5rem;
 }
 
-/* "Add New Pet" / "Add New Rate" buttons */
+/* "Add New" buttons */
 #addPetBtn.btn-primary,
 #addRateBtn.btn-primary {
   background: linear-gradient(90deg,#6a5acd,#8a6bff);
@@ -180,7 +189,10 @@
   filter: brightness(1.05);
 }
 
-/* ---------- Card layout (Pets / Rates / Contacts) ---------- */
+
+/* ---------------------------------
+   LISTS / CARDS
+---------------------------------- */
 
 .admin-list {
   display: grid;
@@ -197,6 +209,7 @@
   border: 1px solid rgba(124,92,255,0.15);
 }
 
+/* card headers */
 .pet-card-header,
 .rate-card-header,
 .contact-card-header {
@@ -221,6 +234,7 @@
   gap: .5rem;
 }
 
+/* badges */
 .dorothy-badge {
   background: #ffd95a;
   color: #000;
@@ -242,6 +256,7 @@
   box-shadow: 0 6px 16px rgba(106,90,205,0.4);
 }
 
+/* action buttons row on cards */
 .pet-card-actions,
 .rate-card-actions,
 .contact-right {
@@ -251,6 +266,7 @@
   gap: .5rem;
 }
 
+/* small buttons */
 .btn-sm {
   background: #6a5acd;
   border: none;
@@ -263,8 +279,11 @@
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(106,90,205,0.4);
 }
-.btn-sm:hover { filter: brightness(1.08); }
+.btn-sm:hover {
+  filter: brightness(1.08);
+}
 
+/* danger variants */
 .btn-sm.danger,
 .delete-pet-btn,
 .delete-rate-btn {
@@ -277,7 +296,7 @@
   filter: brightness(1.08);
 }
 
-/* Pet story block text */
+/* PET STORY TEXT */
 .pet-story {
   color: #444;
   font-size: 0.9rem;
@@ -285,15 +304,16 @@
   white-space: pre-line;
 }
 
-/* Tiny helper row under images */
+/* hint row under pet images */
 .hint-row {
   font-size: 0.75rem;
   color: #666;
   margin-top: 0.5rem;
 }
 
-/* ---------- Pet Images Strip w/ drag+drop ---------- */
-
+/* ---------------------------------
+   PET IMAGES STRIP
+---------------------------------- */
 .pet-images {
   display: flex;
   flex-wrap: wrap;
@@ -347,8 +367,9 @@
   background: rgba(255,0,0,0.8);
 }
 
-/* ---------- Rates card ---------- */
-
+/* ---------------------------------
+   RATES CARD
+---------------------------------- */
 .rate-body {
   color: #444;
   font-size: 0.9rem;
@@ -374,6 +395,11 @@
   line-height: 1.3rem;
   color: #444;
 }
+.rate-flags {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
 .flag-active {
   background: #4caf50;
   color: #fff;
@@ -391,8 +417,9 @@
   border-radius: 6px;
 }
 
-/* ---------- Contacts card ---------- */
-
+/* ---------------------------------
+   CONTACT CARDS
+---------------------------------- */
 .contact-card-header {
   width: 100%;
 }
@@ -427,10 +454,9 @@
   line-height: 1.3rem;
 }
 
-/* "Mark Contacted" button uses .btn-sm from above */
-
-/* ---------- Loading / empty / error states ---------- */
-
+/* ---------------------------------
+   STATES (loading / empty / error)
+---------------------------------- */
 .loading-msg,
 .empty-msg,
 .error-msg {
@@ -452,14 +478,16 @@
   font-weight: 500;
 }
 
-/* ---------- Modals ---------- */
-
+/* ---------------------------------
+   MODALS
+   (petModal / rateModal)
+---------------------------------- */
 .modal {
   position: fixed;
   inset: 0;
   z-index: 9999;
   background: rgba(20,10,40,0.65);
-  display: none; /* hidden by default */
+  display: none; /* we toggle via .show/.hidden */
   align-items: center;
   justify-content: center;
   padding: 1rem;
@@ -484,18 +512,24 @@
   position: relative;
 }
 
+.modal-header {
+  position: relative;
+  padding-right: 2rem;
+  margin-bottom: 0.75rem;
+}
+
 #petModalTitle,
 #rateModalTitle {
   color: #4a3aff;
   font-size: 1.05rem;
   font-weight: 600;
-  margin: 0 0 0.75rem 0;
+  margin: 0;
 }
 
 .close-btn {
   position: absolute;
   right: 0.75rem;
-  top: 0.75rem;
+  top: 0.25rem;
   background: transparent;
   border: none;
   font-size: 1.1rem;
@@ -513,20 +547,18 @@
   gap: 0.75rem;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-.form-group label {
+.modal-content label {
   font-size: 0.8rem;
   font-weight: 500;
   color: #444;
   margin-bottom: 0.25rem;
+  display: block;
 }
-.form-group input[type="text"],
-.form-group input[type="number"],
-.form-group textarea,
-.form-group select,
+
+.modal-content input[type="text"],
+.modal-content input[type="number"],
+.modal-content textarea,
+.modal-content select,
 #adminUsername,
 #adminPassword {
   font-size: 0.9rem;
@@ -538,17 +570,13 @@
   color: #2c2c2c;
 }
 
-.form-group textarea {
+.modal-content textarea {
   min-height: 70px;
   resize: vertical;
 }
 
-.checkbox-row {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  font-size: 0.85rem;
-  color: #444;
+.modal-content input[type="checkbox"] {
+  margin-right: 0.4rem;
 }
 
 .modal-actions {
@@ -587,7 +615,11 @@
   filter: brightness(1.05);
 }
 
-/* responsive tweaks */
+
+/* ---------------------------------
+   RESPONSIVE
+---------------------------------- */
+
 @media (min-width: 640px) {
   .admin-list {
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
