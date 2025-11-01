@@ -345,6 +345,56 @@ app.put("/api/pets/:petId/images/reorder", async (req, res) => {
   }
 });
 
+// ===============================
+// CONTACT FORM SUBMISSION
+// ===============================
+app.post("/api/contact", async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      phone,
+      best_time,
+      service,
+      start_date,
+      end_date,
+      pet_info,
+      message,
+    } = req.body;
+
+    if (!name || !email || !service) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing required fields" });
+    }
+
+    // Insert into DB
+    await pool.query(
+      `INSERT INTO contacts (name, email, phone, best_time, service, start_date, end_date, pet_info, message, contacted, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, NOW())`,
+      [
+        name,
+        email,
+        phone || "",
+        best_time || "",
+        service,
+        start_date || null,
+        end_date || null,
+        pet_info || "",
+        message || "",
+      ]
+    );
+
+    console.log("📨 New contact form submission from:", name);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Error saving contact form:", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Server error submitting contact form" });
+  }
+});
+
 // ----------------------
 // Contacts (Admin Enhancements)
 // ----------------------
