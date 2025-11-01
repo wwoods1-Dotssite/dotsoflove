@@ -372,15 +372,17 @@ app.put("/api/contacts/:id/contacted", async (req, res) => {
 });
 
 // ===============================
-// SERVICE RATES
+// SERVICE RATES (Admin)
 // ===============================
+
+// Get all service rates
 app.get("/api/rates", async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT id, service_type, rate_per_unit, unit_type, description, is_active, is_featured
-      FROM service_rates
-      ORDER BY id ASC
-    `);
+    const result = await pool.query(
+      `SELECT id, service_type, rate_per_unit, unit_type, description, is_active, is_featured, created_at, updated_at 
+       FROM service_rates 
+       ORDER BY created_at ASC`
+    );
     res.json(result.rows);
   } catch (err) {
     console.error("❌ Error fetching rates:", err);
@@ -388,21 +390,55 @@ app.get("/api/rates", async (req, res) => {
   }
 });
 
-// Update rate
+// Add new service rate
+app.post("/api/rates", async (req, res) => {
+  try {
+    const {
+      service_type,
+      rate_per_unit,
+      unit_type,
+      description,
+      is_active,
+      is_featured,
+    } = req.body;
+
+    await pool.query(
+      `INSERT INTO service_rates 
+       (service_type, rate_per_unit, unit_type, description, is_active, is_featured, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, true, $5, NOW(), NOW())`,
+      [service_type, rate_per_unit, unit_type, description, is_featured === "true"]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Error adding rate:", err);
+    res.status(500).json({ success: false, message: "Server error adding rate" });
+  }
+});
+
+// Update existing rate
 app.put("/api/rates/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { service_type, rate_per_unit, unit_type, description, featured } = req.body;
+    const {
+      service_type,
+      rate_per_unit,
+      unit_type,
+      description,
+      is_featured,
+    } = req.body;
+
     await pool.query(
-      `UPDATE service_rates
-       SET service_type=$1, rate_per_unit=$2, unit_type=$3, description=$4, is_featured=$5, updated_at=NOW()
-       WHERE id=$6`,
-      [service_type, rate_per_unit, unit_type, description, featured, id]
+      `UPDATE service_rates 
+       SET service_type = $1, rate_per_unit = $2, unit_type = $3, description = $4, is_featured = $5, updated_at = NOW()
+       WHERE id = $6`,
+      [service_type, rate_per_unit, unit_type, description, is_featured === "true", id]
     );
+
     res.json({ success: true });
   } catch (err) {
     console.error("❌ Error updating rate:", err);
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, message: "Server error updating rate" });
   }
 });
 
@@ -410,11 +446,11 @@ app.put("/api/rates/:id", async (req, res) => {
 app.delete("/api/rates/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.query("DELETE FROM service_rates WHERE id=$1", [id]);
+    await pool.query("DELETE FROM service_rates WHERE id = $1", [id]);
     res.json({ success: true });
   } catch (err) {
     console.error("❌ Error deleting rate:", err);
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, message: "Server error deleting rate" });
   }
 });
 
