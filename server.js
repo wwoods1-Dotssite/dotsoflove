@@ -70,7 +70,7 @@ app.post("/api/admin/auth", async (req, res) => {
 app.get("/api/pets", async (_req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM pet_profiles ORDER BY id ASC"
+      "SELECT * FROM gallery_pets ORDER BY id ASC"
     );
     res.json(result.rows);
   } catch (err) {
@@ -84,7 +84,7 @@ app.get("/api/pets/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const petQuery = await pool.query(
-      "SELECT * FROM pet_profiles WHERE id = $1",
+      "SELECT * FROM gallery_pets WHERE id = $1",
       [id]
     );
 
@@ -111,7 +111,7 @@ app.post("/api/pets", upload.array("images"), async (req, res) => {
   try {
     const { name, story, is_dorothy } = req.body;
     const petResult = await pool.query(
-      "INSERT INTO pet_profiles (name, story, is_dorothy) VALUES ($1, $2, $3) RETURNING id",
+      "INSERT INTO gallery_pets (name, story, is_dorothy) VALUES ($1, $2, $3) RETURNING id",
       [name, story, is_dorothy === "true"]
     );
     const petId = petResult.rows[0].id;
@@ -152,7 +152,7 @@ app.put("/api/pets/:id", upload.array("images"), async (req, res) => {
     const { name, story, is_dorothy } = req.body;
 
     await pool.query(
-      "UPDATE pet_profiles SET name = $1, story = $2, is_dorothy = $3 WHERE id = $4",
+      "UPDATE gallery_pets SET name = $1, story = $2, is_dorothy = $3 WHERE id = $4",
       [name, story, is_dorothy === "true", id]
     );
 
@@ -200,7 +200,7 @@ app.delete("/api/pets/:id", async (req, res) => {
     }
 
     await pool.query("DELETE FROM pet_images WHERE pet_id = $1", [id]);
-    await pool.query("DELETE FROM pet_profiles WHERE id = $1", [id]);
+    await pool.query("DELETE FROM gallery_pets WHERE id = $1", [id]);
 
     res.json({ success: true });
   } catch (err) {
