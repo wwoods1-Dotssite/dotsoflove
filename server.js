@@ -1,12 +1,14 @@
-// ==============================
-//  Dots of Love Pet Sitting API
-//  CommonJS + S3 + PostgreSQL
-// ==============================
+// ================================
+// server.js — CommonJS version for Railway
+// ================================
 
 const express = require("express");
+const multer = require("multer");
+const pkg = require("pg");
 const cors = require("cors");
+const fs = require("fs");
+const path = require("path");
 const dotenv = require("dotenv");
-const { Pool } = require("pg");
 const {
   S3Client,
   PutObjectCommand,
@@ -15,102 +17,83 @@ const {
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 dotenv.config();
+const { Pool } = pkg;
 
 const app = express();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const s3 = new S3Client({ region: process.env.AWS_REGION });
+
+// ----------------------
+// Middleware
+// ----------------------
 app.use(cors());
 app.use(express.json());
+app.use("/uploads", express.static("public/uploads"));
 
-// ---------- ENV + DB + S3 ----------
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
+// ----------------------
+// Multer for local uploads (temporary)
+// ----------------------
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, "public/uploads/"),
+  filename: (req, file, cb) =>
+    cb(null, Date.now() + "_" + file.originalname),
+});
+const upload = multer({ storage });
+
+// ----------------------
+// Health check + root
+// ----------------------
+app.get("/", (_req, res) => {
+  res.send("✅ Dots of Love API running");
 });
 
-pool.connect()
-  .then(() => console.log("✅ Connected to PostgreSQL"))
-  .catch((err) => console.error("❌ DB Connection Error:", err.message));
-
-console.log(`✅ S3 client ready for bucket: ${process.env.S3_BUCKET_NAME}`);
-
-// ---------- ADMIN AUTH ----------
-app.post("/api/admin/auth", (req, res) => {
+// ----------------------
+// Admin authentication
+// ----------------------
+app.post("/api/admin/auth", async (req, res) => {
   const { username, password } = req.body;
-  const validUser = username === process.env.ADMIN_USER;
-  const validPass =
-    password === process.env.ADMIN_PASSWORD ||
-    password === process.env.ADMIN_PASS;
-  if (validUser && validPass) {
-    return res.json({ success: true, token: "mock-admin-token" });
+  if (
+    username === process.env.ADMIN_USER &&
+    password === process.env.ADMIN_PASSWORD
+  ) {
+    res.json({ success: true, token: "mock-admin-token" });
+  } else {
+    res.status(401).json({ success: false, message: "Invalid credentials" });
   }
-  res.status(401).json({ success: false, message: "Invalid credentials" });
 });
 
-// ---------- PETS ----------
+// ----------------------
+// Pets
+// ----------------------
+
+// Get all pets
 app.get("/api/pets", async (_req, res) => {
   try {
-    const pets = await pool.query("SELECT * FROM gallery_pets ORDER BY id");
-    const petIds = pets.rows.map((p) => p.id);
-    const imgs =
-      petIds.length > 0
-        ? await pool.query(
-            "SELECT * FROM pet_images WHERE pet_id = ANY($1) ORDER BY display_order",
-            [petIds]
-          )
-        : { rows: [] };
-
-    const map = {};
-    imgs.rows.forEach((i) => {
-      if (!map[i.pet_id]) map[i.pet_id] = [];
-      map[i.pet_id].push(i);
-    });
-
-    res.json(
-      pets.rows.map((p) => ({ ...p, images: map[p.id] || [] }))
-    );
-  } catch (err) {
-    console.error("❌ GET /api/pets:", err);
-    res.status(500).json({ error: "Server error loading pets" });
-  }
-});
-
-// alias
-app.get("/api/gallery", async (req, res) => {
-  req.url = "/api/pets";
-  app._router.handle(req, res);
-});
-
-// Create pet
-app.post("/api/pets", async (req, res) => {
-  const { pet_name, story_description, is_dorothy_pet } = req.body;
-  try {
     const result = await pool.query(
-      `INSERT INTO gallery_pets (pet_name, story_description, is_dorothy_pet)
-       VALUES ($1,$2,$3) RETURNING *`,
-      [pet_name, story_description, is_dorothy_pet]
+      "SELECT * FROM pet_profiles ORDER BY id ASC"
     );
-    res.json({ success: true, pet: result.rows[0] });
+    res.json(result.rows);
   } catch (err) {
-    console.error("❌ Add Pet:", err);
+    console.error("❌ Error fetching pets:", err);
     res.status(500).json({ success: false });
   }
 });
 
-// Get single pet by ID
+// Get a single pet by ID (for edit modal)
 app.get("/api/pets/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const petQuery = await pool.query("SELECT * FROM gallery_pets WHERE id = $1", [id]);
+    const petQuery = await pool.query(
+      "SELECT * FROM pet_profiles WHERE id = $1",
+      [id]
+    );
+
     if (petQuery.rows.length === 0) {
       return res.status(404).json({ success: false, message: "Pet not found" });
     }
 
-    // Fetch images associated with this pet
     const imgQuery = await pool.query(
-      "SELECT * FROM pet_images WHERE pet_id = $1 ORDER BY id ASC",
+      "SELECT * FROM pet_images WHERE pet_id = $1 ORDER BY display_order ASC, id ASC",
       [id]
     );
 
@@ -123,51 +106,105 @@ app.get("/api/pets/:id", async (req, res) => {
   }
 });
 
-// Update pet
-app.put("/api/pets/:id", async (req, res) => {
-  const { id } = req.params;
-  const { pet_name, story_description, is_dorothy_pet } = req.body;
+// Add new pet
+app.post("/api/pets", upload.array("images"), async (req, res) => {
   try {
-    const result = await pool.query(
-      `UPDATE gallery_pets
-         SET pet_name=$1, story_description=$2, is_dorothy_pet=$3
-       WHERE id=$4 RETURNING *`,
-      [pet_name, story_description, is_dorothy_pet, id]
+    const { name, story, is_dorothy } = req.body;
+    const petResult = await pool.query(
+      "INSERT INTO pet_profiles (name, story, is_dorothy) VALUES ($1, $2, $3) RETURNING id",
+      [name, story, is_dorothy === "true"]
     );
-    if (!result.rowCount)
-      return res.status(404).json({ success: false, message: "Not found" });
-    res.json({ success: true, pet: result.rows[0] });
+    const petId = petResult.rows[0].id;
+
+    // Upload files to S3
+    for (const file of req.files) {
+      const fileStream = fs.createReadStream(file.path);
+      const key = `pets/${Date.now()}_${file.originalname}`;
+
+      const uploadParams = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: key,
+        Body: fileStream,
+        ContentType: file.mimetype,
+      };
+      await s3.send(new PutObjectCommand(uploadParams));
+
+      const publicUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+
+      await pool.query(
+        "INSERT INTO pet_images (pet_id, image_url, s3_key, display_order) VALUES ($1, $2, $3, $4)",
+        [petId, publicUrl, key, 0]
+      );
+      fs.unlinkSync(file.path);
+    }
+
+    res.json({ success: true });
   } catch (err) {
-    console.error("❌ Edit Pet:", err);
+    console.error("❌ Error adding pet:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// Update pet
+app.put("/api/pets/:id", upload.array("images"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, story, is_dorothy } = req.body;
+
+    await pool.query(
+      "UPDATE pet_profiles SET name = $1, story = $2, is_dorothy = $3 WHERE id = $4",
+      [name, story, is_dorothy === "true", id]
+    );
+
+    // Optional: handle new uploaded images
+    for (const file of req.files || []) {
+      const fileStream = fs.createReadStream(file.path);
+      const key = `pets/${Date.now()}_${file.originalname}`;
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: key,
+          Body: fileStream,
+          ContentType: file.mimetype,
+        })
+      );
+      const publicUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+      await pool.query(
+        "INSERT INTO pet_images (pet_id, image_url, s3_key, display_order) VALUES ($1, $2, $3, $4)",
+        [id, publicUrl, key, 0]
+      );
+      fs.unlinkSync(file.path);
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Error updating pet:", err);
     res.status(500).json({ success: false });
   }
 });
 
 // Delete pet
 app.delete("/api/pets/:id", async (req, res) => {
-  const { id } = req.params;
   try {
-    const imgs = await pool.query(
-      "SELECT s3_key FROM pet_images WHERE pet_id=$1",
-      [id]
-    );
-    for (const img of imgs.rows) {
-      try {
-        await s3.send(
-          new DeleteObjectCommand({
-            Bucket: process.env.S3_BUCKET_NAME,
-            Key: img.s3_key,
-          })
-        );
-      } catch (err) {
-        console.warn("⚠️ S3 delete warn:", err.message);
-      }
+    const { id } = req.params;
+
+    // Delete images from S3 first
+    const imgs = await pool.query("SELECT s3_key FROM pet_images WHERE pet_id = $1", [id]);
+    for (const row of imgs.rows) {
+      await s3.send(
+        new DeleteObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: row.s3_key,
+        })
+      );
     }
-    await pool.query("DELETE FROM pet_images WHERE pet_id=$1", [id]);
-    await pool.query("DELETE FROM gallery_pets WHERE id=$1", [id]);
+
+    await pool.query("DELETE FROM pet_images WHERE pet_id = $1", [id]);
+    await pool.query("DELETE FROM pet_profiles WHERE id = $1", [id]);
+
     res.json({ success: true });
   } catch (err) {
-    console.error("❌ Delete Pet:", err);
+    console.error("❌ Error deleting pet:", err);
     res.status(500).json({ success: false });
   }
 });
@@ -176,25 +213,19 @@ app.delete("/api/pets/:id", async (req, res) => {
 app.delete("/api/pets/images/:id", async (req, res) => {
   try {
     const { id } = req.params;
-
-    // Get the S3 key first (to delete the file from the bucket)
     const imgQuery = await pool.query("SELECT s3_key FROM pet_images WHERE id = $1", [id]);
-    if (imgQuery.rows.length === 0) {
+    if (imgQuery.rows.length === 0)
       return res.status(404).json({ success: false, message: "Image not found" });
-    }
 
     const s3Key = imgQuery.rows[0].s3_key;
+    await s3.send(
+      new DeleteObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: s3Key,
+      })
+    );
 
-    // Delete from S3
-    const deleteCommand = new DeleteObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME,
-      Key: s3Key,
-    });
-    await s3.send(deleteCommand);
-
-    // Delete from DB
     await pool.query("DELETE FROM pet_images WHERE id = $1", [id]);
-
     res.json({ success: true, message: "Image deleted" });
   } catch (err) {
     console.error("❌ Error deleting pet image:", err);
@@ -202,23 +233,23 @@ app.delete("/api/pets/images/:id", async (req, res) => {
   }
 });
 
-// Update image display order for a pet
+// Update image order
 app.put("/api/pets/:petId/images/reorder", async (req, res) => {
   try {
     const { petId } = req.params;
-    const { order } = req.body; // Array of image IDs in new order
+    const { order } = req.body;
 
     if (!Array.isArray(order)) {
       return res.status(400).json({ success: false, message: "Invalid order format" });
     }
 
-    const queries = order.map((id, index) => {
-      return pool.query("UPDATE pet_images SET display_order = $1 WHERE id = $2 AND pet_id = $3", [
+    const queries = order.map((id, index) =>
+      pool.query("UPDATE pet_images SET display_order = $1 WHERE id = $2 AND pet_id = $3", [
         index,
         id,
         petId,
-      ]);
-    });
+      ])
+    );
 
     await Promise.all(queries);
     res.json({ success: true });
@@ -227,91 +258,14 @@ app.put("/api/pets/:petId/images/reorder", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-// ---------- S3 UPLOAD PRESIGN ----------
-app.post("/api/s3/upload-url", async (req, res) => {
-  try {
-    const { fileName, fileType } = req.body;
 
-    if (!fileName || !fileType) {
-      return res.status(400).json({ error: "Missing fileName or fileType" });
-    }
-
-    const Key = `pets/${Date.now()}-${fileName}`;
-
-    const command = new PutObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME,
-      Key,
-      ContentType: fileType,
-    });
-
-    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
-
-    const publicUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${Key}`;
-
-    res.json({
-      uploadUrl,
-      publicUrl,
-      s3_key: Key, // <-- fixed field name
-    });
-  } catch (err) {
-    console.error("❌ S3 Upload Error:", err);
-    res.status(500).json({ error: "Failed to generate upload URL" });
-  }
-});
-
-
-// Record uploaded image
-app.post("/api/pets/:id/images", async (req, res) => {
-  const { id } = req.params;
-  const { image_url, s3_key, display_order } = req.body;
-  try {
-    const result = await pool.query(
-      `INSERT INTO pet_images (pet_id, image_url, s3_key, display_order)
-       VALUES ($1,$2,$3,$4) RETURNING *`,
-      [id, image_url, s3_key, display_order || 0]
-    );
-    res.json({ success: true, image: result.rows[0] });
-  } catch (err) {
-    console.error("❌ Record image:", err);
-    res.status(500).json({ success: false });
-  }
-});
-
-// ---------- RATES ----------
-app.get("/api/rates", async (_req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM service_rates ORDER BY is_featured DESC, id"
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("❌ GET /api/rates:", err);
-    res.status(500).json({ error: "Server error loading rates" });
-  }
-});
-
-// ---------- CONTACT ----------
-// app.get("/api/contact", async (_req, res) => {
-//  try {
-//    const result = await pool.query(
-//      "SELECT id,name,email,phone,best_time,service,pet_info,dates,start_date,end_date,message FROM contacts ORDER BY id DESC"
-//    );
-//    res.json(result.rows);
-//  } catch (err) {
-//    console.error("❌ GET /api/contact:", err);
-//    res.status(500).json({ error: "Server error loading contacts" });
-//  }
-// });
-
-// =========================
+// ----------------------
 // Contacts (Admin Enhancements)
-// =========================
-
-// Get all uncontacted contacts sorted oldest -> newest
-app.get("/api/contacts", async (req, res) => {
+// ----------------------
+app.get("/api/contacts", async (_req, res) => {
   try {
     const result = await pool.query(
-      `SELECT * FROM contacts WHERE contacted = false ORDER BY created_at ASC`
+      "SELECT * FROM contacts WHERE contacted = false ORDER BY created_at ASC"
     );
     res.json(result.rows);
   } catch (err) {
@@ -320,21 +274,22 @@ app.get("/api/contacts", async (req, res) => {
   }
 });
 
-// Mark contact as contacted
 app.put("/api/contacts/:id/contacted", async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.query(`UPDATE contacts SET contacted = true WHERE id = $1`, [id]);
+    await pool.query("UPDATE contacts SET contacted = true WHERE id = $1", [id]);
     res.json({ success: true });
   } catch (err) {
-    console.error("❌ Update contacted:", err);
+    console.error("❌ Update contact:", err);
     res.status(500).json({ success: false });
   }
 });
 
-
-// ---------- START ----------
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log(`🚀 Server running on port ${PORT}`)
-);
+// ----------------------
+// Start Server
+// ----------------------
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🪣 S3 Bucket: ${process.env.S3_BUCKET_NAME}`);
+});
