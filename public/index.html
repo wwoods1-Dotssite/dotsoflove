@@ -5,8 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dot’s of Love Pet Sitting</title>
   <link rel="stylesheet" href="css/styles.css" />
-
+  <link rel="stylesheet" href="css/gallery.css" />
+  <link rel="stylesheet" href="css/rates.css" />
+  <link rel="stylesheet" href="css/contact.css" />
+  <link rel="stylesheet" href="css/admin.css" />
 </head>
+
 <body>
   <!-- ========================= -->
   <!--         NAV BAR           -->
@@ -56,7 +60,7 @@
         <strong>$15.00 per walk</strong>
       </div>
     </section>
-<link rel="stylesheet" href="css/gallery.css" />
+
     <!-- ========================= -->
     <!--         GALLERY           -->
     <!-- ========================= -->
@@ -85,322 +89,235 @@
         <button id="nextBtn" class="nav-btn next">❯</button>
       </div>
     </section>
-    
-     <link rel="stylesheet" href="css/rates.css" /> <!-- Rates -->
-     <link rel="stylesheet" href="css/contact.css" />   <!-- Contact -->
-      <link rel="stylesheet" href="css/admin.css" /> <!-- Admin -->
-   
+
+    <!-- ========================= -->
+    <!--         RATES             -->
+    <!-- ========================= -->
     <section id="rates" class="page-section">
       <h2 class="section-title">Service Rates</h2>
       <p class="section-subtitle">Affordable, caring options for every pet</p>
     </section>
 
-<!-- ========================= -->
-<!--         CONTACT           -->
-<!-- ========================= -->
-<section id="contact" class="page-section">
-  <h2 class="section-title">Let's Connect!</h2>
-  <p class="section-subtitle">
-    Ready to give your pet the best care possible? Fill out the form below!
-  </p>
+    <!-- ========================= -->
+    <!--         CONTACT           -->
+    <!-- ========================= -->
+    <section id="contact" class="page-section">
+      <h2 class="section-title">Let's Connect!</h2>
+      <p class="section-subtitle">
+        Ready to give your pet the best care possible? Fill out the form below!
+      </p>
 
-  <form id="contactForm" class="contact-form">
-    <div class="form-row">
-      <div class="form-group">
-        <label for="name">Your Name *</label>
-        <input type="text" id="name" name="name" placeholder="Your Name" required />
+      <form id="contactForm" class="contact-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Your Name *</label>
+            <input type="text" id="name" name="name" placeholder="Your Name" required />
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" name="email" placeholder="name@email.com" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone" placeholder="(555) 555-5555" />
+          </div>
+          <div class="form-group">
+            <label for="best_time">Best Time to Reach You</label>
+            <select id="best_time" name="best_time">
+              <option>Any time</option>
+              <option>Morning</option>
+              <option>Afternoon</option>
+              <option>Evening</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="service">Service Needed</label>
+            <select id="service" name="service">
+              <option value="">Select a service...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="start_date">Start Date *</label>
+            <input type="date" id="start_date" name="start_date" required />
+          </div>
+          <div class="form-group">
+            <label for="end_date">End Date *</label>
+            <input type="date" id="end_date" name="end_date" required />
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="pet_info">Tell me about your pet(s)</label>
+          <textarea id="pet_info" name="pet_info" rows="3" placeholder="Pet's name, breed, age, special needs, etc."></textarea>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="message">Additional Message</label>
+          <textarea id="message" name="message" rows="3"></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary">Send Request</button>
+        <p id="formStatus" class="form-status"></p>
+      </form>
+    </section>
+
+    <!-- ========================= -->
+    <!--       ADMIN LOGIN         -->
+    <!-- ========================= -->
+    <section id="adminLogin" class="page-section">
+      <div class="admin-login-card">
+        <h2>Admin Login</h2>
+        <form id="adminLoginForm">
+          <div class="form-group">
+            <label for="adminUsername">Username</label>
+            <input type="text" id="adminUsername" name="username" required />
+          </div>
+          <div class="form-group">
+            <label for="adminPassword">Password</label>
+            <input type="password" id="adminPassword" name="password" autocomplete="current-password" required />
+          </div>
+          <button type="submit" class="btn-primary">Login</button>
+          <div id="adminLoginStatus" class="form-status"></div>
+        </form>
       </div>
-      <div class="form-group">
-        <label for="email">Email Address *</label>
-        <input type="email" id="email" name="email" placeholder="name@email.com" required />
+    </section>
+
+    <!-- ========================= -->
+    <!--         ADMIN             -->
+    <!-- ========================= -->
+    <section id="admin" class="page-section hidden">
+      <div class="admin-header">
+        <h2>Admin Dashboard</h2>
+        <button id="logoutBtn" class="btn-danger">Logout</button>
       </div>
-    </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label for="phone">Phone Number</label>
-        <input type="tel" id="phone" name="phone" placeholder="(555) 555-5555" />
+      <div class="admin-tabs">
+        <button data-tab="pets" class="tab-btn active">🐾 Pets</button>
+        <button data-tab="rates" class="tab-btn">💲 Rates</button>
+        <button data-tab="contacts" class="tab-btn">📩 Contacts</button>
       </div>
-      <div class="form-group">
-        <label for="best_time">Best Time to Reach You</label>
-        <select id="best_time" name="best_time">
-          <option>Any time</option>
-          <option>Morning</option>
-          <option>Afternoon</option>
-          <option>Evening</option>
-        </select>
+
+      <div id="adminContent" class="admin-content">
+        <div id="tab-pets" class="admin-tab active">
+          <h3>Manage Pets</h3>
+          <div id="petList" class="admin-list"></div>
+          <button id="addPetBtn" class="btn-primary">Add New Pet</button>
+        </div>
+
+        <div id="tab-rates" class="admin-tab">
+          <h3>Manage Rates</h3>
+          <div id="rateList" class="admin-list"></div>
+          <button id="addRateBtn" class="btn-primary">Add New Rate</button>
+        </div>
+
+        <div id="tab-contacts" class="admin-tab">
+          <h3>Contact Requests</h3>
+          <div id="contactList" class="admin-list"></div>
+        </div>
       </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="service">Service Needed</label>
-        <select id="service" name="service">
-          <option value="">Select a service...</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="start_date">Start Date *</label>
-        <input type="date" id="start_date" name="start_date" required />
-      </div>
-      <div class="form-group">
-        <label for="end_date">End Date *</label>
-        <input type="date" id="end_date" name="end_date" required />
-      </div>
-    </div>
-
-    <div class="form-group full-width">
-      <label for="pet_info">Tell me about your pet(s)</label>
-      <textarea id="pet_info" name="pet_info" rows="3" placeholder="Pet's name, breed, age, special needs, etc."></textarea>
-    </div>
-
-    <div class="form-group full-width">
-      <label for="message">Additional Message</label>
-      <textarea id="message" name="message" rows="3"></textarea>
-    </div>
-
-    <button type="submit" class="btn-primary">Send Request</button>
-    <p id="formStatus" class="form-status"></p>
-  </form>
-</section>
-
-<!-- ========================= -->
-<!--       ADMIN LOGIN         -->
-<!-- ========================= -->
-<!-- Admin Login -->
-<section id="adminLogin" class="page-section">
-  <div class="admin-login-card">
-    <h2>Admin Login</h2>
-    <form id="adminLoginForm">
-      <div class="form-group">
-        <label for="adminUsername">Username</label>
-        <input type="text" id="adminUsername" name="username" required />
-      </div>
-      <div class="form-group">
-        <label for="adminPassword">Password</label>
-        <input
-          type="password"
-          id="adminPassword"
-          name="password"
-          autocomplete="current-password"
-          required
-        />
-      </div>
-      <button type="submit" class="btn-primary">Login</button>
-      <div id="adminLoginStatus" class="form-status"></div>
-    </form>
-  </div>
-</section>
-
-
-    
-<!-- ========================= -->
-<!--         ADMIN             -->
-<!-- ========================= -->
-<section id="admin" class="page-section hidden">
-  <div class="admin-header">
-    <h2>Admin Dashboard</h2>
-    <button id="logoutBtn" class="btn-danger">Logout</button>
-  </div>
-
-  <div class="admin-tabs">
-    <button data-tab="pets" class="tab-btn active">🐾 Pets</button>
-    <button data-tab="rates" class="tab-btn">💲 Rates</button>
-    <button data-tab="contacts" class="tab-btn">📩 Contacts</button>
-  </div>
-
-  <div id="adminContent" class="admin-content">
-    <!-- Pets Section -->
-    <div id="tab-pets" class="admin-tab active">
-      <h3>Manage Pets</h3>
-      <div id="petList" class="admin-list"></div>
-      <button id="addPetBtn" class="btn-primary">Add New Pet</button>
-    </div>
-
-    <!-- Rates Section -->
-    <div id="tab-rates" class="admin-tab">
-      <h3>Manage Rates</h3>
-      <div id="rateList" class="admin-list"></div>
-      <button id="addRateBtn" class="btn-primary">Add New Rate</button>
-    </div>
-
-    <!-- Contacts Section -->
-    <div id="tab-contacts" class="admin-tab">
-      <h3>Contact Requests</h3>
-      <div id="contactList" class="admin-list"></div>
-    </div>
-  </div>
-</section>
-
-    
+    </section>
   </main>
 
-  <!-- ========================= -->
-  <!--         FOOTER            -->
-  <!-- ========================= -->
   <footer>
     <p>© <span id="year"></span> Dot’s of Love Pet Sitting. All rights reserved.</p>
   </footer>
 
-  <!-- ========================= -->
-  <!--         SCRIPTS           -->
-  <!-- ========================= -->
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
   </script>
+
   <script src="js/gallery.js"></script>
   <script src="js/rates.js"></script>
   <script src="js/contact.js"></script>
   <script src="js/admin.js"></script>
 
   <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const adminToken = localStorage.getItem("adminToken");
-    const adminSection = document.getElementById("admin");
-    const loginSection = document.getElementById("adminLogin");
+    document.addEventListener("DOMContentLoaded", () => {
+      const adminToken = localStorage.getItem("adminToken");
+      const adminSection = document.getElementById("admin");
+      const loginSection = document.getElementById("adminLogin");
 
-    if (!adminToken) {
-      // Not logged in → show login, hide dashboard
-      if (adminSection) adminSection.style.display = "none";
-      if (loginSection) loginSection.style.display = "block";
-    } else {
-      // Logged in → show dashboard, hide login
-      if (loginSection) loginSection.style.display = "none";
-      if (adminSection) adminSection.style.display = "block";
-    }
-  });
-</script>
+      if (!adminToken) {
+        if (adminSection) adminSection.style.display = "none";
+        if (loginSection) loginSection.style.display = "block";
+      } else {
+        if (loginSection) loginSection.style.display = "none";
+        if (adminSection) adminSection.style.display = "block";
+      }
+    });
+  </script>
 
-<!-- ============================================================
-     Add/Edit Pet Modal
-     ============================================================ -->
-<div id="petModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 class="modal-title">Add New Pet</h3>
-      <button class="close-btn" onclick="closeModal('petModal')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <form id="addPetForm">
-        <label for="petName">Pet Name</label>
-        <input type="text" id="petName" name="petName" placeholder="Enter pet name" required />
-
-        <label for="petDescription">Story Description</label>
-        <textarea
-          id="petDescription"
-          name="petDescription"
-          rows="3"
-          placeholder="Short story or care notes..."
-        ></textarea>
-
-        <div style="margin-top: 0.75rem;">
-          <label>
-            <input type="checkbox" id="isDorothyPet" name="isDorothyPet" />
-            Dorothy's Pet
-          </label>
-        </div>
-
-        <label for="petImages">Upload Photos</label>
-        <input type="file" id="petImages" name="images" accept="image/*" multiple />
-
-        <div class="modal-actions">
-          <button
-            type="button"
-            id="savePetBtn"
-            class="btn-primary"
-          >
-            Save Changes
-          </button>
-          <button
-            type="button"
-            class="btn-danger"
-            onclick="closeModal('petModal')"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+  <!-- Add/Edit Pet Modal -->
+  <div id="petModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Add New Pet</h3>
+        <button class="close-btn" onclick="closeModal('petModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addPetForm">
+          <label for="petName">Pet Name</label>
+          <input type="text" id="petName" name="petName" placeholder="Enter pet name" required />
+          <label for="petDescription">Story Description</label>
+          <textarea id="petDescription" name="petDescription" rows="3" placeholder="Short story or care notes..."></textarea>
+          <div style="margin-top: 0.75rem;">
+            <label><input type="checkbox" id="isDorothyPet" name="isDorothyPet" /> Dorothy's Pet</label>
+          </div>
+          <label for="petImages">Upload Photos</label>
+          <input type="file" id="petImages" name="images" accept="image/*" multiple />
+          <div class="modal-actions">
+            <button type="button" id="savePetBtn" class="btn-primary">Save Changes</button>
+            <button type="button" class="btn-danger" onclick="closeModal('petModal')">Cancel</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ============================================================
-     Add/Edit Rate Modal
-     ============================================================ -->
-<div id="rateModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 class="modal-title">Add New Rate</h3>
-      <button class="close-btn" onclick="closeModal('rateModal')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <form id="addRateForm">
-        <label for="serviceType">Service Type</label>
-        <input
-          type="text"
-          id="serviceType"
-          name="serviceType"
-          placeholder="e.g., Overnight Stay, Day Visits"
-          required
-        />
-
-        <label for="ratePerUnit">Rate Per Unit</label>
-        <input
-          type="number"
-          id="ratePerUnit"
-          name="ratePerUnit"
-          placeholder="e.g., 45"
-          step="0.01"
-          required
-        />
-
-        <label for="unitType">Unit Type</label>
-        <select id="unitType" name="unitType" required>
-          <option value="per_visit">Per Visit</option>
-          <option value="per_day">Per Day</option>
-          <option value="per_night">Per Night</option>
-        </select>
-
-        <label for="rateDescription">Description</label>
-        <textarea
-          id="rateDescription"
-          name="rateDescription"
-          rows="3"
-          placeholder="Short description of this service..."
-        ></textarea>
-
-        <div class="modal-actions">
-          <button
-            type="button"
-            id="saveRateBtn"
-            class="btn-primary"
-          >
-            Save Changes
-          </button>
-          <button
-            type="button"
-            class="btn-danger"
-            onclick="closeModal('rateModal')"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+  <!-- Add/Edit Rate Modal -->
+  <div id="rateModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Add New Rate</h3>
+        <button class="close-btn" onclick="closeModal('rateModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addRateForm">
+          <label for="serviceType">Service Type</label>
+          <input type="text" id="serviceType" name="serviceType" placeholder="e.g., Overnight Stay, Day Visits" required />
+          <label for="ratePerUnit">Rate Per Unit</label>
+          <input type="number" id="ratePerUnit" name="ratePerUnit" placeholder="e.g., 45" step="0.01" required />
+          <label for="unitType">Unit Type</label>
+          <select id="unitType" name="unitType" required>
+            <option value="per_visit">Per Visit</option>
+            <option value="per_day">Per Day</option>
+            <option value="per_night">Per Night</option>
+          </select>
+          <label for="rateDescription">Description</label>
+          <textarea id="rateDescription" name="rateDescription" rows="3" placeholder="Short description of this service..."></textarea>
+          <div class="modal-actions">
+            <button type="button" id="saveRateBtn" class="btn-primary">Save Changes</button>
+            <button type="button" class="btn-danger" onclick="closeModal('rateModal')">Cancel</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ============================================================
-     Lightbox (Image Zoom / Carousel)
-     ============================================================ -->
-<div id="lightbox" class="lightbox">
-  <span id="lightboxPrev" class="lightbox-prev">&#10094;</span>
-  <img id="lightboxImg" src="" alt="Preview" />
-  <span id="lightboxNext" class="lightbox-next">&#10095;</span>
-</div>  
-  
+  <!-- Lightbox (Image Zoom / Carousel) -->
+  <div id="lightbox" class="lightbox">
+    <span id="lightboxPrev" class="lightbox-prev">&#10094;</span>
+    <img id="lightboxImg" src="" alt="Preview" />
+    <span id="lightboxNext" class="lightbox-next">&#10095;</span>
+  </div>
 </body>
 </html>
