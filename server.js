@@ -27,18 +27,14 @@ const s3 = new S3Client({ region: process.env.AWS_REGION });
 // Middleware
 // ----------------------
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("public/uploads"));
 
 // ----------------------
-// Multer for local uploads (temporary)
+// Multer (in-memory storage for S3 uploads)
 // ----------------------
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "public/uploads/"),
-  filename: (req, file, cb) =>
-    cb(null, Date.now() + "_" + file.originalname),
-});
-const upload = multer({ storage });
+const upload = multer({ storage: multer.memoryStorage() });
 
 // ----------------------
 // Health check + root
@@ -136,6 +132,9 @@ app.get("/api/pets/:id", async (req, res) => {
 // ===============================
 app.post("/api/pets", upload.array("images"), async (req, res) => {
   try {
+    console.log("🐾 New pet request received");
+    console.log("Fields:", req.body);
+    console.log("Files:", req.files?.map(f => f.originalname));
     const { pet_name, story_description, is_dorothy_pet } = req.body;
 
     // Insert pet record first
@@ -150,14 +149,14 @@ app.post("/api/pets", upload.array("images"), async (req, res) => {
 
     // Handle image uploads if provided
     for (const file of req.files || []) {
-      const fileStream = fs.createReadStream(file.path);
+      const fileStream = file.buffer;
       const key = `pets/${Date.now()}_${file.originalname}`;
 
       await s3.send(
         new PutObjectCommand({
           Bucket: process.env.S3_BUCKET_NAME,
           Key: key,
-          Body: fileStream,
+          Body: file.buffer,
           ContentType: file.mimetype,
         })
       );
@@ -169,7 +168,7 @@ app.post("/api/pets", upload.array("images"), async (req, res) => {
         [petId, publicUrl, key, 0]
       );
 
-      fs.unlinkSync(file.path);
+      
     }
 
     res.json({ success: true, petId });
@@ -197,7 +196,7 @@ app.put("/api/pets/:id", upload.array("images"), async (req, res) => {
 
     // Handle new image uploads (optional)
     for (const file of req.files || []) {
-      const fileStream = fs.createReadStream(file.path);
+      const fileStream = file.buffer;
       const key = `pets/${Date.now()}_${file.originalname}`;
       await s3.send(
         new PutObjectCommand({
@@ -215,7 +214,7 @@ app.put("/api/pets/:id", upload.array("images"), async (req, res) => {
         [id, publicUrl, key, 0]
       );
 
-      fs.unlinkSync(file.path);
+      
     }
 
     res.json({ success: true });
@@ -577,6 +576,12 @@ app.delete("/api/rates/:id", async (req, res) => {
 // Start Server
 // ----------------------
 const PORT = process.env.PORT || 8080;
+process.on("uncaughtException", (err) => {
+  console.error("💥 Uncaught Exception:", err);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("💥 Unhandled Rejection:", reason);
+});
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`🪣 S3 Bucket: ${process.env.S3_BUCKET_NAME}`);
