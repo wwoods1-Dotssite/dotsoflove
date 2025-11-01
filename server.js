@@ -346,8 +346,11 @@ app.put("/api/pets/:petId/images/reorder", async (req, res) => {
 });
 
 // ===============================
-// CONTACT FORM SUBMISSION
+// CONTACT FORM SUBMISSION (with SendGrid email + Thank You to sender)
 // ===============================
+import sgMail from "@sendgrid/mail"; // If using CommonJS: const sgMail = require("@sendgrid/mail");
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 app.post("/api/contact", async (req, res) => {
   try {
     const {
@@ -368,7 +371,7 @@ app.post("/api/contact", async (req, res) => {
         .json({ success: false, message: "Missing required fields" });
     }
 
-    // Insert into DB
+    // Save submission in DB
     await pool.query(
       `INSERT INTO contacts (name, email, phone, best_time, service, start_date, end_date, pet_info, message, contacted, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, NOW())`,
@@ -385,16 +388,66 @@ app.post("/api/contact", async (req, res) => {
       ]
     );
 
-    console.log("📨 New contact form submission from:", name);
+    // === Format email details ===
+    const formattedDates =
+      start_date && end_date ? `${start_date} → ${end_date}` : "Not specified";
+
+    // === Admin notification email ===
+    const adminMsg = {
+      to: ["wwoods1@gmail.com", "dotty.j.woods@gmail.com"],
+      from: "no-reply@dotsoflovepetsitting.com",
+      subject: `🐾 New Contact Request from ${name}`,
+      html: `
+        <h2>New Contact Request</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone || "N/A"}</p>
+        <p><strong>Best Time:</strong> ${best_time || "N/A"}</p>
+        <p><strong>Service:</strong> ${service}</p>
+        <p><strong>Dates:</strong> ${formattedDates}</p>
+        <p><strong>Pet Info:</strong> ${pet_info || "N/A"}</p>
+        <p><strong>Message:</strong> ${message || "N/A"}</p>
+        <br/>
+        <p style="font-style: italic; color: #666;">This message was automatically sent by Dots of Love Pet Sitting 🐾</p>
+      `,
+    };
+
+    // === Thank-you email for sender ===
+    const thankYouMsg = {
+      to: email,
+      from: "no-reply@dotsoflovepetsitting.com",
+      subject: "Thanks for contacting Dot’s of Love Pet Sitting!",
+      html: `
+        <p>Hi ${name},</p>
+        <p>Thank you for reaching out! We’ve received your request and will get back to you soon.</p>
+        <p style="font-style: italic;">🐾 Dot & Team</p>
+      `,
+    };
+
+    // === Send both emails safely ===
+    try {
+      await Promise.all([
+        sgMail.sendMultiple(adminMsg),
+        sgMail.send(thankYouMsg),
+      ]);
+      console.log(`📧 Emails sent successfully for contact: ${name}`);
+    } catch (emailErr) {
+      console.error(
+        "⚠️ SendGrid email failed:",
+        emailErr.response?.body?.errors || emailErr
+      );
+    }
+
+    console.log("📨 New contact form submission saved and emailed:", name);
     res.json({ success: true });
   } catch (err) {
     console.error("❌ Error saving contact form:", err);
-    res
-      .status(500)
-      .json({ success: false, message: "Server error submitting contact form" });
+    res.status(500).json({
+      success: false,
+      message: "Server error submitting contact form",
+    });
   }
 });
-
 // ----------------------
 // Contacts (Admin Enhancements)
 // ----------------------
