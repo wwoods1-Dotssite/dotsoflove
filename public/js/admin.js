@@ -23,6 +23,42 @@ async function fetchJSON(url, options = {}) {
   return res.json();
 }
 
+// =============================
+// Admin Login
+// =============================
+document
+  .getElementById("adminLoginForm")
+  .addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const username = document.getElementById("adminUsername").value.trim();
+    const password = document.getElementById("adminPassword").value.trim();
+    const statusDiv = document.getElementById("adminLoginStatus");
+
+    statusDiv.textContent = "Logging in...";
+
+    try {
+      const response = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        localStorage.setItem("adminToken", data.token);
+        document.getElementById("adminLogin").style.display = "none";
+        document.getElementById("admin").style.display = "block";
+      } else {
+        statusDiv.textContent = "Invalid credentials";
+      }
+    } catch (err) {
+      console.error("Login failed:", err);
+      statusDiv.textContent = "Server error — please try again later.";
+    }
+  });
+
 // -------------------- PET MANAGEMENT --------------------
 async function loadPets() {
   try {
