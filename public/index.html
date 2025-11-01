@@ -225,6 +225,31 @@
         </div>
       </div>
     </section>
+  </main>
+
+  <footer>
+    <p>© <span id="year"></span> Dot’s of Love Pet Sitting. All rights reserved.</p>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const adminToken = localStorage.getItem("adminToken");
+      const adminSection = document.getElementById("admin");
+      const loginSection = document.getElementById("adminLogin");
+
+      if (!adminToken) {
+        if (adminSection) adminSection.style.display = "none";
+        if (loginSection) loginSection.style.display = "block";
+      } else {
+        if (loginSection) loginSection.style.display = "none";
+        if (adminSection) adminSection.style.display = "block";
+      }
+    });
+  </script>
 
 <!-- Add/Edit Pet Modal -->
 <div id="petModal" class="modal">
@@ -279,34 +304,7 @@
     </form>
   </div>
 </div>
-    
-  </main>
-
-  <footer>
-    <p>© <span id="year"></span> Dot’s of Love Pet Sitting. All rights reserved.</p>
-  </footer>
-
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const adminToken = localStorage.getItem("adminToken");
-      const adminSection = document.getElementById("admin");
-      const loginSection = document.getElementById("adminLogin");
-
-      if (!adminToken) {
-        if (adminSection) adminSection.style.display = "none";
-        if (loginSection) loginSection.style.display = "block";
-      } else {
-        if (loginSection) loginSection.style.display = "none";
-        if (adminSection) adminSection.style.display = "block";
-      }
-    });
-  </script>
-
-
+  
   <!-- Lightbox (Image Zoom / Carousel) -->
   <div id="lightbox" class="lightbox">
     <span id="lightboxPrev" class="lightbox-prev">&#10094;</span>
