@@ -367,6 +367,37 @@
   background: rgba(255,0,0,0.8);
 }
 
+/* ---------- Placeholder for Pets with No Images ---------- */
+.no-image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  color: #c9b6ff;
+  font-size: 1.4rem;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.no-image-placeholder:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #b794f6;
+}
+
+.placeholder-icon {
+  font-size: 2rem;
+  margin-bottom: 0.3rem;
+}
+
+.placeholder-text {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
 /* ---------------------------------
    RATES CARD
 ---------------------------------- */
