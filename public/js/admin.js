@@ -725,6 +725,19 @@
     }
   }
 
+// Close modal when clicking cancel button
+document.querySelectorAll("[data-close]").forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    const modalId = e.target.getAttribute("data-close");
+    const modalEl = document.getElementById(modalId);
+    if (modalEl) {
+      console.log("🪟 Closing modal via cancel button:", modalId);
+      modalEl.classList.remove("show");
+      modalEl.classList.add("hidden");
+    }
+  });
+});
+  
   // ---------------------------
   // CONTACTS
   // ---------------------------
