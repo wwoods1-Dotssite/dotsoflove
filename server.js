@@ -103,7 +103,7 @@ app.post("/api/pets", async (req, res) => {
 app.get("/api/pets/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const petQuery = await pool.query("SELECT * FROM pets WHERE id = $1", [id]);
+    const petQuery = await pool.query("SELECT * FROM gallery_pets WHERE id = $1", [id]);
     if (petQuery.rows.length === 0) {
       return res.status(404).json({ success: false, message: "Pet not found" });
     }
