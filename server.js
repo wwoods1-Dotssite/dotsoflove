@@ -170,18 +170,23 @@ app.post("/api/pets", upload.array("images"), async (req, res) => {
   }
 });
 
-// Update pet
+// ===============================
+// UPDATE PET (fix for field name mismatch + S3 upload)
+// ===============================
 app.put("/api/pets/:id", upload.array("images"), async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, story, is_dorothy } = req.body;
+    const { pet_name, story_description, is_dorothy_pet } = req.body;
 
+    // Update main record
     await pool.query(
-      "UPDATE gallery_pets SET name = $1, story = $2, is_dorothy = $3 WHERE id = $4",
-      [name, story, is_dorothy === "true", id]
+      `UPDATE gallery_pets 
+       SET pet_name = $1, story_description = $2, is_dorothy_pet = $3, updated_at = NOW()
+       WHERE id = $4`,
+      [pet_name, story_description, is_dorothy_pet === "true", id]
     );
 
-    // Optional: handle new uploaded images
+    // Handle new image uploads (optional)
     for (const file of req.files || []) {
       const fileStream = fs.createReadStream(file.path);
       const key = `pets/${Date.now()}_${file.originalname}`;
@@ -193,21 +198,23 @@ app.put("/api/pets/:id", upload.array("images"), async (req, res) => {
           ContentType: file.mimetype,
         })
       );
+
       const publicUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+
       await pool.query(
         "INSERT INTO pet_images (pet_id, image_url, s3_key, display_order) VALUES ($1, $2, $3, $4)",
         [id, publicUrl, key, 0]
       );
+
       fs.unlinkSync(file.path);
     }
 
     res.json({ success: true });
   } catch (err) {
     console.error("❌ Error updating pet:", err);
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, message: "Server error updating pet" });
   }
 });
-
 // Delete pet
 app.delete("/api/pets/:id", async (req, res) => {
   try {
