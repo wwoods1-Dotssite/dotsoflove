@@ -1,395 +1,301 @@
-// ===================================================
-//  admin.js — Dots of Love Admin Dashboard (CommonJS)
-// ===================================================
+/* ============================================================
+   Admin Dashboard Script (CommonJS Safe)
+   ============================================================ */
 
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("⚙️ Admin Dashboard initialized");
+console.log("⚙️ Admin dashboard initialized");
 
-  // ------------------------------
-  // DOM ELEMENTS
-  // ------------------------------
-  const loginForm = document.getElementById("adminLoginForm");
-  const loginSection = document.getElementById("adminLogin");
-  const adminSection = document.getElementById("admin");
-  const statusMsg = document.getElementById("adminLoginStatus");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const tabButtons = document.querySelectorAll(".tab-btn");
-  const tabs = document.querySelectorAll(".admin-tab");
+// -------------------- GLOBAL HELPERS --------------------
+function openModal(modalId, title = "") {
+  const modal = document.getElementById(modalId);
+  if (title) modal.querySelector(".modal-title").textContent = title;
+  modal.classList.add("active");
+}
 
-  // ------------------------------
-  // HELPER FUNCTIONS
-  // ------------------------------
-  const adminFetch = async (url, options = {}) => {
-    const token = localStorage.getItem("adminToken");
-    return fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...(options.headers || {}),
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  };
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  modal.classList.remove("active");
+}
 
-  const showSection = (section) => {
-    tabs.forEach((t) => t.classList.remove("active"));
-    document.getElementById(`tab-${section}`).classList.add("active");
-    tabButtons.forEach((b) => b.classList.remove("active"));
-    document.querySelector(`[data-tab="${section}"]`).classList.add("active");
-  };
+// Generic fetch helper
+async function fetchJSON(url, options = {}) {
+  const res = await fetch(url, options);
+  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+  return res.json();
+}
 
-  // ------------------------------
-  // LOGIN HANDLER
-  // ------------------------------
-  const initLogin = () => {
-    if (!loginForm) return;
+// -------------------- PET MANAGEMENT --------------------
+async function loadPets() {
+  try {
+    const pets = await fetchJSON("/api/pets");
+    const petList = document.getElementById("petList");
+    petList.innerHTML = "";
 
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const username = document.getElementById("adminUsername").value.trim();
-      const password = document.getElementById("adminPassword").value.trim();
-      statusMsg.textContent = "Authenticating...";
+    pets.forEach((pet) => {
+      const card = document.createElement("div");
+      card.classList.add("pet-card");
+      card.dataset.id = pet.id;
 
-      try {
-        const res = await fetch("/api/admin/auth", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password }),
-        });
-
-        const data = await res.json();
-
-        if (res.ok && data.success) {
-          console.log("✅ Admin authenticated");
-          localStorage.setItem("adminToken", data.token);
-          loginSection.style.display = "none";
-          adminSection.style.display = "block";
-          statusMsg.textContent = "";
-
-          // initialize dashboard
-          loadPets();
-          loadRates();
-          loadContacts();
-        } else {
-          statusMsg.textContent = "❌ Invalid credentials";
-        }
-      } catch (err) {
-        console.error("❌ Login error:", err);
-        statusMsg.textContent = "Server error. Try again later.";
-      }
-    });
-  };
-
-  // ------------------------------
-  // LOGOUT HANDLER
-  // ------------------------------
-  const initLogout = () => {
-    if (!logoutBtn) return;
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("adminToken");
-      adminSection.style.display = "none";
-      loginSection.style.display = "block";
-    });
-  };
-
-  // ------------------------------
-  // PETS CRUD
-  // ------------------------------
-  async function loadPets() {
-    try {
-      const res = await adminFetch("/api/pets");
-      const pets = await res.json();
-      const list = document.getElementById("petList");
-      list.innerHTML = "";
-
-      pets.forEach((pet) => {
-        const card = document.createElement("div");
-        card.className = "admin-card";
-        card.innerHTML = `
-          <h4>${pet.pet_name}</h4>
-          <p>${pet.story_description || ""}</p>
-          <p><strong>Dorothy’s Pet:</strong> ${pet.is_dorothy_pet ? "Yes" : "No"}</p>
-          ${
-            pet.images && pet.images.length
-              ? `<div class="admin-image-grid">
-                  ${pet.images
-                    .map(
-                      (img) => `
-                    <div class="img-wrap">
-                      <img src="${img.image_url}" alt="Pet Image">
-                      <button class="btn-danger small delete-image" data-id="${img.id}">🗑</button>
-                    </div>`
-                    )
-                    .join("")}
-                </div>`
-              : "<p>No images</p>"
-          }
-          <div class="admin-btn-row">
-            <button class="btn-primary edit-pet" data-id="${pet.id}">✏️ Edit</button>
-            <button class="btn-danger delete-pet" data-id="${pet.id}">🗑 Delete</button>
+      const imagesHTML = (pet.images || [])
+        .map(
+          (img) => `
+          <div class="img-wrap" data-pet-id="${pet.id}">
+            <img src="${img.image_url}" alt="${pet.pet_name}" class="pet-thumb" />
+            <button class="delete-image" data-id="${img.id}">🗑</button>
           </div>
-        `;
-        list.appendChild(card);
-      });
+        `
+        )
+        .join("");
 
-      // Delete Pet
-      document.querySelectorAll(".delete-pet").forEach((btn) => {
-        btn.addEventListener("click", async (e) => {
-          const id = e.target.dataset.id;
-          if (!confirm("Delete this pet and its images?")) return;
-          await adminFetch(`/api/pets/${id}`, { method: "DELETE" });
-          loadPets();
-        });
-      });
+      card.innerHTML = `
+        <h4 class="pet-name">${pet.pet_name}</h4>
+        <p class="pet-description">${pet.story_description || ""}</p>
+        <p class="pet-dorothy"><strong>Dorothy's Pet:</strong> ${
+          pet.is_dorothy_pet ? "Yes" : "No"
+        }</p>
+        <div class="admin-image-grid">${imagesHTML}</div>
+        <div class="pet-actions">
+          <button class="btn-primary edit-pet">✏️ Edit</button>
+          <button class="btn-danger delete-pet">Delete</button>
+        </div>
+      `;
 
-      // Delete Image
-      document.querySelectorAll(".delete-image").forEach((btn) => {
-        btn.addEventListener("click", async (e) => {
-          const id = e.target.dataset.id;
-          if (!confirm("Delete this image?")) return;
-          await adminFetch(`/api/pets/images/${id}`, { method: "DELETE" });
-          loadPets();
-        });
-      });
-
-      // Edit Pet
-      document.querySelectorAll(".edit-pet").forEach((btn) => {
-        btn.addEventListener("click", () => openPetModal(btn.dataset.id));
-      });
-    } catch (err) {
-      console.error("❌ Load pets failed:", err);
-    }
+      petList.appendChild(card);
+    });
+  } catch (err) {
+    console.error("❌ Error loading pets:", err);
+    document.getElementById("petList").innerHTML =
+      "<p>Error loading pets.</p>";
   }
+}
 
-  async function openPetModal(id) {
-    try {
-      const res = await adminFetch(`/api/pets/${id}`);
-      if (!res.ok) throw new Error("Pet not found");
-      const pet = await res.json();
+// Add or edit pet modal
+document.getElementById("addPetBtn")?.addEventListener("click", () => {
+  const modal = document.getElementById("petModal");
+  modal.dataset.editing = "";
+  modal.querySelector("#petName").value = "";
+  modal.querySelector("#petDescription").value = "";
+  modal.querySelector("#isDorothyPet").checked = false;
+  openModal("petModal", "Add New Pet");
+});
 
-      const name = prompt("Pet Name:", pet.pet_name || "");
-      const story = prompt("Story:", pet.story_description || "");
-      const dorothy = confirm("Is this Dorothy’s pet?");
-
-      const body = JSON.stringify({
-        name,
-        story,
-        is_dorothy: dorothy,
-      });
-
-      const update = await adminFetch(`/api/pets/${id}`, {
-        method: "PUT",
-        body,
-      });
-
-      if (update.ok) loadPets();
-    } catch (err) {
-      console.error("❌ Edit pet failed:", err);
-    }
-  }
-
-  // ------------------------------
-  // RATES CRUD
-  // ------------------------------
-  async function loadRates() {
-    try {
-      const res = await adminFetch("/api/rates");
-      const rates = await res.json();
-      const list = document.getElementById("rateList");
-      list.innerHTML = "";
-
-      rates.forEach((r) => {
-        const div = document.createElement("div");
-        div.className = "admin-card";
-        div.innerHTML = `
-          <h4>${r.service_type}</h4>
-          <p>${r.description || ""}</p>
-          <p><strong>$${r.rate_per_unit}</strong> ${r.unit_type}</p>
-          <div class="admin-btn-row">
-            <button class="btn-primary edit-rate" data-id="${r.id}">✏️ Edit</button>
-            <button class="btn-danger delete-rate" data-id="${r.id}">🗑 Delete</button>
-          </div>
-        `;
-        list.appendChild(div);
-      });
-
-      // Edit Rate
-      document.querySelectorAll(".edit-rate").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const id = btn.dataset.id;
-          const rate = rates.find((r) => r.id == id);
-          const type = prompt("Service Type:", rate.service_type);
-          const desc = prompt("Description:", rate.description || "");
-          const amt = prompt("Rate per unit:", rate.rate_per_unit);
-          const unit = prompt("Unit type:", rate.unit_type);
-          const featured = confirm("Is this Featured?");
-          await adminFetch(`/api/rates/${id}`, {
-            method: "PUT",
-            body: JSON.stringify({
-              service_type: type,
-              description: desc,
-              rate_per_unit: amt,
-              unit_type: unit,
-              featured,
-            }),
-          });
-          loadRates();
-        });
-      });
-
-      // Delete Rate
-      document.querySelectorAll(".delete-rate").forEach((btn) => {
-        btn.addEventListener("click", async (e) => {
-          const id = e.target.dataset.id;
-          if (!confirm("Delete this rate?")) return;
-          await adminFetch(`/api/rates/${id}`, { method: "DELETE" });
-          loadRates();
-        });
-      });
-    } catch (err) {
-      console.error("❌ Load rates failed:", err);
-    }
-  }
-
-  // ------------------------------
-  // CONTACT REQUESTS
-  // ------------------------------
-  async function loadContacts() {
-    try {
-      const res = await adminFetch("/api/contacts");
-      const contacts = await res.json();
-      const list = document.getElementById("contactList");
-      list.innerHTML = "";
-
-      contacts.forEach((c) => {
-        const div = document.createElement("div");
-        div.className = "admin-card";
-        div.innerHTML = `
-          <h4>${c.name}</h4>
-          <p><strong>Email:</strong> ${c.email}</p>
-          <p><strong>Phone:</strong> ${c.phone}</p>
-          <p><strong>Service:</strong> ${c.service}</p>
-          <p><strong>Dates:</strong> ${c.start_date || ""} → ${c.end_date || ""}</p>
-          <p><strong>Message:</strong> ${c.message || ""}</p>
-          <p><em>Created: ${new Date(c.created_at).toLocaleDateString()}</em></p>
-          <div class="admin-btn-row">
-            <button class="btn-success mark-contacted" data-id="${c.id}">✅ Mark Contacted</button>
-            <button class="btn-danger delete-contact" data-id="${c.id}">🗑 Delete</button>
-          </div>
-        `;
-        list.appendChild(div);
-      });
-
-      // Mark Contacted
-      document.querySelectorAll(".mark-contacted").forEach((btn) => {
-        btn.addEventListener("click", async (e) => {
-          const id = e.target.dataset.id;
-          await adminFetch(`/api/contacts/${id}/contacted`, { method: "PUT" });
-          loadContacts();
-        });
-      });
-
-      // Delete Contact
-      document.querySelectorAll(".delete-contact").forEach((btn) => {
-        btn.addEventListener("click", async (e) => {
-          const id = e.target.dataset.id;
-          if (!confirm("Delete this contact?")) return;
-          await adminFetch(`/api/contacts/${id}`, { method: "DELETE" });
-          loadContacts();
-        });
-      });
-    } catch (err) {
-      console.error("❌ Load contacts failed:", err);
-    }
-  }
-
-  // ------------------------------
-  // INITIALIZATION
-  // ------------------------------
-  const token = localStorage.getItem("adminToken");
-  if (token) {
-    loginSection.style.display = "none";
-    adminSection.style.display = "block";
-    loadPets();
-    loadRates();
-    loadContacts();
-  } else {
-    adminSection.style.display = "none";
-    loginSection.style.display = "block";
-  }
-
-  initLogin();
-  initLogout();
-
-  // Default tab
-  if (document.querySelector('[data-tab="pets"]')) {
-    document.querySelector('[data-tab="pets"]').click();
-  }
-
-// ------------------------------
-// LIGHTBOX CAROUSEL FOR PET IMAGES
-// ------------------------------
-let currentImageIndex = 0;
-let currentImages = [];
-
-const lightbox = document.getElementById("adminLightbox");
-const lightboxImg = document.getElementById("lightboxImage");
-const lightboxPrev = document.getElementById("lightboxPrev");
-const lightboxNext = document.getElementById("lightboxNext");
-const lightboxClose = document.getElementById("lightboxClose");
-
-// Open lightbox on image click
+// Edit existing pet
 document.addEventListener("click", (e) => {
-  if (e.target.closest(".admin-image-grid img")) {
-    const imgElements = Array.from(
-      e.target.closest(".admin-image-grid").querySelectorAll("img")
-    );
-    currentImages = imgElements.map((img) => img.src);
-    currentImageIndex = imgElements.indexOf(e.target);
-    openLightbox(currentImages[currentImageIndex]);
+  if (e.target.classList.contains("edit-pet")) {
+    const card = e.target.closest(".pet-card");
+    const id = card.dataset.id;
+    const name = card.querySelector(".pet-name").textContent;
+    const desc = card.querySelector(".pet-description").textContent;
+    const isDorothy = card.querySelector(".pet-dorothy").textContent.includes("Yes");
+
+    const modal = document.getElementById("petModal");
+    modal.dataset.editing = id;
+    modal.querySelector("#petName").value = name;
+    modal.querySelector("#petDescription").value = desc;
+    modal.querySelector("#isDorothyPet").checked = isDorothy;
+    openModal("petModal", `Edit Pet: ${name}`);
   }
 });
 
-function openLightbox(src) {
-  lightbox.classList.remove("hidden");
-  lightboxImg.src = src;
-}
+// Save pet (add/edit)
+document.getElementById("savePetBtn")?.addEventListener("click", async () => {
+  const modal = document.getElementById("petModal");
+  const id = modal.dataset.editing;
+  const payload = {
+    pet_name: modal.querySelector("#petName").value,
+    story_description: modal.querySelector("#petDescription").value,
+    is_dorothy_pet: modal.querySelector("#isDorothyPet").checked,
+  };
 
-// Close lightbox
-function closeLightbox() {
-  lightbox.classList.add("hidden");
-  lightboxImg.src = "";
-  currentImages = [];
-  currentImageIndex = 0;
-}
+  const method = id ? "PUT" : "POST";
+  const url = id ? `/api/pets/${id}` : "/api/pets";
 
-if (lightboxClose) lightboxClose.addEventListener("click", closeLightbox);
-if (lightbox) lightbox.addEventListener("click", (e) => {
-  if (e.target === lightbox) closeLightbox();
+  try {
+    await fetchJSON(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    closeModal("petModal");
+    loadPets();
+  } catch (err) {
+    console.error("❌ Save pet failed:", err);
+  }
 });
 
-// Navigate previous / next
-function showPrevImage() {
-  if (currentImages.length === 0) return;
-  currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
-  lightboxImg.src = currentImages[currentImageIndex];
-}
-
-function showNextImage() {
-  if (currentImages.length === 0) return;
-  currentImageIndex = (currentImageIndex + 1) % currentImages.length;
-  lightboxImg.src = currentImages[currentImageIndex];
-}
-
-if (lightboxPrev) lightboxPrev.addEventListener("click", showPrevImage);
-if (lightboxNext) lightboxNext.addEventListener("click", showNextImage);
-
-// Keyboard navigation
-document.addEventListener("keydown", (e) => {
-  if (lightbox.classList.contains("hidden")) return;
-  if (e.key === "ArrowLeft") showPrevImage();
-  if (e.key === "ArrowRight") showNextImage();
-  if (e.key === "Escape") closeLightbox();
+// Delete pet
+document.addEventListener("click", async (e) => {
+  if (e.target.classList.contains("delete-pet")) {
+    const id = e.target.closest(".pet-card").dataset.id;
+    if (!confirm("Are you sure you want to delete this pet?")) return;
+    try {
+      await fetch(`/api/pets/${id}`, { method: "DELETE" });
+      loadPets();
+    } catch (err) {
+      console.error("❌ Delete pet failed:", err);
+    }
+  }
 });
-  
+
+// Delete single image
+document.addEventListener("click", async (e) => {
+  if (e.target.classList.contains("delete-image")) {
+    const id = e.target.dataset.id;
+    if (!confirm("Delete this image?")) return;
+    try {
+      await fetch(`/api/pet_images/${id}`, { method: "DELETE" });
+      loadPets();
+    } catch (err) {
+      console.error("❌ Delete image failed:", err);
+    }
+  }
+});
+
+// -------------------- RATES MANAGEMENT --------------------
+async function loadRates() {
+  try {
+    const rates = await fetchJSON("/api/rates");
+    const rateList = document.getElementById("rateList");
+    rateList.innerHTML = "";
+
+    rates.forEach((rate) => {
+      const card = document.createElement("div");
+      card.classList.add("rate-card");
+      card.dataset.id = rate.id;
+
+      card.innerHTML = `
+        <h4 class="service-type">${rate.service_type}</h4>
+        <p class="rate-description">${rate.description || ""}</p>
+        <p><strong>Rate:</strong> $${rate.rate_per_unit} per ${rate.unit_type}</p>
+        <div class="rate-actions">
+          <button class="btn-primary edit-rate">✏️ Edit</button>
+          <button class="btn-danger delete-rate">Delete</button>
+        </div>
+      `;
+      rateList.appendChild(card);
+    });
+  } catch (err) {
+    console.error("❌ Error loading rates:", err);
+  }
+}
+
+// Add or edit rate modal
+document.getElementById("addRateBtn")?.addEventListener("click", () => {
+  const modal = document.getElementById("rateModal");
+  modal.dataset.editing = "";
+  modal.querySelector("#serviceType").value = "";
+  modal.querySelector("#ratePerUnit").value = "";
+  modal.querySelector("#unitType").value = "";
+  modal.querySelector("#rateDescription").value = "";
+  openModal("rateModal", "Add New Rate");
+});
+
+// Edit existing rate
+document.addEventListener("click", (e) => {
+  if (e.target.classList.contains("edit-rate")) {
+    const card = e.target.closest(".rate-card");
+    const id = card.dataset.id;
+    const modal = document.getElementById("rateModal");
+
+    modal.dataset.editing = id;
+    modal.querySelector("#serviceType").value =
+      card.querySelector(".service-type").textContent;
+    modal.querySelector("#ratePerUnit").value = parseFloat(
+      card.querySelector(".rate-description").textContent
+    );
+    modal.querySelector("#unitType").value =
+      card.querySelector(".unit-type")?.textContent || "visit";
+    modal.querySelector("#rateDescription").value =
+      card.querySelector(".rate-description").textContent;
+
+    openModal("rateModal", `Edit Rate: ${card.querySelector(".service-type").textContent}`);
+  }
+});
+
+// Save rate
+document.getElementById("saveRateBtn")?.addEventListener("click", async () => {
+  const modal = document.getElementById("rateModal");
+  const id = modal.dataset.editing;
+  const payload = {
+    service_type: modal.querySelector("#serviceType").value,
+    rate_per_unit: modal.querySelector("#ratePerUnit").value,
+    unit_type: modal.querySelector("#unitType").value,
+    description: modal.querySelector("#rateDescription").value,
+  };
+
+  const method = id ? "PUT" : "POST";
+  const url = id ? `/api/rates/${id}` : "/api/rates";
+
+  try {
+    await fetchJSON(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    closeModal("rateModal");
+    loadRates();
+  } catch (err) {
+    console.error("❌ Save rate failed:", err);
+  }
+});
+
+// Delete rate
+document.addEventListener("click", async (e) => {
+  if (e.target.classList.contains("delete-rate")) {
+    const id = e.target.closest(".rate-card").dataset.id;
+    if (!confirm("Delete this rate?")) return;
+    try {
+      await fetch(`/api/rates/${id}`, { method: "DELETE" });
+      loadRates();
+    } catch (err) {
+      console.error("❌ Delete rate failed:", err);
+    }
+  }
+});
+
+// -------------------- CONTACT MANAGEMENT --------------------
+async function loadContacts() {
+  try {
+    const contacts = await fetchJSON("/api/contacts");
+    const contactList = document.getElementById("contactList");
+    contactList.innerHTML = "";
+
+    contacts.forEach((c) => {
+      const card = document.createElement("div");
+      card.classList.add("contact-card");
+      card.dataset.id = c.id;
+
+      card.innerHTML = `
+        <p><strong>${c.name}</strong> (${c.email})</p>
+        <p><strong>Phone:</strong> ${c.phone || ""}</p>
+        <p><strong>Service:</strong> ${c.service || ""}</p>
+        <p><strong>Dates:</strong> ${c.dates || ""}</p>
+        <p><strong>Message:</strong> ${c.message || ""}</p>
+        <p><strong>Submitted:</strong> ${new Date(c.created_at).toLocaleDateString()}</p>
+        <button class="btn-primary mark-contacted">Mark Contacted</button>
+      `;
+      contactList.appendChild(card);
+    });
+  } catch (err) {
+    console.error("❌ Error loading contacts:", err);
+  }
+}
+
+// Mark contact as contacted
+document.addEventListener("click", async (e) => {
+  if (e.target.classList.contains("mark-contacted")) {
+    const id = e.target.closest(".contact-card").dataset.id;
+    try {
+      await fetch(`/api/contacts/${id}/contacted`, { method: "PUT" });
+      loadContacts();
+    } catch (err) {
+      console.error("❌ Update contact failed:", err);
+    }
+  }
+});
+
+// -------------------- INIT --------------------
+document.addEventListener("DOMContentLoaded", () => {
+  loadPets();
+  loadRates();
+  loadContacts();
 });
