@@ -1,497 +1,595 @@
-/* =========================================================
-   Admin Console Styles (purple aesthetic + modals + carousel)
-   ========================================================= */
+/* 
+ * DotsofLove Admin Styles - Final
+ * Goals:
+ *  - Deep purple admin aesthetic (distinct from public pages)
+ *  - Uniform thumbnails for pet images
+ *  - Clean card layout for Pets, Rates, Contacts
+ *  - Instant pop-in modals that visually feel intentional
+ *  - Styled tab bar
+ *
+ * Assumes your HTML structure from index.html:
+ *  #adminLogin.page-section
+ *  #admin.page-section
+ *  .admin-tabs .tab-btn
+ *  #tab-pets / #tab-rates / #tab-contacts
+ *  #petModal, #rateModal with .modal-content
+ */
 
-/* Soft purple gradient background for admin dashboard sections */
-.admin-section-surface {
-  background: radial-gradient(
-    circle at 20% 20%,
-    rgba(116, 88, 220, 0.12) 0%,
-    rgba(93, 74, 189, 0.08) 40%,
-    rgba(50, 38, 120, 0.05) 70%
-  );
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(41, 24, 97, 0.2);
+/* ---------- Admin section background ---------- */
+#admin.page-section {
+  background: radial-gradient(circle at 20% 20%, #3a247b 0%, #1a103a 80%);
+  border-radius: 16px;
   padding: 1.5rem;
-  margin-bottom: 2rem;
-  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  margin-top: 2rem;
 }
 
-/* Section headings inside admin */
-.admin-section-surface h2,
-.admin-section-surface h3 {
-  text-align: center;
-  color: #2e2166;
+/* Make sure login card stays readable on white/main page */
+#adminLogin .admin-login-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  max-width: 400px;
+  margin: 0 auto;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  border: 1px solid rgba(106,90,205,0.2);
+}
+#adminLogin h2 {
+  margin-top: 0;
+  color: #4b3aff;
+  font-size: 1.25rem;
   font-weight: 600;
+}
+#adminLogin .form-group {
+  margin-bottom: 0.75rem;
+}
+#adminLogin label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #4a4a4a;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+#adminLogin input[type="text"],
+#adminLogin input[type="password"] {
+  width: 100%;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+#adminLogin .btn-primary {
+  width: 100%;
+  background: linear-gradient(90deg,#6a5acd,#8a6bff);
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(106,90,205,0.4);
+}
+#adminLogin .btn-primary:hover {
+  filter: brightness(1.05);
+}
+#adminLogin .form-status {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  min-height: 1em;
+}
+
+/* ---------- Dashboard header ---------- */
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
   margin-bottom: 1rem;
 }
 
-/* Tabs row */
-#adminTabs {
+.admin-header h2 {
+  color: #fff;
+  font-size: 1.2rem;
+  margin: 0 0 .5rem 0;
+  font-weight: 600;
+}
+
+#logoutBtn.btn-danger {
+  background: #ff4d5a;
+  color: #fff;
+  border: none;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(255,77,90,.4);
+}
+#logoutBtn.btn-danger:hover {
+  filter: brightness(1.05);
+}
+
+/* ---------- Tab bar ---------- */
+
+.admin-tabs {
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.admin-tabs .tab-btn {
+  background: #2a1d58;
+  border: 1px solid #5d4acf;
+  color: #fff;
+  font-size: 0.9rem;
+  line-height: 1.2rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+  transition: all 0.15s ease;
+}
+.admin-tabs .tab-btn.active {
+  background: #7c5cff;
+  color: #fff;
+  border-color: #7c5cff;
+  box-shadow: 0 10px 24px rgba(124,92,255,0.45);
+}
+.admin-tabs .tab-btn:hover {
+  filter: brightness(1.08);
+}
+
+/* Hide inactive panes by JS using style.display, but ensure base look */
+.admin-content .admin-tab {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 16px 32px rgba(0,0,0,0.4);
+  color: #fff;
+}
+
+/* Section headings inside tabs */
+.admin-tab h3 {
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+/* "Add New Pet" / "Add New Rate" buttons */
+#addPetBtn.btn-primary,
+#addRateBtn.btn-primary {
+  background: linear-gradient(90deg,#6a5acd,#8a6bff);
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 1rem;
+  box-shadow: 0 8px 24px rgba(106,90,205,0.4);
+}
+#addPetBtn.btn-primary:hover,
+#addRateBtn.btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+/* ---------- Card layout (Pets / Rates / Contacts) ---------- */
+
+.admin-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.admin-card {
+  background: #fff;
+  border-radius: 12px;
+  color: #2c2c2c;
+  padding: 1rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  border: 1px solid rgba(124,92,255,0.15);
+}
+
+.pet-card-header,
+.rate-card-header,
+.contact-card-header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .5rem .75rem;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.pet-card-header h4,
+.rate-card-header h4,
+.contact-card-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a3aff;
+  display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: .5rem;
-  margin-bottom: 1rem;
 }
 
-.admin-tab-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  font-size: 0.9rem;
-  background: linear-gradient(to right, #6a5acd, #8a6bff);
+.dorothy-badge {
+  background: #ffd95a;
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  line-height: 1;
+}
+
+.featured-badge {
+  background: #6a5acd;
   color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  line-height: 1;
+  box-shadow: 0 6px 16px rgba(106,90,205,0.4);
+}
+
+.pet-card-actions,
+.rate-card-actions,
+.contact-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+}
+
+.btn-sm {
+  background: #6a5acd;
   border: none;
   border-radius: 8px;
-  padding: .5rem .75rem;
-  cursor: pointer;
-  line-height: 1.2;
-  box-shadow: 0 10px 20px rgba(72, 45, 182, 0.35);
-  transition: all .18s ease;
-}
-
-.admin-tab-btn:hover,
-.admin-tab-btn.active-admin-tab {
-  background: linear-gradient(to right, #7a6dff, #b18cff);
-  box-shadow: 0 16px 28px rgba(72,45,182,.45);
-}
-
-/* Logout button stays visible near tabs if you’re already logged in */
-#adminLogoutBtn {
-  background: #ff6b6b;
-  background: linear-gradient(to right,#ff6b6b,#ff3d62);
-  box-shadow: 0 12px 24px rgba(255,80,112,.4);
-}
-#adminLogoutBtn:hover {
-  background: linear-gradient(to right,#ff8491,#ff5677);
-  box-shadow: 0 16px 32px rgba(255,80,112,.55);
-}
-
-/* "Add New" buttons */
-.primary-action-btn {
-  display: inline-block;
-  background: linear-gradient(to right, #6a5acd, #8a6bff);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  padding: .6rem 1rem;
-  font-size: .95rem;
+  font-size: 0.8rem;
   font-weight: 600;
+  line-height: 1rem;
+  padding: 0.4rem 0.6rem;
+  color: #fff;
   cursor: pointer;
-  box-shadow: 0 16px 32px rgba(80, 45, 182, 0.4);
-  transition: all .16s ease;
-  margin: 1rem auto 1.5rem;
+  box-shadow: 0 6px 16px rgba(106,90,205,0.4);
 }
-.primary-action-btn:hover {
-  background: linear-gradient(to right,#7a6dff,#b18cff);
-  box-shadow: 0 20px 40px rgba(80,45,182,.55);
+.btn-sm:hover { filter: brightness(1.08); }
+
+.btn-sm.danger,
+.delete-pet-btn,
+.delete-rate-btn {
+  background: #ff4d5a;
+  box-shadow: 0 8px 20px rgba(255,77,90,.4);
+}
+.btn-sm.danger:hover,
+.delete-pet-btn:hover,
+.delete-rate-btn:hover {
+  filter: brightness(1.08);
 }
 
-/* Small red destructive buttons */
-.danger-btn {
-  background: linear-gradient(to right,#ff6b6b,#ff3d62);
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  padding:.5rem .8rem;
-  font-size:.8rem;
-  font-weight:600;
-  cursor:pointer;
-  box-shadow:0 12px 24px rgba(255,80,112,.4);
-  transition:all .16s ease;
-}
-.danger-btn:hover {
-  background:linear-gradient(to right,#ff8491,#ff5677);
-  box-shadow:0 16px 32px rgba(255,80,112,.55);
+/* Pet story block text */
+.pet-story {
+  color: #444;
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem 0;
+  white-space: pre-line;
 }
 
-/* Secondary small button (Edit) */
-.secondary-btn {
-  background:#fff;
-  border:1px solid rgba(106,90,205,.4);
-  color:#4b3ba5;
-  border-radius:8px;
-  padding:.5rem .8rem;
-  font-size:.8rem;
-  font-weight:600;
-  cursor:pointer;
-  box-shadow:0 6px 14px rgba(30,15,95,.15);
-  transition:all .14s ease;
-}
-.secondary-btn:hover {
-  background:rgba(122,109,255,.07);
-  border-color:#7a6dff;
-  box-shadow:0 10px 18px rgba(30,15,95,.22);
-  color:#2e2166;
+/* Tiny helper row under images */
+.hint-row {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 0.5rem;
 }
 
-/* Each Pet / Rate / Contact card */
-.admin-card {
-  background:#ffffff;
-  border-radius:12px;
-  box-shadow:0 20px 40px rgba(34,19,94,.16);
-  border:1px solid rgba(0,0,0,0.03);
-  padding:1rem 1rem 1.25rem;
-  margin-bottom:1.5rem;
-  text-align:center;
-  position:relative;
+/* ---------- Pet Images Strip w/ drag+drop ---------- */
+
+.pet-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-/* Card header text (pet name, rate title, etc) */
-.admin-card-title {
-  font-weight:600;
-  color:#2e2166;
-  font-size:1.05rem;
-  margin-bottom:.4rem;
+.img-box {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: grab;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  border: 2px solid rgba(124,92,255,0.4);
 }
-.admin-card-desc {
-  font-size:.9rem;
-  line-height:1.4;
-  color:#4a3f8e;
-  white-space:pre-line;
-  margin-bottom:.75rem;
+.img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .2s ease;
 }
-
-/* Row of buttons under each pet / rate */
-.admin-card-actions {
-  display:flex;
-  justify-content:center;
-  flex-wrap:wrap;
-  gap:.5rem;
+.img-box:hover img {
+  transform: scale(1.05);
 }
 
-
-/* ==========================
-   PET THUMBNAILS + GALLERY
-   ========================== */
-
-.pet-image-strip {
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:.75rem;
-  margin-bottom:1rem;
+.img-box.dragging {
+  opacity: 0.5;
+  border-style: dashed;
+  border-color: #6a5acd;
 }
 
-/* Thumbnail wrapper */
-.pet-thumb {
-  position:relative;
-  width:110px;
-  height:110px;
-  border-radius:10px;
-  overflow:hidden;
-  box-shadow:0 16px 32px rgba(34,19,94,.18);
-  background:#1b133f;
-  cursor:pointer;
-  flex-shrink:0;
-  transition:transform .18s ease, box-shadow .18s ease;
+.delete-image {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: none;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+  line-height: 24px;
+  text-align: center;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.6);
 }
-.pet-thumb:hover {
-  transform:scale(1.04);
-  box-shadow:0 20px 40px rgba(34,19,94,.28);
-}
-
-/* Actual image */
-.pet-thumb img {
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
+.delete-image:hover {
+  background: rgba(255,0,0,0.8);
 }
 
-/* little delete badge in top-right of thumb */
-.delete-thumb-btn {
-  position:absolute;
-  top:6px;
-  right:6px;
-  background:rgba(255,70,90,.9);
-  color:#fff;
-  border:none;
-  border-radius:6px;
-  font-size:.7rem;
-  line-height:1;
-  padding:.3rem .4rem;
-  box-shadow:0 10px 20px rgba(255,70,90,.5);
-  cursor:pointer;
+/* ---------- Rates card ---------- */
+
+.rate-body {
+  color: #444;
+  font-size: 0.9rem;
 }
-.delete-thumb-btn:hover {
-  background:rgba(255,70,90,1);
+.rate-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .5rem;
+  font-weight: 600;
+  color: #2a2a2a;
+}
+.rate-amount {
+  font-size: 1rem;
+  color: #4a3aff;
+}
+.rate-unit {
+  font-size: 0.8rem;
+  color: #666;
+}
+.rate-desc {
+  margin: 0.5rem 0 0.5rem 0;
+  line-height: 1.3rem;
+  color: #444;
+}
+.flag-active {
+  background: #4caf50;
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 600;
+  padding: .2rem .4rem;
+  border-radius: 6px;
+}
+.flag-inactive {
+  background: #ccc;
+  color: #000;
+  font-size: .7rem;
+  font-weight: 600;
+  padding: .2rem .4rem;
+  border-radius: 6px;
 }
 
-/* Dorothy’s pet "Yes" pill */
-.dorothy-pill {
-  font-size:.75rem;
-  font-weight:600;
-  color:#2e2166;
-  background:rgba(119,94,255,.12);
-  border:1px solid rgba(122,109,255,.4);
-  border-radius:999px;
-  padding:.35rem .6rem;
-  display:inline-block;
-  margin-bottom:.75rem;
+/* ---------- Contacts card ---------- */
+
+.contact-card-header {
+  width: 100%;
+}
+.contact-left {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+}
+.contact-left .contact-meta {
+  font-size: 0.8rem;
+  color: #666;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+.contact-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.8rem;
+  color: #444;
+}
+.contact-date {
+  margin-bottom: .5rem;
+  color: #4a3aff;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+.contact-body {
+  font-size: 0.9rem;
+  color: #444;
+  line-height: 1.3rem;
 }
 
+/* "Mark Contacted" button uses .btn-sm from above */
 
-/* ==========================
-   CONTACT CARDS
-   ========================== */
-.contact-details {
-  font-size:.9rem;
-  color:#2e2166;
-  text-align:left;
-  max-width:400px;
-  margin:0 auto 1rem;
-  line-height:1.4;
-}
-.contact-details .label {
-  font-weight:600;
-  color:#4b3ba5;
-  display:inline-block;
-  min-width:5.5rem;
-}
+/* ---------- Loading / empty / error states ---------- */
 
-/* Mark Contacted button */
-.mark-contacted-btn {
-  background:linear-gradient(to right,#6a5acd,#8a6bff);
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  padding:.5rem .8rem;
-  font-size:.8rem;
-  font-weight:600;
-  cursor:pointer;
-  box-shadow:0 12px 24px rgba(80,45,182,.4);
-  transition:all .16s ease;
+.loading-msg,
+.empty-msg,
+.error-msg {
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  color: #444;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.15);
+  border: 1px solid rgba(0,0,0,0.05);
 }
-.mark-contacted-btn:hover {
-  background:linear-gradient(to right,#7a6dff,#b18cff);
-  box-shadow:0 16px 32px rgba(80,45,182,.55);
+.error-msg {
+  border-color: rgba(255,0,0,0.2);
+  color: #c00;
+}
+.empty-msg {
+  border-color: rgba(124,92,255,0.2);
+  color: #4a3aff;
+  font-weight: 500;
 }
 
+/* ---------- Modals ---------- */
 
-/* ==========================
-   MODAL SYSTEM
-   ========================== */
-
-/* Dark scrim behind any modal OR carousel */
-.modal-overlay {
-  position:fixed;
-  inset:0;
-  background:rgba(15,8,32,.7);
-  backdrop-filter:blur(4px);
-  display:none;           /* JS adds .visible-modal */
-  align-items:center;
-  justify-content:center;
-  z-index:3000;
-  opacity:0;
-  transition:opacity .18s ease;
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(20,10,40,0.65);
+  display: none; /* hidden by default */
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
-
-/* container for modal card */
-.modal-card {
-  width:95%;
-  max-width:480px;
-  border-radius:16px;
-  background:radial-gradient(circle at 20% 20%,rgba(116,88,220,.18) 0%,rgba(93,74,189,.15) 40%,rgba(50,38,120,.12) 70%);
-  box-shadow:0 40px 80px rgba(15,8,32,.6);
-  border:1px solid rgba(255,255,255,.18);
-  padding:1rem 1.25rem 1.25rem;
-  color:#2e2166;
-  transform:scale(.95) translateY(10px);
-  opacity:0;
-  transition:all .18s ease;
+.modal.show {
+  display: flex;
+}
+.modal.hidden {
+  display: none;
 }
 
-/* Title row in modal */
-.modal-header {
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  margin-bottom:.75rem;
-}
-.modal-header h3 {
-  margin:0;
-  font-size:1.05rem;
-  font-weight:600;
-  color:#2e2166;
-}
-.modal-close-btn {
-  background:none;
-  border:none;
-  color:#2e2166;
-  font-size:1rem;
-  font-weight:600;
-  cursor:pointer;
-  line-height:1;
-  opacity:.7;
-}
-.modal-close-btn:hover {
-  opacity:1;
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  border: 1px solid rgba(124,92,255,0.25);
+  padding: 1rem 1.25rem 1rem 1.25rem;
+  position: relative;
 }
 
-/* Body content in modal */
-.modal-body {
-  display:flex;
-  flex-direction:column;
-  gap:.75rem;
+#petModalTitle,
+#rateModalTitle {
+  color: #4a3aff;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
 }
 
-/* Input groups */
-.form-field label {
-  font-size:.8rem;
-  font-weight:600;
-  color:#2e2166;
-  margin-bottom:.35rem;
-  display:block;
+.close-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 0.75rem;
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
 }
-.form-field input[type="text"],
-.form-field textarea,
-.form-field input[type="number"],
-.form-field select {
-  width:100%;
-  border-radius:8px;
-  border:1px solid rgba(106,90,205,.4);
-  background:#fff;
-  color:#2e2166;
-  font-size:.9rem;
-  padding:.6rem .65rem;
-  box-shadow:0 12px 24px rgba(30,15,95,.08);
-}
-.form-field textarea {
-  min-height:70px;
-  resize:vertical;
-}
-.form-inline-row {
-  display:flex;
-  align-items:center;
-  gap:.5rem;
-  flex-wrap:wrap;
-  font-size:.8rem;
-  color:#2e2166;
-  font-weight:600;
-}
-.form-inline-row input[type="checkbox"] {
-  transform:scale(1.1);
+.close-btn:hover {
+  color: #000;
 }
 
-/* Modal footer with actions */
-.modal-footer {
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:flex-end;
-  gap:.5rem;
-  margin-top:.75rem;
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-/* We reuse .primary-action-btn and .danger-btn for Save / Delete / etc.
-   We'll add a lighter cancel button */
-.cancel-btn {
-  background:#fff;
-  border:1px solid rgba(106,90,205,.4);
-  color:#4b3ba5;
-  border-radius:8px;
-  padding:.6rem .8rem;
-  font-size:.8rem;
-  font-weight:600;
-  cursor:pointer;
-  box-shadow:0 6px 14px rgba(30,15,95,.15);
-  transition:all .14s ease;
+.form-group {
+  display: flex;
+  flex-direction: column;
 }
-.cancel-btn:hover {
-  background:rgba(122,109,255,.07);
-  border-color:#7a6dff;
-  box-shadow:0 10px 18px rgba(30,15,95,.22);
-  color:#2e2166;
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #444;
+  margin-bottom: 0.25rem;
 }
-
-
-/* Visible state (JS toggles these two classes):
-   - .visible-modal on .modal-overlay 
-   - .modal-active on .modal-card
-*/
-.modal-overlay.visible-modal {
-  display:flex;
-  opacity:1;
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group textarea,
+.form-group select,
+#adminUsername,
+#adminPassword {
+  font-size: 0.9rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 100%;
+  background: #fff;
+  color: #2c2c2c;
 }
 
-.modal-card.modal-active {
-  opacity:1;
-  transform:scale(1) translateY(0);
+.form-group textarea {
+  min-height: 70px;
+  resize: vertical;
 }
 
-
-/* ==========================
-   CAROUSEL OVERLAY
-   ========================== */
-#imageCarouselOverlay {
-  position:fixed;
-  inset:0;
-  z-index:4000;
-  background:rgba(15,8,32,.8);
-  backdrop-filter:blur(6px);
-  display:none; /* shown dynamically */
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  color:#fff;
-  text-align:center;
-  padding:1rem;
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: 0.85rem;
+  color: #444;
 }
 
-/* The big displayed image */
-#carouselImageWrapper {
-  max-width:90vw;
-  max-height:70vh;
-  border-radius:12px;
-  overflow:hidden;
-  box-shadow:0 40px 80px rgba(0,0,0,.8);
-  background:#000;
-  margin-bottom:1rem;
-}
-#carouselImageWrapper img {
-  display:block;
-  max-width:100%;
-  max-height:70vh;
-  object-fit:contain;
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
 }
 
-/* carousel controls row */
-.carousel-controls {
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-wrap:wrap;
-  gap:.75rem;
+.btn-primary {
+  background: linear-gradient(90deg,#6a5acd,#8a6bff);
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(106,90,205,0.4);
+}
+.btn-primary:hover {
+  filter: brightness(1.05);
 }
 
-/* Prev/Next/Close buttons in carousel */
-.carousel-btn {
-  background:#fff;
-  color:#2e2166;
-  font-weight:600;
-  border:none;
-  border-radius:8px;
-  padding:.6rem .8rem;
-  box-shadow:0 10px 24px rgba(0,0,0,.5);
-  cursor:pointer;
-  font-size:.8rem;
-  line-height:1.2;
+.btn-danger {
+  background: #ff4d5a;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(255,77,90,.4);
 }
-.carousel-btn:hover {
-  background:rgba(255,255,255,.9);
+.btn-danger:hover {
+  filter: brightness(1.05);
 }
 
-/* ==========================
-   HIDE/SHOW SECTIONS
-   ========================== */
-#adminPetsSection,
-#adminRatesSection,
-#adminContactsSection {
-  display:none;
-}
-#adminPetsSection.active-admin-section,
-#adminRatesSection.active-admin-section,
-#adminContactsSection.active-admin-section {
-  display:block;
+/* responsive tweaks */
+@media (min-width: 640px) {
+  .admin-list {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
 }
