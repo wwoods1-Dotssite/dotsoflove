@@ -2,6 +2,13 @@
 // ADMIN DASHBOARD SCRIPT (CommonJS)
 // ===============================
 
+// Redirect if not authenticated
+if (!localStorage.getItem("adminToken")) {
+  console.warn("🔒 Admin not logged in — redirecting to login section");
+  const adminSection = document.getElementById("admin");
+  if (adminSection) adminSection.style.display = "none";
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   console.log("⚙️ Admin dashboard initialized");
 
