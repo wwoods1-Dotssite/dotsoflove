@@ -396,7 +396,7 @@ app.post("/api/contact", async (req, res) => {
     const adminMsg = {
       to: ["wwoods1@gmail.com", "dotty.j.woods@gmail.com"],
       from: {
-        email: "no-reply@dotsoflovepetsitting.com",
+        email: "dotsoflovepetsitting@gmail.com",
         name: "Dot's of Love Pet Sitting 🐾",
       },
       subject: `🐾 New Contact Request from ${name}`,
@@ -423,7 +423,7 @@ app.post("/api/contact", async (req, res) => {
     const thankYouMsg = {
       to: email,
       from: {
-        email: "no-reply@dotsoflovepetsitting.com",
+        email: "dotsoflovepetsitting@gmail.com",
         name: "Dot's of Love Pet Sitting 🐾",
       },
       subject: "Thanks for contacting Dot’s of Love Pet Sitting!",
