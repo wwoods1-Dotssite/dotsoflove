@@ -348,7 +348,7 @@ app.put("/api/pets/:petId/images/reorder", async (req, res) => {
 // ===============================
 // CONTACT FORM SUBMISSION (SendGrid with reply handling)
 // ===============================
-import sgMail from "@sendgrid/mail"; // or: const sgMail = require("@sendgrid/mail");
+const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 app.post("/api/contact", async (req, res) => {
