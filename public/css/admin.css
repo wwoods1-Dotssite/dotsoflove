@@ -1,147 +1,101 @@
-/* =======================
-   Admin Dashboard Styles
-========================= */
+/* ============================================================
+   ADMIN DASHBOARD STYLES
+   ============================================================ */
 
-.admin-card {
-  background: #f9f7ff;
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+body {
+  font-family: "Inter", sans-serif;
+  background: linear-gradient(to bottom right, #a18cd1, #fbc2eb);
+  color: #222;
+  margin: 0;
+  padding: 0;
+  text-align: center;
 }
 
-.pet-img-wrapper {
-  position: relative;
-  display: inline-block;
-  margin-right: 8px;
+/* ---------- Section Titles ---------- */
+h2,
+h3,
+h4 {
+  color: #3a1d6a;
+  margin-bottom: 0.5rem;
 }
 
-.pet-img-wrapper img {
-  width: 100px;
-  height: 100px;
-  border-radius: 8px;
-  object-fit: cover;
+.admin-section {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin: 1rem auto;
+  max-width: 900px;
 }
 
-.btn-icon.delete-img {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  background: rgba(255, 0, 0, 0.8);
-  color: white;
+/* ---------- Buttons ---------- */
+.btn-primary {
+  background-color: #6b46c1;
+  color: #fff;
   border: none;
-  border-radius: 50%;
-  width: 22px;
-  height: 22px;
-  cursor: pointer;
-}
-
-.btn-icon.delete-img:hover {
-  background: red;
-}
-
-.btn-group {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.btn-primary,
-.btn-danger {
-  padding: 6px 12px;
-  border: none;
+  padding: 0.5rem 1rem;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.btn-primary {
-  background: #7b68ee;
-  color: white;
+  transition: background-color 0.25s ease;
 }
 
 .btn-primary:hover {
-  background: #6a5acd;
+  background-color: #553c9a;
 }
 
 .btn-danger {
-  background: #ff6b6b;
-  color: white;
+  background-color: #e53e3e;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
 }
 
 .btn-danger:hover {
-  background: #ff4b4b;
+  background-color: #c53030;
 }
 
-/* Contact Enhancements */
-.contact-header {
+/* ============================================================
+   PETS & RATES GRID CARDS
+   ============================================================ */
+
+.pet-card,
+.rate-card,
+.contact-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  text-align: left;
+  position: relative;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.pet-card:hover,
+.rate-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.pet-actions,
+.rate-actions {
+  margin-top: 0.75rem;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 0.5rem;
 }
 
-.contact-date {
-  font-size: 0.85rem;
-  color: #555;
-}
+/* ============================================================
+   CONSISTENT IMAGE GRID
+   ============================================================ */
 
-.btn-contacted {
-  margin-top: 8px;
-  background-color: #6a5acd;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.btn-contacted:hover {
-  background-color: #7b68ee;
-}
-
-/* Modal Styling */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-/* ------------------------------
-   Image Grid (Pets) - FIXED THUMBNAIL SIZE
-   ------------------------------ */
 .admin-image-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin: 0.75rem 0;
+  margin-top: 0.5rem;
   justify-content: flex-start;
 }
 
@@ -150,7 +104,7 @@
   width: 110px;
   height: 110px;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #f0f0f0;
   flex-shrink: 0;
   cursor: pointer;
@@ -161,145 +115,206 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 10px;
   display: block;
-  border-radius: 6px;
   transition: transform 0.25s ease;
 }
 
 /* Hover zoom only, no layout shift */
 .img-wrap:hover img {
-  transform: scale(1.25);
+  transform: scale(1.2);
 }
 
 .img-wrap:hover {
   z-index: 2;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-/* Delete button stays on hover */
 .delete-image {
   position: absolute;
   top: 4px;
   right: 4px;
-  background: rgba(229, 62, 62, 0.9);
+  background: rgba(229, 62, 62, 0.85);
   border: none;
   color: #fff;
-  font-size: 0.8rem;
-  border-radius: 4px;
-  padding: 2px 4px;
+  font-size: 0.75rem;
+  border-radius: 5px;
+  padding: 3px 5px;
   cursor: pointer;
-  display: none;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .img-wrap:hover .delete-image {
-  display: block;
+  opacity: 1;
+  transform: scale(1.1);
 }
 
-/* Mobile tweak for consistency */
 @media (max-width: 768px) {
   .img-wrap {
     width: 90px;
     height: 90px;
   }
-
-  .img-wrap:hover img {
-    transform: scale(1.2);
-  }
 }
 
-/* ===============================
-   LIGHTBOX CAROUSEL FOR PET IMAGES
-================================== */
+/* ============================================================
+   MODALS
+   ============================================================ */
 
-.lightbox {
+.modal {
+  display: none;
   position: fixed;
-  top: 0; left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  z-index: 1000;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  animation: fadeIn 0.25s ease;
 }
 
-.lightbox.hidden {
-  display: none;
+.modal.active {
+  display: flex;
 }
 
-.lightbox-content {
-  position: relative;
-  max-width: 80vw;
-  max-height: 80vh;
-  overflow: hidden;
-  animation: fadeIn 0.3s ease;
-}
-
-.lightbox-content img {
-  width: 100%;
-  height: auto;
-  max-height: 80vh;
-  object-fit: contain;
-  border-radius: 8px;
+.modal-content {
   background: #fff;
+  border-radius: 12px;
+  width: 95%;
+  max-width: 500px;
+  padding: 1.5rem;
+  text-align: left;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  animation: slideIn 0.3s ease;
 }
 
-.lightbox-close {
-  position: absolute;
-  top: -40px;
-  right: -10px;
-  font-size: 2.5rem;
-  color: #fff;
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.modal-title {
+  font-weight: 600;
+  color: #4b0082;
+  font-size: 1.2rem;
+}
+
+.close-btn {
   background: none;
   border: none;
+  font-size: 1.3rem;
   cursor: pointer;
+  color: #666;
 }
 
-.lightbox-nav {
+.modal-body label {
+  display: block;
+  margin-top: 0.75rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.modal-body input[type="text"],
+.modal-body input[type="number"],
+.modal-body textarea,
+.modal-body select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.modal-actions {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* ============================================================
+   LIGHTBOX CAROUSEL (PREVIEW MODE)
+   ============================================================ */
+
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1500;
+  justify-content: center;
+  align-items: center;
+}
+
+.lightbox.active {
+  display: flex;
+}
+
+.lightbox img {
+  max-width: 85vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.lightbox-controls {
   position: absolute;
   top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  font-size: 3rem;
-  border: none;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  color: white;
+  font-size: 2rem;
   cursor: pointer;
-  padding: 0.5rem 1rem;
-  border-radius: 50%;
-  transition: background 0.2s ease;
+  padding: 0 2rem;
 }
 
-.lightbox-nav:hover {
-  background: rgba(255, 255, 255, 0.4);
+.lightbox-controls span:hover {
+  color: #d6bcfa;
 }
 
-.lightbox-nav.prev {
-  left: 40px;
+/* ============================================================
+   CONTACT CARD STYLING
+   ============================================================ */
+
+.contact-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  text-align: left;
 }
 
-.lightbox-nav.next {
-  right: 40px;
+.contact-card p {
+  margin: 0.25rem 0;
 }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: scale(0.95);
   }
   to {
     opacity: 1;
-    transform: scale(1);
   }
 }
 
-@media (max-width: 768px) {
-  .lightbox-content {
-    max-width: 90vw;
-    max-height: 70vh;
+@keyframes slideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
   }
-
-  .lightbox-nav {
-    font-size: 2.2rem;
-    padding: 0.3rem 0.6rem;
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
