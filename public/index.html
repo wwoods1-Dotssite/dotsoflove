@@ -305,17 +305,133 @@
   });
 </script>
 
-<!-- ========================= -->
-<!--   ADMIN IMAGE CAROUSEL    -->
-<!-- ========================= -->
-<div id="adminLightbox" class="lightbox hidden">
-  <button id="lightboxPrev" class="lightbox-nav prev">❮</button>
-  <div class="lightbox-content">
-    <span id="lightboxClose" class="lightbox-close">&times;</span>
-    <img id="lightboxImage" src="" alt="Preview" />
+<!-- ============================================================
+     Add/Edit Pet Modal
+     ============================================================ -->
+<div id="petModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Add New Pet</h3>
+      <button class="close-btn" onclick="closeModal('petModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="addPetForm">
+        <label for="petName">Pet Name</label>
+        <input type="text" id="petName" name="petName" placeholder="Enter pet name" required />
+
+        <label for="petDescription">Story Description</label>
+        <textarea
+          id="petDescription"
+          name="petDescription"
+          rows="3"
+          placeholder="Short story or care notes..."
+        ></textarea>
+
+        <div style="margin-top: 0.75rem;">
+          <label>
+            <input type="checkbox" id="isDorothyPet" name="isDorothyPet" />
+            Dorothy's Pet
+          </label>
+        </div>
+
+        <label for="petImages">Upload Photos</label>
+        <input type="file" id="petImages" name="images" accept="image/*" multiple />
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            id="savePetBtn"
+            class="btn-primary"
+          >
+            Save Changes
+          </button>
+          <button
+            type="button"
+            class="btn-danger"
+            onclick="closeModal('petModal')"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
-  <button id="lightboxNext" class="lightbox-nav next">❯</button>
 </div>
+
+<!-- ============================================================
+     Add/Edit Rate Modal
+     ============================================================ -->
+<div id="rateModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Add New Rate</h3>
+      <button class="close-btn" onclick="closeModal('rateModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="addRateForm">
+        <label for="serviceType">Service Type</label>
+        <input
+          type="text"
+          id="serviceType"
+          name="serviceType"
+          placeholder="e.g., Overnight Stay, Day Visits"
+          required
+        />
+
+        <label for="ratePerUnit">Rate Per Unit</label>
+        <input
+          type="number"
+          id="ratePerUnit"
+          name="ratePerUnit"
+          placeholder="e.g., 45"
+          step="0.01"
+          required
+        />
+
+        <label for="unitType">Unit Type</label>
+        <select id="unitType" name="unitType" required>
+          <option value="per_visit">Per Visit</option>
+          <option value="per_day">Per Day</option>
+          <option value="per_night">Per Night</option>
+        </select>
+
+        <label for="rateDescription">Description</label>
+        <textarea
+          id="rateDescription"
+          name="rateDescription"
+          rows="3"
+          placeholder="Short description of this service..."
+        ></textarea>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            id="saveRateBtn"
+            class="btn-primary"
+          >
+            Save Changes
+          </button>
+          <button
+            type="button"
+            class="btn-danger"
+            onclick="closeModal('rateModal')"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     Lightbox (Image Zoom / Carousel)
+     ============================================================ -->
+<div id="lightbox" class="lightbox">
+  <span id="lightboxPrev" class="lightbox-prev">&#10094;</span>
+  <img id="lightboxImg" src="" alt="Preview" />
+  <span id="lightboxNext" class="lightbox-next">&#10095;</span>
+</div>  
   
 </body>
 </html>
