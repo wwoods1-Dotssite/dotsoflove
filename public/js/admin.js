@@ -2,13 +2,47 @@
 // ADMIN DASHBOARD SCRIPT (CommonJS)
 // ===============================
 
-// Redirect if not authenticated
-if (!localStorage.getItem("adminToken")) {
-  console.warn("🔒 Admin not logged in — redirecting to login section");
+// ===============================
+// ADMIN LOGIN HANDLER
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  const loginForm = document.getElementById("adminLoginForm");
+  const loginSection = document.getElementById("adminLogin");
   const adminSection = document.getElementById("admin");
-  if (adminSection) adminSection.style.display = "none";
-}
+  const statusMsg = document.getElementById("adminLoginStatus");
 
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("adminUsername").value.trim();
+      const password = document.getElementById("adminPassword").value.trim();
+
+      statusMsg.textContent = "Authenticating...";
+      try {
+        const res = await fetch("/api/admin/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          localStorage.setItem("adminToken", data.token);
+          loginSection.classList.add("hidden");
+          adminSection.classList.remove("hidden");
+          statusMsg.textContent = "";
+          loadPets(); // Initialize dashboard after login
+        } else {
+          statusMsg.textContent = "❌ Invalid credentials";
+        }
+      } catch (err) {
+        console.error("❌ Login error:", err);
+        statusMsg.textContent = "Server error. Try again later.";
+      }
+    });
+  }
+});
 document.addEventListener("DOMContentLoaded", () => {
   console.log("⚙️ Admin dashboard initialized");
 
