@@ -99,6 +99,30 @@ app.post("/api/pets", async (req, res) => {
   }
 });
 
+// Get single pet by ID
+app.get("/api/pets/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const petQuery = await pool.query("SELECT * FROM pets WHERE id = $1", [id]);
+    if (petQuery.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Pet not found" });
+    }
+
+    // Fetch images associated with this pet
+    const imgQuery = await pool.query(
+      "SELECT * FROM pet_images WHERE pet_id = $1 ORDER BY id ASC",
+      [id]
+    );
+
+    const pet = petQuery.rows[0];
+    pet.images = imgQuery.rows;
+    res.json(pet);
+  } catch (err) {
+    console.error("❌ Error fetching pet:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 // Update pet
 app.put("/api/pets/:id", async (req, res) => {
   const { id } = req.params;
