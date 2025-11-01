@@ -225,6 +225,61 @@
         </div>
       </div>
     </section>
+
+<!-- Add/Edit Pet Modal -->
+<div id="petModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="petModalTitle">Add New Pet</h3>
+      <button id="closePetModal" class="close-btn">&times;</button>
+    </div>
+    <form id="petForm">
+      <input type="hidden" id="petId" />
+      <label>Pet Name</label>
+      <input type="text" id="petName" required />
+      <label>Story Description</label>
+      <textarea id="storyDescription"></textarea>
+      <label><input type="checkbox" id="isDorothyPet" /> Dorothy's Pet</label>
+      <label>Upload Additional Images</label>
+      <input type="file" id="petImages" multiple />
+      <div class="modal-actions">
+        <button type="button" id="savePetBtn" class="btn-primary">Save Changes</button>
+        <button type="button" class="btn-danger" onclick="closeModal(petModal)">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add/Edit Rate Modal -->
+<div id="rateModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="rateModalTitle">Add New Rate</h3>
+      <button id="closeRateModal" class="close-btn">&times;</button>
+    </div>
+    <form id="rateForm">
+      <input type="hidden" id="rateId" />
+      <label>Service Type</label>
+      <input type="text" id="serviceType" required />
+      <label>Rate Per Unit</label>
+      <input type="number" id="ratePerUnit" step="0.01" required />
+      <label>Unit Type</label>
+      <select id="unitType">
+        <option value="per_visit">Per Visit</option>
+        <option value="per_day">Per Day</option>
+        <option value="per_night">Per Night</option>
+      </select>
+      <label>Description</label>
+      <textarea id="rateDescription"></textarea>
+      <label><input type="checkbox" id="isFeaturedRate" /> Featured</label>
+      <div class="modal-actions">
+        <button type="button" id="saveRateBtn" class="btn-primary">Save Changes</button>
+        <button type="button" class="btn-danger" onclick="closeModal(rateModal)">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+    
   </main>
 
   <footer>
