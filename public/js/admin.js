@@ -262,26 +262,17 @@
   function switchTab(tabName) {
     console.log("🗂 Switching to tab:", tabName);
 
-    // highlight tab button
-    tabButtons.forEach((btn) => {
-      if (btn.dataset.tab === tabName) {
-        btn.classList.add("active");
-      } else {
-        btn.classList.remove("active");
-      }
-    });
+function switchAdminTab(tab) {
+  console.log("Switching to tab:", tab);
 
-    // show only the right pane
-    [petsTabPane, ratesTabPane, contactsTabPane].forEach((pane) => {
-      if (!pane) return;
-      pane.style.display = "none";
-    });
+  // highlight the active tab button
+  document.querySelectorAll(".admin-tab-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.tab === tab);
+  });
 
-    if (tabName === "pets" && petsTabPane) petsTabPane.style.display = "block";
-    if (tabName === "rates" && ratesTabPane) ratesTabPane.style.display = "block";
-    if (tabName === "contacts" && contactsTabPane) contactsTabPane.style.display = "block";
-    if (tabName === "reviews" && reviewsTabPane) reviewsTabPane.style.display = "block";
-  }
+  // show only the requested section
+  showAdminSection(tab);
+}
 
   // ---------------------------
   // PETS
@@ -898,6 +889,21 @@ async function deleteReview(id) {
     console.error("Error deleting review:", err);
     alert("Error deleting review.");
   }
+}
+
+  // Helper: show only the selected admin section
+function showAdminSection(sectionKey) {
+  const map = {
+    pets: document.getElementById("adminPetsSection"),
+    rates: document.getElementById("adminRatesSection"),
+    contacts: document.getElementById("adminContactsSection"),
+    reviews: document.getElementById("adminReviewsSection"),
+  };
+
+  Object.entries(map).forEach(([key, el]) => {
+    if (!el) return;
+    el.style.display = key === sectionKey ? "block" : "none";
+  });
 }
 
   // ---------------------------
