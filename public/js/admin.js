@@ -45,6 +45,7 @@
   const petsTabPane = document.getElementById("tab-pets");
   const ratesTabPane = document.getElementById("tab-rates");
   const contactsTabPane = document.getElementById("tab-contacts");
+  const reviewsTabPane = document.getElementById("tab-reviews");
 
   // Lists/containers in each tab
   const petListEl = document.getElementById("petList");
@@ -278,8 +279,8 @@
 
     if (tabName === "pets" && petsTabPane) petsTabPane.style.display = "block";
     if (tabName === "rates" && ratesTabPane) ratesTabPane.style.display = "block";
-    if (tabName === "contacts" && contactsTabPane)
-      contactsTabPane.style.display = "block";
+    if (tabName === "contacts" && contactsTabPane) contactsTabPane.style.display = "block";
+    if (tabName === "reviews" && reviewsTabPane) reviewsTabPane.style.display = "block";
   }
 
   // ---------------------------
@@ -898,7 +899,7 @@ async function deleteReview(id) {
     alert("Error deleting review.");
   }
 }
-  
+
   // ---------------------------
   // GLOBAL REFRESH
   // ---------------------------
@@ -911,6 +912,11 @@ async function deleteReview(id) {
     loadAdminReviews();
   }
 
+  // ✅ Export review actions for inline onclicks
+  window.approveReview = approveReview;
+  window.deleteReview = deleteReview;
+  
+  
   // ---------------------------
   // EVENT BINDINGS
   // ---------------------------
