@@ -819,6 +819,86 @@ document.querySelectorAll("[data-close]").forEach((btn) => {
     }
   }
 
+// ---------- ADMIN: REVIEWS ----------
+
+async function loadAdminReviews() {
+  const container = document.getElementById("adminReviewList");
+  if (!container) return;
+
+  try {
+    const res = await fetch("/api/admin/reviews");
+    const reviews = await res.json();
+
+    if (!reviews.length) {
+      container.innerHTML = `<p class="muted-text">No reviews submitted yet.</p>`;
+      return;
+    }
+
+    container.innerHTML = reviews
+      .map((r) => {
+        const date = r.created_at
+          ? new Date(r.created_at).toLocaleDateString()
+          : "";
+        return `
+        <div class="admin-review-card ${
+          r.approved ? "approved" : "pending"
+        }">
+          <div class="admin-review-header">
+            <h4>${r.customer_name}</h4>
+            <span class="admin-review-rating">⭐ ${r.rating}/5</span>
+          </div>
+          <p class="admin-review-text">${r.review_text}</p>
+          ${
+            date
+              ? `<p class="admin-review-date">Submitted on ${date}</p>`
+              : ""
+          }
+          <div class="admin-review-actions">
+            ${
+              r.approved
+                ? `<span class="badge badge-approved">Approved</span>`
+                : `<button class="btn-primary" onclick="approveReview(${r.id})">Approve</button>`
+            }
+            <button class="btn-danger" onclick="deleteReview(${r.id})">Delete</button>
+          </div>
+        </div>
+      `;
+      })
+      .join("");
+  } catch (err) {
+    console.error("Error loading admin reviews:", err);
+    container.innerHTML = `<p class="error">Failed to load reviews.</p>`;
+  }
+}
+
+async function approveReview(id) {
+  try {
+    const res = await fetch(`/api/admin/reviews/${id}/approve`, {
+      method: "PUT",
+    });
+    if (!res.ok) throw new Error("Failed to approve");
+    await loadAdminReviews();
+  } catch (err) {
+    console.error("Error approving review:", err);
+    alert("Error approving review.");
+  }
+}
+
+async function deleteReview(id) {
+  if (!confirm("Are you sure you want to delete this review?")) return;
+
+  try {
+    const res = await fetch(`/api/admin/reviews/${id}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Failed to delete");
+    await loadAdminReviews();
+  } catch (err) {
+    console.error("Error deleting review:", err);
+    alert("Error deleting review.");
+  }
+}
+  
   // ---------------------------
   // GLOBAL REFRESH
   // ---------------------------
@@ -828,6 +908,7 @@ document.querySelectorAll("[data-close]").forEach((btn) => {
     loadPets();
     loadRates();
     loadContacts();
+    loadAdminReviews();
   }
 
   // ---------------------------
