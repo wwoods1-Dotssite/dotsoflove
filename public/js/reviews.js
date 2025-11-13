@@ -1,13 +1,46 @@
-// reviews.js — public reviews display + submission
+// reviews.js — public reviews display + modal submission
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("reviewForm");
+  const openBtn = document.getElementById("openReviewModalBtn");
+  const closeBtn = document.getElementById("closeReviewModalBtn");
+  const modal = document.getElementById("reviewModal");
+
+  if (openBtn && modal) {
+    openBtn.addEventListener("click", () => openReviewModal(modal));
+  }
+  if (closeBtn && modal) {
+    closeBtn.addEventListener("click", () => closeReviewModal(modal));
+  }
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeReviewModal(modal);
+    });
+  }
   if (form) {
     form.addEventListener("submit", handleReviewSubmit);
   }
+
   loadPublicReviews();
 });
 
+function openReviewModal(modal) {
+  modal.setAttribute("aria-hidden", "false");
+  modal.classList.add("open");
+}
+
+function closeReviewModal(modal) {
+  modal.setAttribute("aria-hidden", "true");
+  modal.classList.remove("open");
+
+  const statusEl = document.getElementById("reviewStatus");
+  if (statusEl) {
+    statusEl.textContent = "";
+    statusEl.classList.remove("error", "success");
+  }
+}
+
+// Load approved reviews for public display
 async function loadPublicReviews() {
   const list = document.getElementById("reviewsList");
   const emptyMsg = document.getElementById("noReviewsMessage");
@@ -31,19 +64,19 @@ async function loadPublicReviews() {
           ? new Date(r.created_at).toLocaleDateString()
           : "";
         return `
-        <article class="review-card">
-          <header class="review-header">
-            <h4>${r.customer_name}</h4>
-            <span class="review-rating">⭐ ${r.rating}/5</span>
-          </header>
-          <p class="review-text">${r.review_text}</p>
-          ${
-            date
-              ? `<p class="review-date">Submitted on ${date}</p>`
-              : ""
-          }
-        </article>
-      `;
+          <article class="review-card">
+            <header class="review-header">
+              <h4>${r.customer_name}</h4>
+              <span class="review-rating">⭐ ${r.rating}/5</span>
+            </header>
+            <p class="review-text">${r.review_text}</p>
+            ${
+              date
+                ? `<p class="review-date">Submitted on ${date}</p>`
+                : ""
+            }
+          </article>
+        `;
       })
       .join("");
   } catch (err) {
@@ -62,7 +95,7 @@ async function handleReviewSubmit(e) {
 
   const payload = {
     customer_name: nameEl.value.trim(),
-    rating: ratingEl.value,
+    rating: parseInt(ratingEl.value, 10),
     review_text: textEl.value.trim(),
   };
 
@@ -93,6 +126,10 @@ async function handleReviewSubmit(e) {
       nameEl.value = "";
       ratingEl.value = "";
       textEl.value = "";
+
+      // Keep modal open so they can read message; you can auto-close if you want
+      // Refresh public reviews (once approved, they'll appear)
+      loadPublicReviews();
     } else {
       if (statusEl) {
         statusEl.textContent =
