@@ -214,6 +214,123 @@ footer {
   }
 }
 
+/* ---------- Reviews Section ---------- */
+.reviews-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr);
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+@media (max-width: 900px) {
+  .reviews-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.reviews-list-card,
+.reviews-form-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.review-card {
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  background: #f7f4ff;
+  margin-bottom: 0.75rem;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.review-rating {
+  font-weight: 600;
+  color: #6b46c1;
+}
+
+.review-text {
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.review-date {
+  font-size: 0.8rem;
+  color: #718096;
+}
+
+.review-form .form-group {
+  margin-bottom: 0.85rem;
+}
+
+.form-status.success {
+  color: #2f855a;
+}
+
+.form-status.error {
+  color: #c53030;
+}
+
+/* Admin review styling */
+.admin-review-card {
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.75rem;
+  background: rgba(15, 23, 42, 0.6);
+  color: #edf2ff;
+}
+
+.admin-review-card.pending {
+  border: 1px solid #ecc94b;
+}
+
+.admin-review-card.approved {
+  border: 1px solid #48bb78;
+}
+
+.admin-review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.admin-review-rating {
+  font-weight: 600;
+}
+
+.admin-review-text {
+  font-size: 0.95rem;
+  margin-bottom: 0.35rem;
+}
+
+.admin-review-date {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.admin-review-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.badge-approved {
+  background: #48bb78;
+  color: #1a202c;
+}
 
 /* ==========================================
    Added Sticky Header + Smooth Scroll + Scroll Spy - Nov 2025
