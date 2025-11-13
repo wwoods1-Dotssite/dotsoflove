@@ -277,6 +277,119 @@ footer {
   color: #c53030;
 }
 
+/* ---------- Public Reviews Layout ---------- */
+
+.reviews-section {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.reviews-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.reviews-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #4a5568;
+}
+
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.review-card {
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  background: #f7f4ff;
+  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.08);
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.review-rating {
+  font-weight: 600;
+  color: #6b46c1;
+}
+
+.review-text {
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.review-date {
+  font-size: 0.8rem;
+  color: #718096;
+}
+
+/* ---------- Review Modal ---------- */
+
+.review-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  z-index: 2000;
+}
+
+.review-modal.open {
+  display: flex;
+}
+
+.review-modal-content {
+  background: #ffffff;
+  border-radius: 16px;
+  max-width: 480px;
+  width: 100%;
+  padding: 1.75rem 1.5rem 1.5rem;
+  position: relative;
+  box-shadow: 0 20px 45px rgba(17, 24, 39, 0.35);
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.85rem;
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.review-form .form-group {
+  margin-bottom: 0.85rem;
+}
+
+.btn-primary.full-width {
+  width: 100%;
+  justify-content: center;
+}
+
+.form-status.success {
+  color: #2f855a;
+  margin-top: 0.5rem;
+}
+
+.form-status.error {
+  color: #c53030;
+  margin-top: 0.5rem;
+}
+
 /* Admin review styling */
 .admin-review-card {
   border-radius: 12px;
