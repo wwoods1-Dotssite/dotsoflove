@@ -489,6 +489,107 @@ app.put("/api/contacts/:id/contacted", async (req, res) => {
   }
 });
 
+// ----------------------
+// Reviews
+// ----------------------
+
+// Public: submit a new review (pending approval)
+app.post("/api/reviews", async (req, res) => {
+  try {
+    const { customer_name, rating, review_text } = req.body;
+
+    if (!customer_name || !rating || !review_text) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing required fields" });
+    }
+
+    const numericRating = Number(rating);
+    if (Number.isNaN(numericRating) || numericRating < 1 || numericRating > 5) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Rating must be between 1 and 5" });
+    }
+
+    await pool.query(
+      `INSERT INTO reviews (customer_name, rating, review_text, approved)
+       VALUES ($1, $2, $3, FALSE)`,
+      [customer_name, numericRating, review_text]
+    );
+
+    console.log("📝 New review submitted (pending approval) from:", customer_name);
+    res.json({
+      success: true,
+      message: "Thank you! Your review is pending approval.",
+    });
+  } catch (err) {
+    console.error("❌ Error submitting review:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Public: get approved reviews
+app.get("/api/reviews", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, customer_name, rating, review_text, created_at
+       FROM reviews
+       WHERE approved = TRUE
+       ORDER BY created_at DESC`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ Error fetching reviews:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Admin: get all reviews (pending + approved)
+app.get("/api/admin/reviews", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, customer_name, rating, review_text, approved, created_at
+       FROM reviews
+       ORDER BY approved ASC, created_at DESC`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ Admin fetch reviews error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Admin: approve a review
+app.put("/api/admin/reviews/:id/approve", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query(
+      `UPDATE reviews
+       SET approved = TRUE
+       WHERE id = $1`,
+      [id]
+    );
+    console.log("✅ Review approved:", id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Error approving review:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Admin: delete a review
+app.delete("/api/admin/reviews/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query("DELETE FROM reviews WHERE id = $1", [id]);
+    console.log("🗑️ Review deleted:", id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Error deleting review:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 // ===============================
 // SERVICE RATES (Admin)
 // ===============================
