@@ -5,6 +5,14 @@
 // - Uses existing backend API routes
 // - CommonJS-friendly (no ES module syntax)
 
+// Make sure main.js has something safe to call
+window.checkAdminAuth = function () {
+  // If you want to do extra work here later (e.g. auto-open dashboard
+  // when a valid token is present), you can add it.
+  // For now, it's just a harmless no-op for non-admin views.
+  console.log("checkAdminAuth called (non-admin view or no-op).");
+};
+
 (function () {
   const API_BASE = "/api";
 
