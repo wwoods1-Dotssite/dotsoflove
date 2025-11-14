@@ -82,34 +82,31 @@
     el.style.display = "none";
   }
 
-  // -----------------------------
-  // Login Modal
-  // -----------------------------
-  function showLoginModal() {
-    if (!adminLoginModal) {
-      console.error("[Admin] adminLoginModal is missing in DOM");
-      return;
-    }
-
-    console.log("[Admin] Showing login modal…");
-
-    // Clear any inline display style
-    adminLoginModal.style.display = "";
-    adminLoginModal.classList.add("visible");
-    adminLoginModal.setAttribute("aria-hidden", "false");
+// -----------------------------
+// Login Modal
+// -----------------------------
+function showLoginModal() {
+  if (!adminLoginModal) {
+    console.error("[Admin] adminLoginModal is missing in DOM");
+    return;
   }
 
-  function hideLoginModal() {
-    if (!adminLoginModal) return;
+  console.log("[Admin] Showing login modal…");
 
-    console.log("[Admin] Hiding login modal…");
+  adminLoginModal.classList.remove("hidden");
+  adminLoginModal.classList.add("visible");
+  adminLoginModal.setAttribute("aria-hidden", "false");
+}
 
-    adminLoginModal.classList.remove("visible");
-    adminLoginModal.setAttribute("aria-hidden", "true");
-    // optional hard hide:
-    // adminLoginModal.style.display = "none";
-  }
+function hideLoginModal() {
+  if (!adminLoginModal) return;
 
+  console.log("[Admin] Hiding login modal…");
+
+  adminLoginModal.classList.remove("visible");
+  adminLoginModal.classList.add("hidden");
+  adminLoginModal.setAttribute("aria-hidden", "true");
+}
   // -----------------------------
   // Admin Panel Show / Hide
   // -----------------------------
