@@ -173,6 +173,60 @@
   right: 40px;
 }
 
+/* =========================
+   Public Gallery Thumbnails
+   ========================= */
+
+/* Layout containers for Dorothy + client pets */
+#dorothyGallery,
+#clientGallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* Each pet card */
+#dorothyGallery .pet-card,
+#clientGallery .pet-card {
+  width: 220px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+  text-align: center;
+  padding-bottom: 0.75rem;
+}
+
+/* If your JS doesn’t create .pet-card yet, this safely
+   falls back to any direct <img> inside the container. */
+#dorothyGallery img,
+#clientGallery img {
+  width: 220px;
+  height: 220px;
+  display: block;
+  object-fit: cover;
+  border-radius: 18px;
+}
+
+/* Pet name / caption inside the card, if present */
+#dorothyGallery .pet-name,
+#clientGallery .pet-name {
+  font-weight: 600;
+  margin-top: 0.75rem;
+  color: #1f2933;
+}
+
+/* Optional small description text */
+#dorothyGallery .pet-story,
+#clientGallery .pet-story {
+  font-size: 0.9rem;
+  color: #6b7280;
+  padding: 0 0.75rem;
+  margin-top: 0.25rem;
+}
+
 /* ---------- No Image Placeholder (Gallery) ---------- */
 .no-image-placeholder {
   display: flex;
