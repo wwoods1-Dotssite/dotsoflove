@@ -1,330 +1,167 @@
-/* =========================================
-   GALLERY STYLES
-   ========================================= */
+/* gallery.css – layout + modal for gallery section */
 
-/* Section layout */
-#gallery {
-  text-align: center;
-  padding: 4rem 1rem;
-  background: linear-gradient(180deg, #c5c4ff, #a19bff);
-  min-height: 100vh;
+/* Section container */
+.gallery-section {
+  padding: 3rem 1.5rem 4rem;
 }
 
-.section-title {
+/* Headings */
+.gallery-section h2 {
+  text-align: center;
   font-size: 2rem;
-  color: #4b3fb6;
   margin-bottom: 0.5rem;
 }
 
-.section-subtitle {
-  font-size: 1rem;
-  color: #333;
-  margin-bottom: 2rem;
+.gallery-section p.section-lead {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  color: #4a4a6a;
 }
 
-/* Gallery containers */
-.gallery-section {
-  background: #f6f4ff;
-  border-radius: 1rem;
-  margin: 2rem auto;
-  padding: 2rem;
-  max-width: 1100px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.gallery-heading {
-  font-size: 1.25rem;
-  color: #5b4ce0;
-  margin-bottom: 1rem;
-  text-align: left;
-  padding-left: 0.5rem;
-}
-
-/* Grid layout */
-.gallery-grid {
+/* Grid of pet cards */
+.pet-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.5rem;
-  justify-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.75rem;
 }
 
-.gallery-card {
-  background: #fff;
-  border-radius: 1rem;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  cursor: pointer;
-  width: 100%;
-  max-width: 300px;
-}
-
-.gallery-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-}
-
-.gallery-thumb {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-  display: block;
-}
-
-/* Keep thumbnails and placeholders uniform */
-.gallery-thumb,
-.no-image-placeholder {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-}
-
-.gallery-info {
-  padding: 0.75rem 1rem;
-}
-
-.gallery-info h4 {
-  font-size: 1.1rem;
-  color: #4b3fb6;
-  margin: 0.3rem 0;
-}
-
-.gallery-info p {
-  color: #444;
-  font-size: 0.9rem;
-}
-
-/* Empty state */
-.empty-msg {
-  color: #666;
-  font-style: italic;
-  margin-top: 1rem;
-}
-
-/* Modal styles */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  padding-top: 5vh;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(15, 15, 15, 0.9);
-  overflow: hidden;
-}
-
-.modal-content {
-  margin: auto;
-  display: block;
-  max-width: 90%;
-  max-height: 75vh;
-  border-radius: 0.75rem;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-}
-
-#caption {
-  color: #fff;
-  font-size: 1rem;
-  text-align: center;
-  margin-top: 1rem;
-}
-
-.close {
-  position: absolute;
-  top: 15px;
-  right: 35px;
-  color: #fff;
-  font-size: 2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.close:hover {
-  color: #ffbcbc;
-}
-
-/* Modal navigation buttons */
-.nav-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.3);
-  color: #fff;
-  border: none;
-  font-size: 2rem;
-  padding: 0.5rem 1rem;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.nav-btn:hover {
-  background: rgba(255, 255, 255, 0.6);
-}
-
-.nav-btn.prev {
-  left: 40px;
-}
-
-.nav-btn.next {
-  right: 40px;
-}
-
-/* =========================
-   Public Gallery Thumbnails
-   ========================= */
-
-/* Layout containers for Dorothy + client pets */
-#dorothyGallery,
-#clientGallery {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-/* Each pet card */
-#dorothyGallery .pet-card,
-#clientGallery .pet-card {
-  width: 220px;
+/* Individual pet card */
+.pet-card {
   background: #ffffff;
-  border-radius: 18px;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
-  overflow: hidden;
-  text-align: center;
-  padding-bottom: 0.75rem;
-}
-
-/* If your JS doesn’t create .pet-card yet, this safely
-   falls back to any direct <img> inside the container. */
-#dorothyGallery img,
-#clientGallery img {
-  width: 220px;
-  height: 220px;
-  display: block;
-  object-fit: cover;
-  border-radius: 18px;
-}
-
-/* Pet name / caption inside the card, if present */
-#dorothyGallery .pet-name,
-#clientGallery .pet-name {
-  font-weight: 600;
-  margin-top: 0.75rem;
-  color: #1f2933;
-}
-
-/* Optional small description text */
-#dorothyGallery .pet-story,
-#clientGallery .pet-story {
-  font-size: 0.9rem;
-  color: #6b7280;
-  padding: 0 0.75rem;
-  margin-top: 0.25rem;
-}
-
-/* ---------- No Image Placeholder (Gallery) ---------- */
-.no-image-placeholder {
+  border-radius: 1.5rem;
+  padding: 1.25rem 1.25rem 1.5rem;
+  box-shadow: 0 10px 30px rgba(96, 72, 255, 0.16);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 250px;
-  height: 250px;
-  background: linear-gradient(135deg, #6b46c1 0%, #805ad5 100%);
-  border-radius: 12px;
-  color: #e9d8fd;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  font-family: "Inter", sans-serif;
-  transition: all 0.3s ease;
+  gap: 0.75rem;
 }
 
-.no-image-placeholder:hover {
-  transform: scale(1.03);
-  background: linear-gradient(135deg, #7c3aed 0%, #9f7aea 100%);
+/* Pet name + story */
+.pet-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #3b277f;
 }
 
-.placeholder-icon {
-  font-size: 3rem;
-  opacity: 0.9;
-}
-
-.placeholder-text {
+.pet-story {
+  margin: 0;
   font-size: 0.9rem;
-  opacity: 0.8;
+  line-height: 1.5;
+  color: #4a4a6a;
+}
+
+/* Thumbnails row */
+.pet-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-top: 0.25rem;
 }
 
-/* =========================
-   Image Modal Styling
-   ========================= */
+/* Thumbnail button */
+.pet-thumb {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: none;
+  padding: 0;
+  background: #f4f0ff;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(92, 60, 196, 0.15);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pet-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pet-thumb:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(92, 60, 196, 0.22);
+}
+
+/* Placeholder when no images yet */
+.pet-thumb.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: #7b7b9b;
+  background: #f4f0ff;
+  box-shadow: none;
+}
+
+/* Small-screen layout tweaks */
+@media (max-width: 600px) {
+  .pet-card {
+    border-radius: 1.25rem;
+  }
+
+  .pet-thumb {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* -------- Image modal -------- */
 
 .image-modal {
   position: fixed;
   inset: 0;
-  z-index: 999;
-  display: none;           /* gallery.js will toggle this */
+  display: none;
   align-items: center;
   justify-content: center;
+  background: rgba(15, 6, 41, 0.8);
+  z-index: 9999;
 }
 
-.image-modal.is-open {
+.image-modal.open {
   display: flex;
-}
-
-.image-modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.75);
 }
 
 .image-modal-content {
   position: relative;
-  z-index: 1;
   max-width: min(90vw, 900px);
-  max-height: min(85vh, 700px);
-  background: #111827;
-  border-radius: 24px;
-  padding: 1.5rem 3rem;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.6);
+  max-height: 90vh;
+  background: #111021;
+  border-radius: 1.5rem;
+  padding: 1rem 1rem 1.75rem;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 0.75rem;
 }
 
 .image-modal-img {
   max-width: 100%;
-  max-height: 60vh;
-  border-radius: 16px;
+  max-height: 70vh;
   object-fit: contain;
+  border-radius: 1rem;
+  background: #000;
 }
 
 .image-modal-caption {
-  color: #e5e7eb;
   font-size: 0.95rem;
+  color: #e4e0ff;
   text-align: center;
-  margin-top: 0.25rem;
 }
 
-/* Close + nav buttons */
-
+/* Modal controls */
 .image-modal-close {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
+  top: 0.35rem;
+  right: 0.6rem;
+  background: transparent;
   border: none;
-  background: rgba(17, 24, 39, 0.75);
-  color: #f9fafb;
-  font-size: 1.6rem;
-  line-height: 1;
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
+  color: #ffffff;
+  font-size: 1.8rem;
   cursor: pointer;
 }
 
@@ -333,40 +170,34 @@
   top: 50%;
   transform: translateY(-50%);
   border: none;
-  background: rgba(17, 24, 39, 0.6);
-  color: #f9fafb;
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  cursor: pointer;
+  background: rgba(0, 0, 0, 0.4);
+  color: #ffffff;
   font-size: 1.6rem;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
 .image-modal-prev {
-  left: 1.25rem;
+  left: 0.3rem;
 }
 
 .image-modal-next {
-  right: 1.25rem;
+  right: 0.3rem;
 }
 
-/* Responsive tweaks */
-@media (max-width: 600px) {
-  .gallery-thumb {
-    height: 180px;
-  }
-
-  .gallery-card {
-    max-width: 90%;
-  }
-
-  .nav-btn {
-    font-size: 1.5rem;
-  }
+/* Prevent background scroll when modal is open */
+.no-scroll {
+  overflow: hidden;
 }
-.gallery-card img.gallery-thumb,
-.no-image-placeholder {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
+
+/* Error text */
+.gallery-error {
+  text-align: center;
+  color: #b31f4b;
+  padding: 1rem 0;
 }
