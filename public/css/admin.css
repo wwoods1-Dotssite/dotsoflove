@@ -509,33 +509,6 @@
   font-weight: 500;
 }
 
-/* =============================
-   Generic overlay modal
-   ============================= */
-.modal {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: rgba(0, 0, 0, 0.55);
-
-  display: none;           /* hidden by default */
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-}
-
-/* ---------------------------------
-   Modal visibility helpers
----------------------------------- */
-
-.modal.show {
-  display: flex !important;
-}
-
-.modal.hidden {
-  display: none !important;
-}
-
 /* Specific styling for the admin login modal content */
 #adminLoginModal .modal-content {
   max-width: 480px;
