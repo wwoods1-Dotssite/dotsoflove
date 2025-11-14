@@ -114,6 +114,10 @@
    Gallery Image Modal
 ================================ */
 
+/* ================================
+   Gallery Image Modal
+================================ */
+
 .image-modal {
   /* start hidden */
   display: none;
@@ -125,10 +129,9 @@
   background: rgba(0, 0, 0, 0.65);
   align-items: center;
   justify-content: center;
-  padding: 1rem;
 }
 
-/* JS adds .open */
+/* JS toggles this class */
 .image-modal.open {
   display: flex;
 }
@@ -136,8 +139,8 @@
 .image-modal-backdrop {
   position: absolute;
   inset: 0;
-  background: transparent; /* the dark overlay comes from .image-modal */
 }
+
 
 .image-modal-content {
   position: relative;
