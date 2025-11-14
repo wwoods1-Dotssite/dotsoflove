@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalClose = modal ? modal.querySelector(".image-modal-close") : null;
   const prevBtn = document.getElementById("prevBtn");
   const nextBtn = document.getElementById("nextBtn");
+  const backdrop = modal ? modal.querySelector(".image-modal-backdrop") : null;
 
   let currentUrls = [];
  // let currentIndex = 0;
@@ -43,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentCaption = "";
 
   const modalAvailable =
-    modal && modalImg && modalCaption && prevBtn && nextBtn && closeBtn && backdrop;
+    modal && modalImg && modalCaption && prevBtn && nextBtn && modalClose && backdrop;
 
   if (!modalAvailable) {
     console.warn(
