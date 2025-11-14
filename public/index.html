@@ -278,13 +278,47 @@
       <button class="admin-tab" data-section="adminReviews">⭐ Reviews</button>
     </div>
 
-    <div id="adminLoginModal" class="modal">
-  <form id="adminLoginForm">
-    <input id="adminUsername" name="username" type="text" />
-    <input id="adminPassword" name="password" type="password" />
-    <button type="submit">Login</button>
-    <button type="button" id="adminLoginCancel">Cancel</button>
-  </form>
+<!-- Admin Login Modal -->
+<div id="adminLoginModal" class="admin-login-modal" aria-hidden="true">
+  <div class="admin-login-backdrop"></div>
+
+  <div class="admin-login-dialog">
+    <button
+      type="button"
+      id="adminLoginClose"
+      class="admin-login-close"
+      aria-label="Close admin login"
+    >
+      ×
+    </button>
+
+    <h2 class="admin-login-title">Admin Login</h2>
+
+    <form id="adminLoginForm" class="admin-login-form">
+      <label for="adminUsername">Username</label>
+      <input
+        type="text"
+        id="adminUsername"
+        autocomplete="username"
+        required
+      />
+
+      <label for="adminPassword">Password</label>
+      <input
+        type="password"
+        id="adminPassword"
+        autocomplete="current-password"
+        required
+      />
+
+      <div class="admin-login-actions">
+        <button type="submit" class="btn-primary">Login</button>
+        <button type="button" id="adminLoginCancel" class="btn-secondary">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 
     <!-- Admin Sections -->
