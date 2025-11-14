@@ -518,12 +518,11 @@
   inset: 0;
   z-index: 9999;
   background: rgba(20,10,40,0.65);
-  display: none; /* we toggle via .show/.hidden */
   align-items: center;
   justify-content: center;
   padding: 1rem;
 }
-.modal.show {
+.modal.visible {
   display: flex;
 }
 .modal.hidden {
