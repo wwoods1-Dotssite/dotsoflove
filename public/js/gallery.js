@@ -14,13 +14,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===============================
   // Modal wiring
   // ===============================
-  const modal = document.getElementById("imageModal");
-  const modalImg = document.getElementById("modalImage");
-  const modalCaption = document.getElementById("caption");
-  const prevBtn = document.getElementById("prevBtn");
-  const nextBtn = document.getElementById("nextBtn");
-  const closeBtn = modal ? modal.querySelector(".image-modal-close") : null;
-  const backdrop = modal ? modal.querySelector(".image-modal-backdrop") : null;
+//  const modal = document.getElementById("imageModal");
+ // const modalImg = document.getElementById("modalImage");
+ // const modalCaption = document.getElementById("caption");
+//  const prevBtn = document.getElementById("prevBtn");
+//  const nextBtn = document.getElementById("nextBtn");
+ // const closeBtn = modal ? modal.querySelector(".image-modal-close") : null;
+//  const backdrop = modal ? modal.querySelector(".image-modal-backdrop") : null;
 
   let currentImages = [];
   let currentIndex = 0;
