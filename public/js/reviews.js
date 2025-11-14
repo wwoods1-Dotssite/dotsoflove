@@ -58,7 +58,7 @@
     console.log("[Reviews] Submitting review payload:", payload);
 
     try {
-      const res = await fetch("/api/reviews/public", {
+      const res = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
