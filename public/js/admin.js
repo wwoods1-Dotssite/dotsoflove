@@ -784,6 +784,174 @@
     }
   }
 
+// =====================================================
+// Admin nav + login handling (safe to append at bottom)
+// =====================================================
+(() => {
+  const TOKEN_KEY = "dotsAdminToken";
+
+  // Sections
+  const adminNav = document.getElementById("navAdmin");
+  const adminSection =
+    document.getElementById("adminDashboard") ||
+    document.getElementById("adminSection") ||
+    document.getElementById("admin");
+
+  const customerSections = [
+    document.getElementById("about"),
+    document.getElementById("gallery"),
+    document.getElementById("reviews"),
+    document.getElementById("rates"),
+    document.getElementById("contact"),
+  ].filter(Boolean);
+
+  // Modal + form
+  const loginModal = document.getElementById("adminLoginModal");
+  const loginForm = document.getElementById("adminLoginForm");
+  const usernameInput = document.getElementById("adminUsername");
+  const passwordInput = document.getElementById("adminPassword");
+  const cancelBtn = document.getElementById("adminLoginCancel");
+  const logoutBtn = document.getElementById("adminLogoutBtn"); // optional
+
+  function hasToken() {
+    return !!localStorage.getItem(TOKEN_KEY);
+  }
+
+  function showAdmin() {
+    if (!adminSection) return;
+
+    // Hide public sections
+    customerSections.forEach((sec) => {
+      if (!sec) return;
+      sec.dataset.prevDisplay = sec.style.display || "";
+      sec.style.display = "none";
+    });
+
+    // Show dashboard
+    adminSection.style.display = "block";
+
+    // Scroll to top of admin
+    const offset = adminSection.getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top: offset, behavior: "smooth" });
+  }
+
+  function showPublic() {
+    if (adminSection) {
+      adminSection.style.display = "none";
+    }
+    customerSections.forEach((sec) => {
+      if (!sec) return;
+      sec.style.display = sec.dataset.prevDisplay || "";
+    });
+  }
+
+  function openLoginModal() {
+    if (!loginModal) return;
+    loginModal.classList.add("is-visible");
+    document.body.classList.add("modal-open");
+    if (usernameInput) usernameInput.focus();
+  }
+
+  function closeLoginModal() {
+    if (!loginModal) return;
+    loginModal.classList.remove("is-visible");
+    document.body.classList.remove("modal-open");
+    if (loginForm) loginForm.reset();
+  }
+
+  // Expose for main.js or inline handlers if needed
+  window.openAdminLoginModal = openLoginModal;
+  window.closeAdminLoginModal = closeLoginModal;
+
+  // Main.js calls this – give it something useful to do.
+  window.checkAdminAuth = function checkAdminAuth() {
+    if (hasToken()) {
+      console.info("Admin token present, click 'Admin' to enter dashboard.");
+    } else {
+      console.info("No admin token – public view.");
+    }
+  };
+
+  // Nav click: either go straight to dashboard (if logged in)
+  // or open the login modal.
+  if (adminNav) {
+    adminNav.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (hasToken()) {
+        showAdmin();
+      } else {
+        openLoginModal();
+      }
+    });
+  }
+
+  // Login submit
+  if (loginForm && usernameInput && passwordInput) {
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!username || !password) {
+        alert("Please enter both username and password.");
+        return;
+      }
+
+      try {
+        const resp = await fetch("/api/admin/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (!resp.ok) {
+          alert("Invalid credentials.");
+          return;
+        }
+
+        const data = await resp.json();
+        if (!data || !data.success || !data.token) {
+          alert("Login failed. Please try again.");
+          return;
+        }
+
+        localStorage.setItem(TOKEN_KEY, data.token);
+        closeLoginModal();
+        showAdmin();
+      } catch (err) {
+        console.error("Admin login error:", err);
+        alert("Could not log in. Please try again.");
+      }
+    });
+  }
+
+  // Cancel button closes modal
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeLoginModal();
+    });
+  }
+
+  // Optional: logout button inside the dashboard
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      localStorage.removeItem(TOKEN_KEY);
+      showPublic();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  // On initial load, hide admin dashboard if we’re on the public view
+  if (adminSection && !hasToken()) {
+    adminSection.style.display = "none";
+  }
+
+  console.log("🔐 Admin login module initialized.");
+})();
+  
   // ======================================================================
   // WIRE UP NAV + INITIAL STATE
   // ======================================================================
