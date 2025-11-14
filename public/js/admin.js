@@ -1,301 +1,210 @@
-/* =========================================================
- * admin.js – Login, dashboard visibility & tab switching
- * ======================================================= */
+// ============================================================
+// ADMIN PANEL CONTROLLER (CommonJS-safe browser script)
+// Version: Stable — matches index.html exactly
+// ============================================================
 
 (() => {
-  const ADMIN_TOKEN_KEY = "adminToken";
 
-  // ----- Helpers --------------------------------------------------
+  // -----------------------------
+  // State
+  // -----------------------------
+  let isLoggedIn = false;
 
-  function log(...args) {
-    console.log("🛠️ [Admin]", ...args);
-  }
+  // -----------------------------
+  // Cached DOM References
+  // -----------------------------
+  let adminNavLink,
+    adminLoginModal,
+    adminLoginForm,
+    adminLoginClose,
+    adminLoginCancel,
+    adminPanel,
+    adminHeader,
+    adminLogoutBtn,
+    adminTabs,
+    adminSections;
 
-  function getToken() {
-    return localStorage.getItem(ADMIN_TOKEN_KEY);
-  }
-
-  function setToken(token) {
-    localStorage.setItem(ADMIN_TOKEN_KEY, token);
-  }
-
-  function clearToken() {
-    localStorage.removeItem(ADMIN_TOKEN_KEY);
-  }
-
-  function isAdminAuthed() {
-    return !!getToken();
-  }
-
-  // Expose for main.js / other modules
-  window.checkAdminAuth = function checkAdminAuth() {
-    return isAdminAuthed();
-  };
-
-  function emitAuthChanged() {
-    const detail = { isAdmin: isAdminAuthed() };
-    window.dispatchEvent(
-      new CustomEvent("admin-auth-changed", { detail })
-    );
-  }
-
-  // ----- DOM references -------------------------------------------
-
-  let adminNavLink;
-  let adminSection;
-  let adminDashboard;
-
-  let adminLoginModal;
-  let adminLoginForm;
-  let adminUsernameInput;
-  let adminPasswordInput;
-  let adminLoginCancelBtn;
-  let adminLoginCloseBtn;
-  let adminLogoutBtn;
-
-  let adminTabButtons = {};
-  let adminTabSections = {};
-
-  function cacheDomRefs() {
+  // -----------------------------
+  // Cache DOM elements
+  // -----------------------------
+  function cacheDom() {
     adminNavLink = document.getElementById("adminNav");
-    adminSection = document.getElementById("adminSection");
-    adminDashboard = document.getElementById("adminDashboard");
 
+    // Login modal
     adminLoginModal = document.getElementById("adminLoginModal");
     adminLoginForm = document.getElementById("adminLoginForm");
-    adminUsernameInput = document.getElementById("adminUsername");
-    adminPasswordInput = document.getElementById("adminPassword");
-    adminLoginCancelBtn = document.getElementById("adminLoginCancel");
-    adminLoginCloseBtn = document.getElementById("adminLoginClose");
+    adminLoginClose = document.getElementById("adminLoginClose");
+    adminLoginCancel = document.getElementById("adminLoginCancel");
+
+    // Admin panel + header + tabs
+    adminPanel = document.getElementById("adminPanel");
+    adminHeader = document.getElementById("adminHeader");
     adminLogoutBtn = document.getElementById("adminLogoutBtn");
 
-    adminTabButtons = {
-      pets: document.getElementById("adminTabPets"),
-      rates: document.getElementById("adminTabRates"),
-      contacts: document.getElementById("adminTabContacts"),
-      reviews: document.getElementById("adminTabReviews")
-    };
-
-    adminTabSections = {
-      pets: document.getElementById("adminPetsSection"),
-      rates: document.getElementById("adminRatesSection"),
-      contacts: document.getElementById("adminContactsSection"),
-      reviews: document.getElementById("adminReviewsSection")
-    };
+    // Tab buttons and sections
+    adminTabs = document.querySelectorAll(".admin-tab");
+    adminSections = document.querySelectorAll(".admin-section");
   }
 
-  // ----- UI helpers -----------------------------------------------
-
-  function showElement(el) {
-    if (!el) return;
-    el.style.display = "";
-    el.classList.remove("hidden");
+  // -----------------------------
+  // Utility: Show/Hide Elements
+  // -----------------------------
+  function show(el) {
+    if (el) el.style.display = "block";
   }
 
-  function hideElement(el) {
-    if (!el) return;
-    el.style.display = "none";
-    el.classList.add("hidden");
+  function hide(el) {
+    if (el) el.style.display = "none";
   }
 
+  // -----------------------------
+  // Admin Login Modal
+  // -----------------------------
   function openLoginModal() {
-    if (!adminLoginModal) return;
-    adminLoginModal.classList.add("open");
-    adminLoginModal.style.display = "flex";
-
-    if (adminUsernameInput) adminUsernameInput.focus();
+    adminLoginForm.reset();
+    show(adminLoginModal);
   }
 
   function closeLoginModal() {
-    if (!adminLoginModal) return;
-    adminLoginModal.classList.remove("open");
-    adminLoginModal.style.display = "none";
-
-    if (adminLoginForm) adminLoginForm.reset();
+    hide(adminLoginModal);
   }
 
-  function scrollToAdminSection() {
-    if (!adminSection) return;
-    adminSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  // -----------------------------
+  // Switch Active Admin Tab
+  // -----------------------------
+  function activateTab(sectionId) {
+    console.log("[Admin] Switching to tab:", sectionId);
+
+    // Deactivate all tabs
+    adminTabs.forEach((btn) => btn.classList.remove("active"));
+    adminSections.forEach((sec) => hide(sec));
+
+    // Activate selected tab
+    const selectedBtn = document.querySelector(`[data-section="${sectionId}"]`);
+    const selectedSection = document.getElementById(sectionId);
+
+    if (selectedBtn) selectedBtn.classList.add("active");
+    show(selectedSection);
   }
 
-  function setActiveAdminTab(tabKey) {
-    Object.entries(adminTabButtons).forEach(([key, btn]) => {
-      if (!btn) return;
-      if (key === tabKey) {
-        btn.classList.add("active");
-      } else {
-        btn.classList.remove("active");
-      }
+  // -----------------------------
+  // Login Form Submission
+  // -----------------------------
+  async function handleLoginSubmit(e) {
+    e.preventDefault();
+    console.log("[Admin] Login attempt...");
+
+    const username = document.getElementById("adminUser").value.trim();
+    const password = document.getElementById("adminPass").value.trim();
+
+    const res = await fetch("/api/admin/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
     });
 
-    Object.entries(adminTabSections).forEach(([key, section]) => {
-      if (!section) return;
-      if (key === tabKey) {
-        showElement(section);
-      } else {
-        hideElement(section);
-      }
-    });
-  }
-
-function refreshAdminUI() {
-  const token = localStorage.getItem("adminToken");
-  const adminSection = document.getElementById("admin");
-  const adminNav = document.getElementById("adminNav");
-
-  if (!adminSection || !adminNav) {
-    console.warn("[Admin] Missing admin DOM elements, cannot refresh UI.");
-    return;
-  }
-
-  if (token) {
-    console.log("[Admin] Auth token found — showing admin dashboard");
-    adminSection.style.display = "block";
-    adminNav.textContent = "Admin ✓";
-  } else {
-    console.log("[Admin] No token — hiding admin dashboard");
-    adminSection.style.display = "none";
-    adminNav.textContent = "Admin";
-  }
-}
-  // ----- Event handlers -------------------------------------------
-
-  async function handleLoginSubmit(evt) {
-    evt.preventDefault();
-    if (!adminUsernameInput || !adminPasswordInput) return;
-
-    const username = adminUsernameInput.value.trim();
-    const password = adminPasswordInput.value;
-
-    if (!username || !password) {
-      alert("Please enter both username and password.");
-      return;
-    }
-
-    try {
-      log("Attempting admin login…");
-
-      const res = await fetch("/api/admin/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-      });
-
-      if (!res.ok) {
-        log("Login failed, status", res.status);
-        alert("Invalid username or password.");
-        return;
-      }
-
+    if (res.ok) {
       const data = await res.json();
-      if (!data.success || !data.token) {
-        alert("Login failed. Please try again.");
+      if (data.success) {
+        console.log("[Admin] Login successful");
+        isLoggedIn = true;
+        localStorage.setItem("adminToken", data.token);
+
+        closeLoginModal();
+        showAdminPanel();
         return;
       }
-
-      setToken(data.token);
-      emitAuthChanged();
-      refreshAdminUI();
-      closeLoginModal();
-      scrollToAdminSection();
-
-      log("Admin login successful.");
-      refreshAdminUI();
-
-    } catch (err) {
-      console.error("❌ Admin login error:", err);
-      alert("There was a problem logging in. Please try again.");
     }
+
+    alert("Invalid credentials.");
   }
 
-  function handleLogoutClick() {
-    clearToken();
-    emitAuthChanged();
-    refreshAdminUI();
-    log("Admin logged out.");
-    // Optionally scroll back to top
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  // -----------------------------
+  // Logout Handler
+  // -----------------------------
+  function handleLogout() {
+    localStorage.removeItem("adminToken");
+    isLoggedIn = false;
+    hide(adminPanel);
+    alert("Logged out.");
   }
 
-  function handleAdminNavClick(evt) {
-    evt.preventDefault();
-    log("Admin nav clicked");
-    if (isAdminAuthed()) {
-      // Already logged in – go straight to dashboard
-      refreshAdminUI();
-      scrollToAdminSection();
+  // -----------------------------
+  // Show Admin Panel
+  // -----------------------------
+  function showAdminPanel() {
+    console.log("[Admin] Showing admin panel...");
+
+    show(adminPanel);
+    show(adminHeader);
+
+    // Default to Pets section
+    activateTab("adminPets");
+  }
+
+  // -----------------------------
+  // On Page Load — restore login state
+  // -----------------------------
+  function restoreLoginState() {
+    const token = localStorage.getItem("adminToken");
+    if (token) {
+      console.log("[Admin] Restoring logged-in session");
+      isLoggedIn = true;
+      showAdminPanel();
     } else {
-      // Not logged in – open login modal
-      openLoginModal();
+      hide(adminPanel);
     }
   }
 
-  function attachEventListeners() {
-    // Admin nav in sticky header
+  // -----------------------------
+  // Event Listeners
+  // -----------------------------
+  function addListeners() {
 
-    
+    // Click "Admin" in sticky nav
     if (adminNavLink) {
-      adminNavLink.addEventListener("click", handleAdminNavClick);
+      adminNavLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        console.log("[Admin] Admin nav clicked");
+
+        if (isLoggedIn) {
+          showAdminPanel();
+        } else {
+          openLoginModal();
+        }
+      });
     }
 
-    // Login form
+    // Login modal events
+    if (adminLoginClose) adminLoginClose.addEventListener("click", closeLoginModal);
+    if (adminLoginCancel) adminLoginCancel.addEventListener("click", closeLoginModal);
+
     if (adminLoginForm) {
       adminLoginForm.addEventListener("submit", handleLoginSubmit);
     }
 
-    if (adminLoginCancelBtn) {
-      adminLoginCancelBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        closeLoginModal();
-      });
-    }
-
-    if (adminLoginCloseBtn) {
-      adminLoginCloseBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        closeLoginModal();
-      });
-    }
-
     // Logout
     if (adminLogoutBtn) {
-      adminLogoutBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        handleLogoutClick();
-      });
+      adminLogoutBtn.addEventListener("click", handleLogout);
     }
 
-    // Tab buttons
-    if (adminTabButtons.pets) {
-      adminTabButtons.pets.addEventListener("click", () =>
-        setActiveAdminTab("pets")
-      );
-    }
-    if (adminTabButtons.rates) {
-      adminTabButtons.rates.addEventListener("click", () =>
-        setActiveAdminTab("rates")
-      );
-    }
-    if (adminTabButtons.contacts) {
-      adminTabButtons.contacts.addEventListener("click", () =>
-        setActiveAdminTab("contacts")
-      );
-    }
-    if (adminTabButtons.reviews) {
-      adminTabButtons.reviews.addEventListener("click", () =>
-        setActiveAdminTab("reviews")
-      );
-    }
+    // Tab switch buttons
+    adminTabs.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const section = btn.dataset.section;
+        activateTab(section);
+      });
+    });
   }
 
-  // ----- Init -----------------------------------------------------
+  // -----------------------------
+  // Initialize
+  // -----------------------------
   document.addEventListener("DOMContentLoaded", () => {
-    cacheDomRefs();
-    attachEventListeners();
-    refreshAdminUI();
-    emitAuthChanged();
-    log("Admin login module initialized.");
+    console.log("[Admin] Initializing admin.js...");
+    cacheDom();
+    addListeners();
+    restoreLoginState();
   });
-  
+
 })();
