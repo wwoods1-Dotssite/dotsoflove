@@ -35,67 +35,89 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  function updateModalImage() {
-    if (!currentImages.length || !modalImg) return;
+  // ===============================
+  // MODAL HELPERS
+  // ===============================
 
-    const url = currentImages[currentIndex];
+  const modal = document.getElementById("imageModal");
+  const modalImg = document.getElementById("modalImage");
+  const modalCaption = document.getElementById("caption");
+  const modalClose = modal ? modal.querySelector(".image-modal-close") : null;
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+
+  let currentUrls = [];
+  let currentIndex = 0;
+  let currentPetName = "";
+
+  function updateModalImage() {
+    if (!modal || !modalImg || !currentUrls.length) return;
+
+    const url = currentUrls[currentIndex];
     modalImg.src = url;
-    modalImg.alt = currentCaption || "Pet photo";
+    modalImg.alt = `${currentPetName || "Pet"} photo ${currentIndex + 1}`;
 
     if (modalCaption) {
-      modalCaption.textContent = currentCaption || "";
+      modalCaption.textContent = currentPetName || "";
     }
   }
 
-  function openModal(images, startIndex = 0, captionText = "") {
-    if (!modalAvailable) return;
+  function openModal(urls, startIndex = 0, petName = "") {
+    if (!modal) return;
 
-    currentImages = images;
+    currentUrls = urls;
     currentIndex = startIndex;
-    currentCaption = captionText;
+    currentPetName = petName;
 
     updateModalImage();
 
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden"; // prevent background scroll
-
-    console.log("[Gallery] Opened image modal", { startIndex, count: images.length });
+    document.body.style.overflow = "hidden"; // lock background scroll
   }
 
   function closeModal() {
-    if (!modalAvailable) return;
+    if (!modal) return;
 
     modal.classList.remove("open");
     modal.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
-
-    console.log("[Gallery] Closed image modal");
+    document.body.style.overflow = ""; // restore scroll
   }
 
-  // Modal event listeners
-  if (closeBtn) {
-    closeBtn.addEventListener("click", (e) => {
+  // Close button
+  if (modalClose) {
+    modalClose.addEventListener("click", (e) => {
       e.preventDefault();
       closeModal();
     });
   }
 
-  if (backdrop) {
-    backdrop.addEventListener("click", () => closeModal());
+  // Click on dark backdrop
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (
+        e.target === modal ||
+        e.target.classList.contains("image-modal-backdrop")
+      ) {
+        closeModal();
+      }
+    });
   }
 
+  // ESC key closes modal
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeModal();
     }
   });
 
+  // Prev / next arrows
   if (prevBtn) {
     prevBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      if (!currentImages.length) return;
-      currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
+      if (!currentUrls.length) return;
+      currentIndex =
+        (currentIndex - 1 + currentUrls.length) % currentUrls.length;
       updateModalImage();
     });
   }
@@ -103,12 +125,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (nextBtn) {
     nextBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      if (!currentImages.length) return;
-      currentIndex = (currentIndex + 1) % currentImages.length;
+      if (!currentUrls.length) return;
+      currentIndex = (currentIndex + 1) % currentUrls.length;
       updateModalImage();
     });
   }
-
   // ===============================
   // Card rendering
   // ===============================
