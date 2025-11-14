@@ -127,15 +127,19 @@ header {
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
-  display: none;
+  z-index: 9999;
+  background: rgba(20,10,40,0.65);
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  padding: 1rem;
 }
 
-.modal.active {
+.modal.show {
   display: flex;
+}
+
+.modal.hidden {
+  display: none;
 }
 
 .modal-content {
