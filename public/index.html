@@ -261,31 +261,24 @@
 <!-- ============================================================
      ADMIN DASHBOARD
 ============================================================ -->
-<section id="admin" style="display:none;">
-  <div class="admin-container">
-
-    <div style="text-align:right;">
-      <button id="logoutBtn" class="btn-danger">Logout</button>
-    </div>
-
+<div id="adminPanel" style="display:none;">
+  <div id="adminHeader">
     <h2>Admin Dashboard</h2>
-
-    <!-- Admin Navigation -->
-    <div style="display:flex; gap:12px; margin-top:20px;">
-      <button class="admin-tab" data-section="adminPets">🐾 Pets</button>
-      <button class="admin-tab" data-section="adminRates">💲 Rates</button>
-      <button class="admin-tab" data-section="adminContacts">📬 Contacts</button>
-      <button class="admin-tab" data-section="adminReviews">⭐ Reviews</button>
-    </div>
-
-
-    <!-- Admin Sections -->
-    <div id="adminPets" class="admin-section"></div>
-    <div id="adminRates" class="admin-section"></div>
-    <div id="adminContacts" class="admin-section"></div>
-    <div id="adminReviews" class="admin-section"></div>
-
+    <button id="adminLogoutBtn" class="btn-danger">Logout</button>
   </div>
+
+  <div class="admin-tabs">
+    <button class="admin-tab" data-section="adminPets">🐾 Pets</button>
+    <button class="admin-tab" data-section="adminRates">💲 Rates</button>
+    <button class="admin-tab" data-section="adminContacts">📬 Contacts</button>
+    <button class="admin-tab" data-section="adminReviews">⭐ Reviews</button>
+  </div>
+
+  <div id="adminPets" class="admin-section"></div>
+  <div id="adminRates" class="admin-section"></div>
+  <div id="adminContacts" class="admin-section"></div>
+  <div id="adminReviews" class="admin-section"></div>
+</div>
 </section>
 
 <script src="js/gallery.js" defer></script>
@@ -324,22 +317,18 @@
 ============================================================ -->
 <div id="adminLoginModal" class="modal">
   <div class="modal-content">
-    <button id="adminLoginClose" class="close-btn">&times;</button>
+      <h3>Admin Login</h3>
+      <form id="adminLoginForm">
+          <label>Username</label>
+          <input id="adminUser" type="text" required>
 
-    <h2>Admin Login</h2>
+          <label>Password</label>
+          <input id="adminPass" type="password" required>
 
-    <form id="adminLoginForm">
-      <label>Username</label>
-      <input id="adminUsername" type="text" autocomplete="username" />
-
-      <label>Password</label>
-      <input id="adminPassword" type="password" autocomplete="current-password" />
-
-      <div class="modal-actions">
-        <button type="submit" class="btn-primary">Login</button>
-        <button id="adminLoginCancel" class="btn-secondary">Cancel</button>
-      </div>
-    </form>
+          <button type="submit" class="btn-primary">Login</button>
+          <button id="adminLoginCancel" type="button" class="btn-secondary">Cancel</button>
+          <span id="adminLoginClose" class="modal-close-btn">&times;</span>
+      </form>
   </div>
 </div>
 
