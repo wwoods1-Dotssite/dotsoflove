@@ -139,22 +139,26 @@
     });
   }
 
-  function refreshAdminUI() {
-    if (!adminSection || !adminDashboard) return;
+function refreshAdminUI() {
+  const token = localStorage.getItem("adminToken");
+  const adminSection = document.getElementById("admin");
+  const adminNav = document.getElementById("adminNav");
 
-    if (isAdminAuthed()) {
-      showElement(adminDashboard);
-      // Once logged in, make sure the admin section is visible
-      showElement(adminSection);
-      setActiveAdminTab("pets"); // default tab
-      log("Admin token present – dashboard ready.");
-    } else {
-      hideElement(adminDashboard);
-      // Admin section still visible as a public heading, but no dashboard
-      log("No admin token – public view.");
-    }
+  if (!adminSection || !adminNav) {
+    console.warn("[Admin] Missing admin DOM elements, cannot refresh UI.");
+    return;
   }
 
+  if (token) {
+    console.log("[Admin] Auth token found — showing admin dashboard");
+    adminSection.style.display = "block";
+    adminNav.textContent = "Admin ✓";
+  } else {
+    console.log("[Admin] No token — hiding admin dashboard");
+    adminSection.style.display = "none";
+    adminNav.textContent = "Admin";
+  }
+}
   // ----- Event handlers -------------------------------------------
 
   async function handleLoginSubmit(evt) {
@@ -197,6 +201,7 @@
       scrollToAdminSection();
 
       log("Admin login successful.");
+      refreshAdminUI();
 
     } catch (err) {
       console.error("❌ Admin login error:", err);
