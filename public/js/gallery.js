@@ -1,4 +1,5 @@
 // gallery.js – Responsive gallery with modal carousel
+
 document.addEventListener("DOMContentLoaded", () => {
   console.log("🖼 Initializing Gallery…");
 
@@ -14,98 +15,95 @@ document.addEventListener("DOMContentLoaded", () => {
   // Modal elements
   // ===============================
   const modal = document.getElementById("imageModal");
-  const modalImg = modal ? modal.querySelector("#modalImage") : null;
-  const modalCaption = modal ? modal.querySelector("#caption") : null;
+  const modalImg = modal ? document.getElementById("modalImage") : null;
+  const caption = modal ? document.getElementById("caption") : null;
   const closeBtn = modal ? modal.querySelector(".image-modal-close") : null;
-  const backdrop = modal ? modal.querySelector(".image-modal-backdrop") : null;
-  const prevBtn = modal ? modal.querySelector("#prevBtn") : null;
-  const nextBtn = modal ? modal.querySelector("#nextBtn") : null;
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
 
   const modalReady =
-    modal && modalImg && modalCaption && closeBtn && prevBtn && nextBtn;
+    !!modal && !!modalImg && !!caption && !!closeBtn && !!prevBtn && !!nextBtn;
 
   if (!modalReady) {
-    console.warn(
-      "[Gallery] Modal pieces missing, thumbnails will still render but clicks will do nothing."
-    );
+    console.warn("[Gallery] Modal pieces missing; thumbnails only.");
   }
 
   // ===============================
   // Modal state + helpers
   // ===============================
-  let currentImages = []; // array of URLs (strings)
+  let currentImages = [];
   let currentIndex = 0;
-  let currentPetName = "";
+  let currentCaption = "";
 
-  function renderModalImage() {
-    if (!currentImages.length || !modalImg) return;
-
+  function updateModalImage() {
+    if (!currentImages.length) return;
     const url = currentImages[currentIndex];
     modalImg.src = url;
-    modalImg.alt = `${currentPetName || "Pet"} photo ${currentIndex + 1}`;
-
-    if (modalCaption) {
-      modalCaption.textContent = currentPetName || "";
-    }
+    modalImg.alt = currentCaption || "Pet photo";
+    caption.textContent = currentCaption || "";
   }
 
-  function showModal() {
-    if (!modal) return;
-    modal.classList.add("open");
-    modal.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
-  }
-
-  function hideModal() {
-    if (!modal) return;
-    modal.classList.remove("open");
-    modal.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
-  }
-
-  function openImageModal(images, startIndex, petName) {
+  function openModal(images, startIndex = 0, petName = "") {
     if (!modalReady) return;
 
     currentImages = images || [];
     if (!currentImages.length) return;
 
-    currentIndex =
-      typeof startIndex === "number" && !Number.isNaN(startIndex)
-        ? startIndex
-        : 0;
-    currentPetName = petName || "";
+    currentIndex = startIndex;
+    currentCaption = petName;
 
-    renderModalImage();
-    showModal();
+    updateModalImage();
+
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+
+    console.log("[Gallery] Opening modal for", petName, "index", startIndex);
   }
 
-  // Wire modal controls
+  function closeModal() {
+    if (!modal) return;
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    console.log("[Gallery] Closing modal");
+  }
+
+  // Close button
   if (closeBtn) {
     closeBtn.addEventListener("click", (e) => {
       e.preventDefault();
-      hideModal();
+      closeModal();
     });
   }
 
-  if (backdrop) {
-    backdrop.addEventListener("click", () => {
-      hideModal();
+  // Backdrop click (clicking outside the content)
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (
+        e.target === modal ||
+        e.target.classList.contains("image-modal-backdrop")
+      ) {
+        closeModal();
+      }
     });
   }
 
+  // ESC key closes
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
-      hideModal();
+      closeModal();
     }
   });
 
+  // Prev / Next
   if (prevBtn) {
     prevBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       if (!currentImages.length) return;
       currentIndex =
         (currentIndex - 1 + currentImages.length) % currentImages.length;
-      renderModalImage();
+      updateModalImage();
     });
   }
 
@@ -114,23 +112,22 @@ document.addEventListener("DOMContentLoaded", () => {
       e.stopPropagation();
       if (!currentImages.length) return;
       currentIndex = (currentIndex + 1) % currentImages.length;
-      renderModalImage();
+      updateModalImage();
     });
   }
 
   // ===============================
-  // Card rendering
+  // Card creation
   // ===============================
   function createPetCard(pet) {
     const card = document.createElement("article");
     card.className = "pet-card";
 
-    const imageUrls = (pet.images || [])
+    const images = (pet.images || [])
       .filter((img) => img && img.image_url)
       .map((img) => img.image_url);
 
-    // Store data needed for the modal
-    card.dataset.images = JSON.stringify(imageUrls);
+    card.dataset.images = JSON.stringify(images);
     card.dataset.petName = pet.pet_name || "";
 
     const title = document.createElement("h3");
@@ -145,8 +142,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const imagesWrap = document.createElement("div");
     imagesWrap.className = "pet-images";
 
-    if (imageUrls.length) {
-      imageUrls.forEach((url, index) => {
+    if (images.length) {
+      images.forEach((url, index) => {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "pet-thumb";
@@ -174,6 +171,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return card;
   }
 
+  // ===============================
+  // Attach thumbnail click -> modal
+  // ===============================
   function attachThumbnailClicks(grid) {
     if (!modalReady) return;
 
@@ -190,12 +190,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const index = parseInt(thumb.dataset.index || "0", 10) || 0;
       const name = card.dataset.petName || "";
 
-      openImageModal(urls, index, name);
+      openModal(urls, index, name);
     });
   }
 
   // ===============================
-  // Fetch + render
+  // Fetch + render pets
   // ===============================
   async function loadPets() {
     try {
@@ -212,8 +212,12 @@ document.addEventListener("DOMContentLoaded", () => {
       dorothyGrid.innerHTML = "";
       clientGrid.innerHTML = "";
 
-      dorothyPets.forEach((pet) => dorothyGrid.appendChild(createPetCard(pet)));
-      clientPets.forEach((pet) => clientGrid.appendChild(createPetCard(pet)));
+      dorothyPets.forEach((pet) =>
+        dorothyGrid.appendChild(createPetCard(p))
+      );
+      clientPets.forEach((pet) =>
+        clientGrid.appendChild(createPetCard(p))
+      );
 
       attachThumbnailClicks(dorothyGrid);
       attachThumbnailClicks(clientGrid);
