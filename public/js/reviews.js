@@ -1,143 +1,204 @@
 // public/js/reviews.js
-document.addEventListener("DOMContentLoaded", () => {
+// Handles the public "Share Your Experience" modal + submission
 
-  const modal = document.getElementById("reviewModal");
-  const closeBtn = document.querySelector("#reviewModal .close-btn");
-  const cancelBtn = document.getElementById("cancelReviewBtn");
-  const openBtn = document.getElementById("openReviewModalBtn");
-  const form = document.getElementById("reviewForm");
-  const submitBtn = document.getElementById("submitReviewBtn");
-  const reviewList = document.getElementById("publicReviews");
+(function () {
+  "use strict";
 
-  if (!modal) {
-    console.warn("[Reviews] reviewModal not found — skipping review setup.");
-    return;
+  let reviewModal;
+  let openBtn;
+  let closeBtn;
+  let cancelBtn;
+  let form;
+  let listContainer;
+
+  // -----------------------------
+  // Helpers: show/hide modal
+  // -----------------------------
+  function showReviewModal() {
+    if (!reviewModal) return;
+    reviewModal.classList.remove("hidden");
+    reviewModal.classList.add("show");
+    reviewModal.setAttribute("aria-hidden", "false");
+    console.log("[Reviews] Opening review modal");
   }
 
-  // --------------------------------------------------
-  // Helpers: Open / Close Modal
-  // --------------------------------------------------
-  function openReviewModal() {
-    modal.classList.remove("hidden");
-    modal.classList.add("show");
-    modal.setAttribute("aria-hidden", "false");
+  function hideReviewModal() {
+    if (!reviewModal) return;
+    reviewModal.classList.remove("show");
+    reviewModal.classList.add("hidden");
+    reviewModal.setAttribute("aria-hidden", "true");
+    console.log("[Reviews] Closing review modal");
   }
 
-  function closeReviewModal() {
-    modal.classList.remove("show");
-    modal.classList.add("hidden");
-    modal.setAttribute("aria-hidden", "true");
-  }
+  // -----------------------------
+  // Submit handler
+  // -----------------------------
+  async function handleReviewSubmit(event) {
+    event.preventDefault();
+    if (!form) return;
 
-  // --------------------------------------------------
-  // Event Listeners
-  // --------------------------------------------------
-  if (openBtn) {
-    openBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      openReviewModal();
-    });
-  }
+    const name = form.querySelector("#reviewName").value.trim();
+    const rating = parseInt(
+      form.querySelector("#reviewRating").value,
+      10
+    );
+    const text = form.querySelector("#reviewText").value.trim();
 
-  if (closeBtn) {
-    closeBtn.addEventListener("click", closeReviewModal);
-  }
-
-  if (cancelBtn) {
-    cancelBtn.addEventListener("click", closeReviewModal);
-  }
-
-  // close when clicking background overlay
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) closeReviewModal();
-  });
-
-  // --------------------------------------------------
-  // Submit Review
-  // --------------------------------------------------
-  async function submitReview(e) {
-    e.preventDefault();
-
-    if (!form.checkValidity()) {
-      form.reportValidity();
+    if (!name || !text || !rating) {
+      alert("Please fill in your name, rating, and review text.");
       return;
     }
 
     const payload = {
-      customer_name: form.reviewerName.value.trim(),
-      rating: Number(form.reviewerRating.value),
-      review_text: form.reviewerText.value.trim(),
+      customer_name: name,
+      rating: rating,
+      review_text: text,
     };
 
-    submitBtn.disabled = true;
+    console.log("[Reviews] Submitting review payload:", payload);
 
     try {
-      const res = await fetch("/api/reviews", {
+      const res = await fetch("/api/reviews/public", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
-        console.error("Review submission failed", await res.text());
-        alert("Error submitting review.");
+        console.error("[Reviews] Server responded with", res.status);
+        alert(
+          "Sorry, there was a problem submitting your review. Please try again."
+        );
         return;
       }
 
-      alert("Thank you! Your review was submitted and awaits approval.");
-
-      // reset + close modal
+      // Clear the form and close the modal
       form.reset();
-      closeReviewModal();
+      hideReviewModal();
 
-      // reload approved reviews
-      loadReviews();
-
+      alert(
+        "Thank you! Your review has been submitted and will appear once approved."
+      );
     } catch (err) {
-      console.error("Network error submitting review:", err);
-      alert("Network error submitting review.");
+      console.error("[Reviews] Error submitting review:", err);
+      alert(
+        "Sorry, there was a network error submitting your review. Please try again."
+      );
     }
-
-    submitBtn.disabled = false;
   }
 
-  form.addEventListener("submit", submitReview);
-
-  // --------------------------------------------------
-  // Load Approved Reviews
-  // --------------------------------------------------
-  async function loadReviews() {
-    if (!reviewList) return;
+  // -----------------------------
+  // (Optional) Load approved reviews
+  // -----------------------------
+  async function loadApprovedReviews() {
+    if (!listContainer) return; // If you don't have a list on the page, skip.
 
     try {
-      const res = await fetch("/api/reviews/approved");
-      const reviews = await res.json();
-
-      reviewList.innerHTML = "";
-
-      if (!Array.isArray(reviews) || reviews.length === 0) {
-        reviewList.innerHTML =
-          "<p>No reviews yet — be the first to share your experience!</p>";
+      const res = await fetch("/api/reviews");
+      if (!res.ok) {
+        console.warn(
+          "[Reviews] Failed to load approved reviews, status:",
+          res.status
+        );
         return;
       }
 
-      for (const r of reviews) {
-        const item = document.createElement("div");
-        item.className = "review-card";
-        item.innerHTML = `
-          <h4>${r.customer_name}</h4>
-          <div class="rating">⭐ ${r.rating}/5</div>
-          <p>${r.review_text}</p>
-          <small>${new Date(r.created).toLocaleDateString()}</small>
-        `;
-        reviewList.appendChild(item);
+      const data = await res.json();
+      if (!Array.isArray(data)) return;
+
+      listContainer.innerHTML = "";
+
+      if (data.length === 0) {
+        listContainer.innerHTML =
+          '<p class="muted">No reviews yet—be the first to share your experience!</p>';
+        return;
       }
 
+      data
+        .filter((r) => r.approved !== false) // if backend includes approved flag
+        .forEach((review) => {
+          const card = document.createElement("article");
+          card.className = "review-card";
+
+          const nameEl = document.createElement("h4");
+          nameEl.textContent = review.customer_name || "Happy Client";
+
+          const ratingEl = document.createElement("div");
+          ratingEl.className = "review-rating";
+          const stars = "★★★★★☆☆☆☆☆".slice(5 - (review.rating || 5), 10);
+          ratingEl.textContent = "★".repeat(review.rating || 5);
+
+          const textEl = document.createElement("p");
+          textEl.textContent = review.review_text || "";
+
+          card.appendChild(nameEl);
+          card.appendChild(ratingEl);
+          card.appendChild(textEl);
+
+          listContainer.appendChild(card);
+        });
     } catch (err) {
-      console.error("Error loading reviews:", err);
-      reviewList.innerHTML = "<p>Error loading reviews.</p>";
+      console.warn("[Reviews] Error loading approved reviews:", err);
     }
   }
 
-  loadReviews(); // initial load
-});
+  // -----------------------------
+  // Init
+  // -----------------------------
+  document.addEventListener("DOMContentLoaded", () => {
+    reviewModal = document.getElementById("reviewModal");
+    openBtn = document.getElementById("openReviewModal");
+    closeBtn = document.getElementById("reviewModalClose");
+    cancelBtn = document.getElementById("reviewModalCancel");
+    form = document.getElementById("reviewForm");
+    listContainer = document.getElementById("publicReviewsList");
+
+    console.log("[Reviews] Initializing reviews.js", {
+      reviewModal,
+      openBtn,
+      closeBtn,
+      cancelBtn,
+      form,
+      listContainer,
+    });
+
+    // Wire up open
+    if (openBtn) {
+      openBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        showReviewModal();
+      });
+    }
+
+    // Wire up close / cancel
+    if (closeBtn) {
+      closeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        hideReviewModal();
+      });
+    }
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        hideReviewModal();
+      });
+    }
+
+    // Clicking backdrop closes modal
+    if (reviewModal) {
+      reviewModal.addEventListener("click", (e) => {
+        if (e.target === reviewModal) {
+          hideReviewModal();
+        }
+      });
+    }
+
+    // Form submit
+    if (form) {
+      form.addEventListener("submit", handleReviewSubmit);
+    }
+
+    // Load approved reviews if the container exists
+    loadApprovedReviews();
+  });
+})();
