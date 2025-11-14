@@ -290,5 +290,20 @@
     refreshAdminUI();
     emitAuthChanged();
     log("Admin login module initialized.");
+     const adminNav = document.getElementById("adminNav");
+
+  if (!adminNav) {
+    console.warn("[Admin] #adminNav link not found in DOM");
+    return;
+  }
+
+  console.log("[Admin] Found adminNav element:", adminNav);
+
+  adminNav.addEventListener("click", (event) => {
+    event.preventDefault();
+    console.log("[Admin] Admin nav clicked");
+    openAdminEntry(); // or whatever your entry function is called
+
   });
+  
 })();
