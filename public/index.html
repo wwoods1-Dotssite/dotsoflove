@@ -1,15 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dot’s of Love Pet Sitting</title>
-  <link rel="stylesheet" href="css/styles.css" />
-  <link rel="stylesheet" href="css/gallery.css" />
-  <link rel="stylesheet" href="css/rates.css" />
-  <link rel="stylesheet" href="css/contact.css" />
-  <link rel="stylesheet" href="css/admin.css" />
-</head>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-paw">🐾</span>
+      <span class="logo-text">Dot's of Love Pet Sitting</span>
+    </div>
+
+    <nav class="nav-links">
+      <a href="#about" class="nav-link">About</a>
+      <a href="#gallery" class="nav-link">Gallery</a>
+      <a href="#reviews" class="nav-link">Reviews</a>
+      <a href="#rates" class="nav-link">Rates</a>
+      <a href="#contact" class="nav-link">Contact</a>
+      <a href="#adminLoginSection" class="nav-link">Admin</a>
+    </nav>
+  </div>
+</header>
 
 <body>
   <!-- ========================= -->
@@ -181,12 +188,10 @@
       Read what pet parents have to say about Dot’s of Love Pet Sitting.
     </p>
 
-    <!-- Public reviews list -->
-    <div id="publicReviewsList" class="reviews-list">
-      <!-- reviews.js will inject cards here -->
-    </div>
+    <!-- Approved reviews will be rendered here by reviews.js -->
+    <div id="publicReviewsList" class="reviews-list"></div>
 
-    <!-- Leave a review CTA -->
+    <!-- CTA to open the review modal -->
     <div class="reviews-cta">
       <button id="openReviewModalBtn" class="btn-primary">
         Share Your Experience
@@ -195,149 +200,132 @@
   </div>
 </section>
 
-<!-- Submit Review Modal -->
-<div id="reviewModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 class="modal-title">Share Your Experience</h3>
-      <button class="close-btn" type="button" data-close-modal="reviewModal">
-        &times;
-      </button>
-    </div>
+<!-- ========================= -->
+<!--       ADMIN LOGIN         -->
+<!-- ========================= -->
+<section id="adminLoginSection" class="page-section admin-login-section">
+  <div class="section-inner">
+    <h2 class="section-title">Admin Login</h2>
+    <p class="section-subtitle">
+      Dorothy, log in to manage pets, rates, contacts, and reviews.
+    </p>
 
-    <div class="modal-body">
-      <form id="reviewForm">
-        <label for="reviewerName">Your Name</label>
-        <input
-          type="text"
-          id="reviewerName"
-          name="name"
-          placeholder="e.g., Emma Smutzer"
-          required
-        />
-
-        <label for="reviewRating">Rating</label>
-        <select id="reviewRating" name="rating" required>
-          <option value="5" selected>⭐️⭐️⭐️⭐️⭐️ 5</option>
-          <option value="4">⭐️⭐️⭐️⭐️ 4</option>
-          <option value="3">⭐️⭐️⭐️ 3</option>
-          <option value="2">⭐️⭐️ 2</option>
-          <option value="1">⭐️ 1</option>
-        </select>
-
-        <label for="reviewMessage">Your Review</label>
-        <textarea
-          id="reviewMessage"
-          name="review_text"
-          rows="4"
-          placeholder="Tell other pet parents about your experience..."
-          required
-        ></textarea>
-
-        <div class="modal-actions">
-          <button
-            type="button"
-            id="saveReviewBtn"
-            class="btn-primary"
-          >
-            Submit Review
-          </button>
-          <button
-            type="button"
-            class="btn-danger"
-            data-close-modal="reviewModal"
-          >
-            Cancel
-          </button>
+    <div class="admin-login-card">
+      <form id="adminLoginForm">
+        <div class="form-group">
+          <label for="adminUsername">Username</label>
+          <input
+            type="text"
+            id="adminUsername"
+            name="adminUsername"
+            autocomplete="username"
+            required
+          />
         </div>
-      </form>
 
-      <p class="modal-note">
-        Your review will be submitted for approval before it appears on the
-        site.
-      </p>
+        <div class="form-group">
+          <label for="adminPassword">Password</label>
+          <input
+            type="password"
+            id="adminPassword"
+            name="adminPassword"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+
+        <button type="submit" class="btn-primary">Login</button>
+        <div id="adminLoginStatus" class="form-status"></div>
+      </form>
     </div>
   </div>
-</div>
-
-    <!-- ========================= -->
-    <!--       ADMIN LOGIN         -->
-    <!-- ========================= -->
-    <section id="adminLogin" class="page-section">
-      <div class="admin-login-card">
-        <h2>Admin Login</h2>
-        <form id="adminLoginForm">
-          <div class="form-group">
-            <label for="adminUsername">Username</label>
-            <input type="text" id="adminUsername" name="username" required />
-          </div>
-          <div class="form-group">
-            <label for="adminPassword">Password</label>
-            <input type="password" id="adminPassword" name="password" autocomplete="current-password" required />
-          </div>
-          <button type="submit" class="btn-primary">Login</button>
-          <div id="adminLoginStatus" class="form-status"></div>
-        </form>
-      </div>
-    </section>
+</section>
 
     <!-- ========================= -->
     <!--         ADMIN             -->
     <!-- ========================= -->
-<section
-  id="adminPetsPanel"
-  class="admin-section-panel"
-  data-section="pets"
->
-  <header class="admin-panel-header">
-    <h2>Manage Pets</h2>
-    <button id="addPetBtn" class="btn-primary">Add New Pet</button>
-  </header>
-  <div id="adminPetsList" class="admin-list"></div>
-</section>
-
-<section
-  id="adminRatesPanel"
-  class="admin-section-panel hidden"
-  data-section="rates"
->
-  <header class="admin-panel-header">
-    <h2>Manage Rates</h2>
-    <button id="addRateBtn" class="btn-primary">Add New Rate</button>
-  </header>
-  <div id="adminRatesList" class="admin-list"></div>
-</section>
-
-<section
-  id="adminContactsPanel"
-  class="admin-section-panel hidden"
-  data-section="contacts"
->
-  <header class="admin-panel-header">
-    <h2>Contact Requests</h2>
-  </header>
-  <div id="adminContactsList" class="admin-list"></div>
-</section>
-
-<section
-  id="adminReviewsPanel"
-  class="admin-section-panel hidden"
-  data-section="reviews"
->
-  <header class="admin-panel-header">
-    <h2>Manage Reviews</h2>
-  </header>
-  <div id="adminReviewsList" class="admin-list"></div>
-</section>
-
-        <!-- Reviews Section -->
-        <div id="tab-reviews" class="admin-tab">
-          <h3>Manage Reviews</h3>
-          <div id="adminReviewList" class="admin-list"></div>
-        </div>
-        
+<!-- ========================= -->
+<!--      ADMIN DASHBOARD      -->
+<!-- ========================= -->
+<section id="adminDashboard" class="page-section admin-dashboard hidden">
+  <div class="section-inner admin-dashboard-inner">
+    <header class="admin-dashboard-header">
+      <div>
+        <h2 class="section-title">Admin Dashboard</h2>
+        <p class="section-subtitle">
+          Manage gallery pets, service rates, contact requests, and customer reviews.
+        </p>
       </div>
+      <button id="adminLogoutBtn" class="btn-danger">Logout</button>
+    </header>
+
+    <!-- Admin Tabs (Option B: icon buttons) -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-target="pets">
+        🐾 <span>Pets</span>
+      </button>
+      <button class="admin-tab" data-target="rates">
+        💲 <span>Rates</span>
+      </button>
+      <button class="admin-tab" data-target="contacts">
+        📬 <span>Contacts</span>
+      </button>
+      <button class="admin-tab" data-target="reviews">
+        ⭐ <span>Reviews</span>
+      </button>
+    </div>
+
+    <!-- PETS PANEL -->
+    <section
+      id="adminPetsPanel"
+      class="admin-section-panel"
+      data-section="pets"
+    >
+      <header class="admin-panel-header">
+        <h3>Manage Pets</h3>
+        <button id="addPetBtn" class="btn-primary">Add New Pet</button>
+      </header>
+      <div id="adminPetsList" class="admin-list"></div>
     </section>
+
+    <!-- RATES PANEL -->
+    <section
+      id="adminRatesPanel"
+      class="admin-section-panel hidden"
+      data-section="rates"
+    >
+      <header class="admin-panel-header">
+        <h3>Manage Rates</h3>
+        <button id="addRateBtn" class="btn-primary">Add New Rate</button>
+      </header>
+      <div id="adminRatesList" class="admin-list"></div>
+    </section>
+
+    <!-- CONTACTS PANEL -->
+    <section
+      id="adminContactsPanel"
+      class="admin-section-panel hidden"
+      data-section="contacts"
+    >
+      <header class="admin-panel-header">
+        <h3>Contact Requests</h3>
+      </header>
+      <div id="adminContactsList" class="admin-list"></div>
+    </section>
+
+    <!-- REVIEWS PANEL -->
+    <section
+      id="adminReviewsPanel"
+      class="admin-section-panel hidden"
+      data-section="reviews"
+    >
+      <header class="admin-panel-header">
+        <h3>Manage Reviews</h3>
+      </header>
+      <div id="adminReviewsList" class="admin-list"></div>
+    </section>
+  </div>
+</section>
   </main>
 
   <footer>
@@ -415,6 +403,74 @@
         <button type="button" class="btn-danger" data-close="rateModal">Cancel</button>
       </div>
     </form>
+  </div>
+</div>
+
+  <!-- Submit Review Modal -->
+<div id="reviewModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Share Your Experience</h3>
+      <button
+        class="close-btn"
+        type="button"
+        data-close-modal="reviewModal"
+      >
+        &times;
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form id="reviewForm">
+        <label for="reviewerName">Your Name</label>
+        <input
+          type="text"
+          id="reviewerName"
+          name="name"
+          placeholder="e.g., Emma Smutzer"
+          required
+        />
+
+        <label for="reviewRating">Rating</label>
+        <select id="reviewRating" name="rating" required>
+          <option value="5" selected>⭐️⭐️⭐️⭐️⭐️ 5</option>
+          <option value="4">⭐️⭐️⭐️⭐️ 4</option>
+          <option value="3">⭐️⭐️⭐️ 3</option>
+          <option value="2">⭐️⭐️ 2</option>
+          <option value="1">⭐️ 1</option>
+        </select>
+
+        <label for="reviewMessage">Your Review</label>
+        <textarea
+          id="reviewMessage"
+          name="review_text"
+          rows="4"
+          placeholder="Tell other pet parents about your experience..."
+          required
+        ></textarea>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            id="saveReviewBtn"
+            class="btn-primary"
+          >
+            Submit Review
+          </button>
+          <button
+            type="button"
+            class="btn-danger"
+            data-close-modal="reviewModal"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+
+      <p class="modal-note">
+        Your review will be submitted for approval before it appears on the site.
+      </p>
+    </div>
   </div>
 </div>
   
