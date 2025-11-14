@@ -215,7 +215,7 @@
 
   function handleAdminNavClick(evt) {
     evt.preventDefault();
-
+    log("Admin nav clicked");
     if (isAdminAuthed()) {
       // Already logged in – go straight to dashboard
       refreshAdminUI();
@@ -228,6 +228,8 @@
 
   function attachEventListeners() {
     // Admin nav in sticky header
+
+    
     if (adminNavLink) {
       adminNavLink.addEventListener("click", handleAdminNavClick);
     }
@@ -282,35 +284,12 @@
     }
   }
 
-// ----- Init -----------------------------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-  cacheDomRefs();
-  attachEventListeners();
-  refreshAdminUI();
-  emitAuthChanged();
-  log("Admin login module initialized.");
-
-  // --- Wire up Admin nav link ---
-  const adminNav = document.getElementById("adminNav");
-  if (!adminNav) {
-    console.warn("[Admin] #adminNav link not found in DOM");
-    return;
-  }
-
-  console.log("[Admin] Found adminNav element:", adminNav);
-
-  adminNav.addEventListener("click", (event) => {
-    event.preventDefault();
-    console.log("[Admin] Admin nav clicked");
-
-    // Decide what to show:
-    if (isAdminAuthed()) {
-      // Already logged in → go straight to dashboard
-      refreshAdminUI();
-      scrollToAdminSection();
-    } else {
-      // Not logged in → open the login modal
-      openLoginModal();
-    }
+  // ----- Init -----------------------------------------------------
+  document.addEventListener("DOMContentLoaded", () => {
+    cacheDomRefs();
+    attachEventListeners();
+    refreshAdminUI();
+    emitAuthChanged();
+    log("Admin login module initialized.");
   });
-});
+})();
