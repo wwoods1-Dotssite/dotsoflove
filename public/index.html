@@ -74,20 +74,24 @@
   <div id="clientGallery"></div>
 </section>
 
-<!-- ============================================================
-     REVIEWS PUBLIC SECTION (Option A)
+  <!-- ============================================================
+     PUBLIC REVIEW SUBMISSION
 ============================================================ -->
 <section id="reviews">
-  <h2 class="section-title">Happy Clients</h2>
-  <p class="section-subtitle">
-    See what pet parents are saying about Dot’s of Love.
-  </p>
-
-  <div style="text-align:center; margin-bottom:25px;">
-    <button class="button-main" id="openReviewModal">Share Your Experience</button>
+  <div class="section-header">
+    <h2>Happy Clients</h2>
+    <p>See what pet parents are saying about Dot’s of Love.</p>
   </div>
 
-  <div id="publicReviewsContainer"></div>
+  <!-- Where approved reviews will render (optional) -->
+  <div id="publicReviewsList"></div>
+
+  <!-- Trigger button for the modal -->
+  <div class="reviews-cta">
+    <button id="openReviewModal" class="btn-primary">
+      Share Your Experience
+    </button>
+  </div>
 </section>
 
 <!-- ============================================================
@@ -97,23 +101,51 @@
   <div class="modal-content">
     <div class="modal-header">
       <h3>Share Your Experience</h3>
-      <button class="close-btn" onclick="closeReviewModal()">×</button>
+      <button
+        id="reviewModalClose"
+        class="close-btn"
+        type="button"
+        aria-label="Close"
+      >
+        &times;
+      </button>
     </div>
 
-    <div class="modal-body">
-      <input type="text" id="reviewerName" placeholder="Your name" />
-      <select id="reviewStars">
-        <option value="5">⭐️⭐️⭐️⭐️⭐️ (5)</option>
-        <option value="4">⭐️⭐️⭐️⭐️ (4)</option>
-        <option value="3">⭐️⭐️⭐️ (3)</option>
-        <option value="2">⭐️⭐️ (2)</option>
-        <option value="1">⭐️ (1)</option>
+    <form id="reviewForm" class="modal-body">
+      <label for="reviewName">Your name</label>
+      <input
+        id="reviewName"
+        type="text"
+        name="name"
+        placeholder="Your name"
+        required
+      />
+
+      <label for="reviewRating">Rating</label>
+      <select id="reviewRating" name="rating" required>
+        <option value="5">★★★★★ (5)</option>
+        <option value="4">★★★★☆ (4)</option>
+        <option value="3">★★★☆☆ (3)</option>
+        <option value="2">★★☆☆☆ (2)</option>
+        <option value="1">★☆☆☆☆ (1)</option>
       </select>
-      <textarea id="reviewText" rows="4" placeholder="Write your review…"></textarea>
 
-      <button class="btn-primary" id="submitReviewBtn">Submit Review</button>
-      <button class="btn-danger" onclick="closeReviewModal()">Cancel</button>
-    </div>
+      <label for="reviewText">Write your review…</label>
+      <textarea
+        id="reviewText"
+        name="text"
+        rows="4"
+        placeholder="Tell other pet parents about your experience"
+        required
+      ></textarea>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn-primary">Submit Review</button>
+        <button type="button" id="reviewModalCancel" class="btn-secondary">
+          Cancel
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
