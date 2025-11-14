@@ -275,36 +275,51 @@
     <!-- ========================= -->
     <!--         ADMIN             -->
     <!-- ========================= -->
-    <section id="admin" class="page-section hidden">
-      <div class="admin-header">
-        <h2>Admin Dashboard</h2>
-        <button id="logoutBtn" class="btn-danger">Logout</button>
-      </div>
+<section
+  id="adminPetsPanel"
+  class="admin-section-panel"
+  data-section="pets"
+>
+  <header class="admin-panel-header">
+    <h2>Manage Pets</h2>
+    <button id="addPetBtn" class="btn-primary">Add New Pet</button>
+  </header>
+  <div id="adminPetsList" class="admin-list"></div>
+</section>
 
-      <div class="admin-tabs">
-        <button data-tab="pets" class="tab-btn active">🐾 Pets</button>
-        <button data-tab="rates" class="tab-btn">💲 Rates</button>
-        <button data-tab="contacts" class="tab-btn">📩 Contacts</button>
-          <button data-tab="reviews" class="tab-btn">⭐ Reviews</button>
-      </div>
+<section
+  id="adminRatesPanel"
+  class="admin-section-panel hidden"
+  data-section="rates"
+>
+  <header class="admin-panel-header">
+    <h2>Manage Rates</h2>
+    <button id="addRateBtn" class="btn-primary">Add New Rate</button>
+  </header>
+  <div id="adminRatesList" class="admin-list"></div>
+</section>
 
-      <div id="adminContent" class="admin-content">
-        <div id="tab-pets" class="admin-tab active">
-          <h3>Manage Pets</h3>
-          <div id="petList" class="admin-list"></div>
-          <button id="addPetBtn" class="btn-primary">Add New Pet</button>
-        </div>
+<section
+  id="adminContactsPanel"
+  class="admin-section-panel hidden"
+  data-section="contacts"
+>
+  <header class="admin-panel-header">
+    <h2>Contact Requests</h2>
+  </header>
+  <div id="adminContactsList" class="admin-list"></div>
+</section>
 
-        <div id="tab-rates" class="admin-tab">
-          <h3>Manage Rates</h3>
-          <div id="rateList" class="admin-list"></div>
-          <button id="addRateBtn" class="btn-primary">Add New Rate</button>
-        </div>
-
-        <div id="tab-contacts" class="admin-tab">
-          <h3>Contact Requests</h3>
-          <div id="contactList" class="admin-list"></div>
-        </div>
+<section
+  id="adminReviewsPanel"
+  class="admin-section-panel hidden"
+  data-section="reviews"
+>
+  <header class="admin-panel-header">
+    <h2>Manage Reviews</h2>
+  </header>
+  <div id="adminReviewsList" class="admin-list"></div>
+</section>
 
         <!-- Reviews Section -->
         <div id="tab-reviews" class="admin-tab">
