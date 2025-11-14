@@ -22,7 +22,11 @@
     adminHeader,
     adminLogoutBtn,
     adminTabs,
-    adminSections;
+    adminSections,
+    adminPetsSection,
+    adminRatesSection,
+    adminContactsSection,
+    adminReviewsSection;
 
   // -----------------------------
   // Cache DOM elements
@@ -43,7 +47,11 @@
 
     // Tab buttons and sections
     adminTabs = document.querySelectorAll(".admin-tab");
-    adminSections = document.querySelectorAll(".admin-section");
+    adminSections = document.querySelectorAll(".admin-section"); 
+    adminPetsSection = document.getElementById("adminPets");
+    adminRatesSection = document.getElementById("adminRates");
+    adminContactsSection = document.getElementById("adminContacts");
+    adminReviewsSection = document.getElementById("adminReviews");
   }
 
   // -----------------------------
@@ -72,21 +80,69 @@
   // -----------------------------
   // Switch Active Admin Tab
   // -----------------------------
-  function activateTab(sectionId) {
-    console.log("[Admin] Switching to tab:", sectionId);
+function setActiveAdminTab(tabName) {
+  if (!adminPanel || !adminTabsRow) return;
 
-    // Deactivate all tabs
-    adminTabs.forEach((btn) => btn.classList.remove("active"));
-    adminSections.forEach((sec) => hide(sec));
+  if (data && data.success && data.token) {
+  adminToken = data.token;
+  localStorage.setItem(ADMIN_TOKEN_KEY, adminToken);
+  closeLoginModal();
+  showAdminPanel();
+  setActiveAdminTab("pets"); // default tab after login
+}
 
-    // Activate selected tab
-    const selectedBtn = document.querySelector(`[data-section="${sectionId}"]`);
-    const selectedSection = document.getElementById(sectionId);
+  // Hide all admin-section containers
+  const sections = document.querySelectorAll(".admin-section");
+  sections.forEach((el) => {
+    el.style.display = "none";
+  });
 
-    if (selectedBtn) selectedBtn.classList.add("active");
-    show(selectedSection);
+  // Remove active class from tab buttons
+  const tabButtons = adminTabsRow.querySelectorAll(".admin-tab");
+  tabButtons.forEach((btn) => btn.classList.remove("active"));
+
+  // Show selected section and mark tab active
+  let targetId = null;
+  switch (tabName) {
+    case "pets":
+      targetId = "adminPets";
+      break;
+    case "rates":
+      targetId = "adminRates";
+      break;
+    case "contacts":
+      targetId = "adminContacts";
+      break;
+    case "reviews":
+      targetId = "adminReviews";
+      break;
+    default:
+      targetId = "adminPets";
   }
 
+  const targetSection = document.getElementById(targetId);
+  if (targetSection) {
+    targetSection.style.display = "block";
+  }
+
+  const activeBtn = adminTabsRow.querySelector(
+    `.admin-tab[data-section="${targetId}"]`
+  );
+  if (activeBtn) {
+    activeBtn.classList.add("active");
+  }
+
+  console.log("[Admin] Switching to tab:", targetId);
+
+  // Load data for the selected tab
+  if (tabName === "reviews") {
+    loadAdminReviews();
+  }
+  // later you can add:
+  // if (tabName === "pets") loadAdminPets();
+  // if (tabName === "rates") loadAdminRates();
+  // if (tabName === "contacts") loadAdminContacts();
+}
   // -----------------------------
   // Login Form Submission
   // -----------------------------
