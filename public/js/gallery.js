@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const nextBtn = document.getElementById("nextBtn");
 
   let currentUrls = [];
-  let currentIndex = 0;
+ // let currentIndex = 0;
   let currentPetName = "";
 
   function updateModalImage() {
