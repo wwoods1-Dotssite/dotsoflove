@@ -22,18 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
  // const closeBtn = modal ? modal.querySelector(".image-modal-close") : null;
 //  const backdrop = modal ? modal.querySelector(".image-modal-backdrop") : null;
 
-  let currentImages = [];
-  let currentIndex = 0;
-  let currentCaption = "";
 
-  const modalAvailable =
-    modal && modalImg && modalCaption && prevBtn && nextBtn && closeBtn && backdrop;
-
-  if (!modalAvailable) {
-    console.warn(
-      "[Gallery] Modal elements not found; thumbnails will work but no fullscreen viewer."
-    );
-  }
 
   // ===============================
   // MODAL HELPERS
@@ -49,6 +38,18 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentUrls = [];
  // let currentIndex = 0;
   let currentPetName = "";
+  let currentImages = [];
+  let currentIndex = 0;
+  let currentCaption = "";
+
+  const modalAvailable =
+    modal && modalImg && modalCaption && prevBtn && nextBtn && closeBtn && backdrop;
+
+  if (!modalAvailable) {
+    console.warn(
+      "[Gallery] Modal elements not found; thumbnails will work but no fullscreen viewer."
+    );
+  }
 
   function updateModalImage() {
     if (!modal || !modalImg || !currentUrls.length) return;
