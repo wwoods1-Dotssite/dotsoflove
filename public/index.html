@@ -136,7 +136,39 @@
     Send a request — I’d love to care for your furry family member!
   </p>
 
-  <div id="contactFormContainer"></div>
+<form id="contactForm" class="contact-form">
+  <label>Your Name</label>
+  <input type="text" id="contactName" required />
+
+  <label>Email</label>
+  <input type="email" id="contactEmail" required />
+
+  <label>Phone Number</label>
+  <input type="text" id="contactPhone" />
+
+  <label>Best Time to Reach You</label>
+  <input type="text" id="contactBestTime" />
+
+  <label>Service Needed</label>
+  <select id="contactService">
+    <option value="Pet Sitting (Overnight)">Pet Sitting (Overnight)</option>
+    <option value="Dog Walking">Dog Walking</option>
+  </select>
+
+  <label>Start Date</label>
+  <input type="date" id="contactStart" />
+
+  <label>End Date</label>
+  <input type="date" id="contactEnd" />
+
+  <label>Tell me about your pet(s)</label>
+  <textarea id="contactPetInfo" rows="3"></textarea>
+
+  <label>Additional Message</label>
+  <textarea id="contactMessage" rows="3"></textarea>
+
+  <button type="submit" class="button-main">Send Request</button>
+</form>
 </section>
 
 <!-- ============================================================
@@ -185,69 +217,21 @@
 <!-- =========================
      Image Gallery Modal
      ========================= -->
-<div id="imageModal" class="image-modal">
+<div id="imageModal" class="image-modal" aria-hidden="true">
   <div class="image-modal-backdrop"></div>
 
   <div class="image-modal-content">
-    <button type="button" class="image-modal-close close" aria-label="Close">
-      &times;
-    </button>
+    <button type="button" class="image-modal-close" aria-label="Close">&times;</button>
 
-    <img id="modalImage" class="image-modal-img" src="" alt="Pet photo" />
+    <button type="button" id="prevBtn" class="image-modal-nav image-modal-prev">&#10094;</button>
+
+    <img id="modalImage" class="image-modal-img" src="" alt="Pet Photo">
+
+    <button type="button" id="nextBtn" class="image-modal-nav image-modal-next">&#10095;</button>
 
     <div id="caption" class="image-modal-caption"></div>
-
-    <button
-      type="button"
-      id="prevBtn"
-      class="image-modal-nav image-modal-prev"
-      aria-label="Previous image"
-    >
-      ‹
-    </button>
-    <button
-      type="button"
-      id="nextBtn"
-      class="image-modal-nav image-modal-next"
-      aria-label="Next image"
-    >
-      ›
-    </button>
   </div>
 </div>
-
-   <!-- Image viewer modal for gallery -->
-  <div id="imageModal" class="image-modal" aria-hidden="true">
-    <div class="image-modal-content">
-      <button
-        type="button"
-        class="image-modal-close"
-        aria-label="Close image viewer"
-      >
-        &times;
-      </button>
-
-      <button
-        type="button"
-        class="image-modal-nav image-modal-prev"
-        aria-label="Previous image"
-      >
-        &#10094;
-      </button>
-
-      <img class="image-modal-img" src="" alt="Pet photo" />
-
-      <button
-        type="button"
-        class="image-modal-nav image-modal-next"
-        aria-label="Next image"
-      >
-        &#10095;
-      </button>
-
-      <div class="image-modal-caption"></div>
-    </div>
-  </div>
 </body>
 </html> 
   
