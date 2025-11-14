@@ -69,16 +69,18 @@
   // -----------------------------
   // Admin Login Modal
   // -----------------------------
-  function openLoginModal() {
-    console.log("[Admin] Opening login modal…");
-    if (adminLoginForm) adminLoginForm.reset();
-    show(adminLoginModal, "block");
-  }
+function openLoginModal() {
+  if (!adminLoginModal) return;
+  console.log("[Admin] Opening login modal…");
+  adminLoginModal.style.display = "flex";
+  adminLoginModal.setAttribute("aria-hidden", "false");
+}
 
-  function closeLoginModal() {
-    console.log("[Admin] Closing login modal…");
-    hide(adminLoginModal);
-  }
+function closeLoginModal() {
+  if (!adminLoginModal) return;
+  adminLoginModal.style.display = "none";
+  adminLoginModal.setAttribute("aria-hidden", "true");
+}
 
   // -----------------------------
   // Switch Active Admin Tab
