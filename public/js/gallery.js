@@ -11,7 +11,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // Modal elements (optional – we fall back to thumbnails only if missing)
+  // ===============================
+  // MODAL ELEMENTS
+  // ===============================
   const modal = document.getElementById("imageModal");
   const modalImg = modal ? modal.querySelector(".image-modal-img") : null;
   const modalCaption = modal ? modal.querySelector(".image-modal-caption") : null;
@@ -19,73 +21,101 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalPrev = modal ? modal.querySelector(".image-modal-prev") : null;
   const modalNext = modal ? modal.querySelector(".image-modal-next") : null;
 
-  let activeImages = [];
-  let activeIndex = 0;
-  let activeCaption = "";
-
   const modalAvailable =
     modal && modalImg && modalCaption && modalClose && modalPrev && modalNext;
 
   if (!modalAvailable) {
     console.warn(
-      "Image modal elements not found; gallery will show thumbnails only."
+      "[Gallery] Image modal elements not found; gallery will show thumbnails only."
     );
   }
 
-  // ---------- Modal helpers ----------
+  // ===============================
+  // MODAL STATE + HELPERS
+  // ===============================
+  let currentImages = [];
+  let currentIndex = 0;
+  let currentTitle = "";
 
-  function showCurrentImage() {
-    if (!modalAvailable || !activeImages.length) return;
-    modalImg.src = activeImages[activeIndex];
-    modalImg.alt = activeCaption || "Pet photo";
-    modalCaption.textContent = activeCaption;
+  function updateModalImage() {
+    if (!modalAvailable || !currentImages.length) return;
+
+    const url = currentImages[currentIndex];
+    modalImg.src = url;
+    modalImg.alt = currentTitle ? `${currentTitle} photo` : "Pet photo";
+
+    if (modalCaption) {
+      modalCaption.textContent = currentTitle || "";
+    }
   }
 
-  function openModal(images, startIndex, caption) {
-    if (!modalAvailable || !images.length) return;
-
-    activeImages = images;
-    activeIndex = startIndex ?? 0;
-    activeCaption = caption || "";
-
-    showCurrentImage();
-    modal.classList.add("open");
-    document.body.classList.add("no-scroll");
-  }
-
-  function closeModal() {
+  function openImageModal(urls, startIndex = 0, title = "") {
     if (!modalAvailable) return;
+    if (!urls || !urls.length) return;
+
+    currentImages = urls;
+    currentIndex = startIndex;
+    currentTitle = title;
+
+    updateModalImage();
+
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden"; // lock background scroll
+  }
+
+  function closeImageModal() {
+    if (!modalAvailable) return;
+
     modal.classList.remove("open");
-    document.body.classList.remove("no-scroll");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
   }
 
-  function showNext(delta) {
-    if (!modalAvailable || !activeImages.length) return;
-    const len = activeImages.length;
-    activeIndex = (activeIndex + delta + len) % len;
-    showCurrentImage();
-  }
-
+  // Bind modal controls (if available)
   if (modalAvailable) {
-    modalClose.addEventListener("click", closeModal);
-    modalPrev.addEventListener("click", () => showNext(-1));
-    modalNext.addEventListener("click", () => showNext(1));
-
-    // Close when clicking backdrop
-    modal.addEventListener("click", (evt) => {
-      if (evt.target === modal) closeModal();
+    // Close button
+    modalClose.addEventListener("click", () => {
+      closeImageModal();
     });
 
-    // Close on Escape
-    window.addEventListener("keydown", (evt) => {
-      if (evt.key === "Escape" && modal.classList.contains("open")) {
-        closeModal();
+    // Click backdrop to close (click outside content)
+    modal.addEventListener("click", (e) => {
+      if (
+        e.target === modal ||
+        e.target.classList.contains("image-modal-backdrop")
+      ) {
+        closeImageModal();
       }
     });
+
+    // Keyboard ESC closes
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeImageModal();
+      }
+    });
+
+    // Prev / Next
+    modalPrev.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!currentImages.length) return;
+      currentIndex =
+        (currentIndex - 1 + currentImages.length) % currentImages.length;
+      updateModalImage();
+    });
+
+    modalNext.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!currentImages.length) return;
+      currentIndex = (currentIndex + 1) % currentImages.length;
+      updateModalImage();
+    });
   }
 
-  // ---------- Render helpers ----------
-
+  // ===============================
+  // RENDER HELPERS
+  // ===============================
   function createPetCard(pet) {
     const card = document.createElement("article");
     card.className = "pet-card";
@@ -154,12 +184,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const index = parseInt(thumb.dataset.index || "0", 10) || 0;
       const name = card.dataset.petName || "";
-      openModal(urls, index, name);
+
+      openImageModal(urls, index, name);
     });
   }
 
-  // ---------- Fetch + render ----------
-
+  // ===============================
+  // FETCH + RENDER PETS
+  // ===============================
   async function loadPets() {
     try {
       console.log("🐶 Fetching pets for gallery…");
@@ -175,15 +207,19 @@ document.addEventListener("DOMContentLoaded", () => {
       dorothyGrid.innerHTML = "";
       clientGrid.innerHTML = "";
 
-      dorothyPets.forEach((pet) => dorothyGrid.appendChild(createPetCard(pet)));
-      clientPets.forEach((pet) => clientGrid.appendChild(createPetCard(pet)));
+      dorothyPets.forEach((pet) =>
+        dorothyGrid.appendChild(createPetCard(pet))
+      );
+      clientPets.forEach((pet) =>
+        clientGrid.appendChild(createPetCard(pet))
+      );
 
       attachThumbnailClicks(dorothyGrid);
       attachThumbnailClicks(clientGrid);
     } catch (err) {
       console.error("❌ Error loading pets for gallery:", err);
       dorothyGrid.innerHTML =
-        "<p class=\"gallery-error\">Sorry, the pet gallery is unavailable right now.</p>";
+        '<p class="gallery-error">Sorry, the pet gallery is unavailable right now.</p>';
       clientGrid.innerHTML = "";
     }
   }
