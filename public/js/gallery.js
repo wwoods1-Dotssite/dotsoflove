@@ -1,185 +1,192 @@
-/* =========================================================
-   gallery.js – Responsive Gallery with Modal
-   ========================================================= */
+/* gallery.js – Responsive gallery with thumbnail modal */
 
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("📸 Initializing Gallery...");
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("🖼 Initializing Gallery…");
 
-  const dorothyContainer = document.getElementById("dorothyGallery");
-  const clientContainer = document.getElementById("clientGallery");
+  const dorothyGrid = document.getElementById("dorothyGallery");
+  const clientGrid = document.getElementById("clientGallery");
 
-  // If there are no gallery containers, bail out quietly
-  if (!dorothyContainer && !clientContainer) {
-    console.warn("Gallery containers not found in DOM. Skipping gallery.js.");
+  if (!dorothyGrid || !clientGrid) {
+    console.warn("Gallery containers not found in DOM.");
     return;
   }
 
-  const modal    = document.getElementById("imageModal");
-  const modalImg = document.getElementById("modalImage");
-  const caption  = document.getElementById("caption");
-  const prevBtn  = document.getElementById("prevBtn");
-  const nextBtn  = document.getElementById("nextBtn");
-  const closeBtn = document.querySelector(".close");
+  // Modal elements (optional – we fall back to thumbnails only if missing)
+  const modal = document.getElementById("imageModal");
+  const modalImg = modal ? modal.querySelector(".image-modal-img") : null;
+  const modalCaption = modal ? modal.querySelector(".image-modal-caption") : null;
+  const modalClose = modal ? modal.querySelector(".image-modal-close") : null;
+  const modalPrev = modal ? modal.querySelector(".image-modal-prev") : null;
+  const modalNext = modal ? modal.querySelector(".image-modal-next") : null;
 
-  let allImages = [];   // flattened list of all images in display order
-  let currentIndex = 0; // index into allImages[]
+  let activeImages = [];
+  let activeIndex = 0;
+  let activeCaption = "";
 
-  /* ================================
-     MODAL HELPERS
-     ================================ */
+  const modalAvailable =
+    modal && modalImg && modalCaption && modalClose && modalPrev && modalNext;
 
-  function renderCurrentImage() {
-    const data = allImages[currentIndex];
-    if (!data || !modalImg || !caption) return;
-
-    modalImg.src = data.url;
-    modalImg.alt = data.alt || data.petName || "Pet photo";
-    caption.textContent = data.caption || data.petName || "";
+  if (!modalAvailable) {
+    console.warn(
+      "Image modal elements not found; gallery will show thumbnails only."
+    );
   }
 
-  function openModalFromIndex(index) {
-    if (!modal) return;
-    if (!allImages.length) return;
+  // ---------- Modal helpers ----------
 
-    currentIndex = index;
-    renderCurrentImage();
+  function showCurrentImage() {
+    if (!modalAvailable || !activeImages.length) return;
+    modalImg.src = activeImages[activeIndex];
+    modalImg.alt = activeCaption || "Pet photo";
+    modalCaption.textContent = activeCaption;
+  }
+
+  function openModal(images, startIndex, caption) {
+    if (!modalAvailable || !images.length) return;
+
+    activeImages = images;
+    activeIndex = startIndex ?? 0;
+    activeCaption = caption || "";
+
+    showCurrentImage();
     modal.classList.add("open");
-    document.body.style.overflow = "hidden";
+    document.body.classList.add("no-scroll");
   }
 
   function closeModal() {
-    if (!modal) return;
+    if (!modalAvailable) return;
     modal.classList.remove("open");
-    document.body.style.overflow = "";
+    document.body.classList.remove("no-scroll");
   }
 
-  function showPrevImage() {
-    if (!allImages.length) return;
-    currentIndex = (currentIndex - 1 + allImages.length) % allImages.length;
-    renderCurrentImage();
+  function showNext(delta) {
+    if (!modalAvailable || !activeImages.length) return;
+    const len = activeImages.length;
+    activeIndex = (activeIndex + delta + len) % len;
+    showCurrentImage();
   }
 
-  function showNextImage() {
-    if (!allImages.length) return;
-    currentIndex = (currentIndex + 1) % allImages.length;
-    renderCurrentImage();
-  }
+  if (modalAvailable) {
+    modalClose.addEventListener("click", closeModal);
+    modalPrev.addEventListener("click", () => showNext(-1));
+    modalNext.addEventListener("click", () => showNext(1));
 
-  // Wire modal controls **only if** the buttons exist
-  if (modal) {
-    if (prevBtn && typeof prevBtn.addEventListener === "function") {
-      prevBtn.addEventListener("click", showPrevImage);
-    }
-
-    if (nextBtn && typeof nextBtn.addEventListener === "function") {
-      nextBtn.addEventListener("click", showNextImage);
-    }
-
-    if (closeBtn && typeof closeBtn.addEventListener === "function") {
-      closeBtn.addEventListener("click", closeModal);
-    }
-
-    // Click outside image closes modal
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) closeModal();
+    // Close when clicking backdrop
+    modal.addEventListener("click", (evt) => {
+      if (evt.target === modal) closeModal();
     });
 
-    // ESC closes modal
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeModal();
+    // Close on Escape
+    window.addEventListener("keydown", (evt) => {
+      if (evt.key === "Escape" && modal.classList.contains("open")) {
+        closeModal();
+      }
     });
-  } else {
-    console.warn("Image modal elements not found; gallery will show thumbnails only.");
   }
 
-  /* ================================
-     RENDER HELPERS
-     ================================ */
+  // ---------- Render helpers ----------
 
-  function createThumb(img, petName) {
-    const thumb = document.createElement("img");
-    thumb.className = "pet-thumb";
-    thumb.src = img.image_url;
-    thumb.alt = petName || "Pet photo";
-
-    const globalIndex = allImages.length;
-    allImages.push({
-      url: img.image_url,
-      petName,
-      caption: petName,
-      alt: petName
-    });
-
-    thumb.addEventListener("click", () => openModalFromIndex(globalIndex));
-    return thumb;
-  }
-
-  function createPlaceholderThumb() {
-    const wrap = document.createElement("div");
-    wrap.className = "pet-thumb pet-thumb--empty";
-    wrap.textContent = "No photos yet";
-    return wrap;
-  }
-
-  function renderPetCard(pet) {
+  function createPetCard(pet) {
     const card = document.createElement("article");
     card.className = "pet-card";
 
-    const nameEl = document.createElement("h3");
-    nameEl.className = "pet-name";
-    nameEl.textContent = pet.pet_name || "Unnamed friend";
+    // store data for modal
+    const imageUrls = (pet.images || [])
+      .filter((img) => img && img.image_url)
+      .map((img) => img.image_url);
 
-    const storyEl = document.createElement("p");
-    storyEl.className = "pet-story";
-    storyEl.textContent = pet.story_description || "";
+    card.dataset.images = JSON.stringify(imageUrls);
+    card.dataset.petName = pet.pet_name || "";
 
-    const strip = document.createElement("div");
-    strip.className = "pet-images-row";
+    const title = document.createElement("h3");
+    title.className = "pet-name";
+    title.textContent = pet.pet_name || "Unnamed Pet";
 
-    if (Array.isArray(pet.images) && pet.images.length > 0) {
-      pet.images.forEach((img) => {
-        if (!img || !img.image_url) return;
-        strip.appendChild(createThumb(img, pet.pet_name));
+    const story = document.createElement("p");
+    story.className = "pet-story";
+    story.textContent =
+      pet.story_description || "This furry friend is still writing their story.";
+
+    const imagesWrap = document.createElement("div");
+    imagesWrap.className = "pet-images";
+
+    if (imageUrls.length) {
+      imageUrls.forEach((url, index) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "pet-thumb";
+        btn.dataset.index = String(index);
+
+        const img = document.createElement("img");
+        img.src = url;
+        img.loading = "lazy";
+        img.alt = `${pet.pet_name || "Pet"} photo ${index + 1}`;
+
+        btn.appendChild(img);
+        imagesWrap.appendChild(btn);
       });
     } else {
-      strip.appendChild(createPlaceholderThumb());
+      const placeholder = document.createElement("div");
+      placeholder.className = "pet-thumb placeholder";
+      placeholder.textContent = "No photos yet";
+      imagesWrap.appendChild(placeholder);
     }
 
-    card.appendChild(nameEl);
-    card.appendChild(storyEl);
-    card.appendChild(strip);
+    card.appendChild(title);
+    card.appendChild(story);
+    card.appendChild(imagesWrap);
 
-    const target = pet.is_dorothy_pet ? dorothyContainer : clientContainer;
-    if (target) target.appendChild(card);
+    return card;
   }
 
-  /* ================================
-     LOAD DATA FROM API
-     ================================ */
+  function attachThumbnailClicks(grid) {
+    if (!modalAvailable) return;
+
+    grid.addEventListener("click", (evt) => {
+      const thumb = evt.target.closest(".pet-thumb");
+      if (!thumb) return;
+
+      const card = thumb.closest(".pet-card");
+      if (!card) return;
+
+      const urls = JSON.parse(card.dataset.images || "[]");
+      if (!urls.length) return;
+
+      const index = parseInt(thumb.dataset.index || "0", 10) || 0;
+      const name = card.dataset.petName || "";
+      openModal(urls, index, name);
+    });
+  }
+
+  // ---------- Fetch + render ----------
 
   async function loadPets() {
     try {
-      console.log("🐶 Fetching pets for gallery...");
+      console.log("🐶 Fetching pets for gallery…");
       const res = await fetch("/api/pets");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
+      console.log("✅ Loaded pets:", data.length);
 
-      const pets = await res.json();
+      const dorothyPets = data.filter((p) => p.is_dorothy_pet);
+      const clientPets = data.filter((p) => !p.is_dorothy_pet);
 
-      // Clear existing
-      if (dorothyContainer) dorothyContainer.innerHTML = "";
-      if (clientContainer) clientContainer.innerHTML = "";
-      allImages = [];
+      dorothyGrid.innerHTML = "";
+      clientGrid.innerHTML = "";
 
-      pets.forEach(renderPetCard);
-      console.log(`✅ Loaded pets: ${pets.length}`);
+      dorothyPets.forEach((pet) => dorothyGrid.appendChild(createPetCard(pet)));
+      clientPets.forEach((pet) => clientGrid.appendChild(createPetCard(pet)));
+
+      attachThumbnailClicks(dorothyGrid);
+      attachThumbnailClicks(clientGrid);
     } catch (err) {
       console.error("❌ Error loading pets for gallery:", err);
+      dorothyGrid.innerHTML =
+        "<p class=\"gallery-error\">Sorry, the pet gallery is unavailable right now.</p>";
+      clientGrid.innerHTML = "";
     }
   }
 
-  // Kick things off
-  await loadPets();
+  loadPets();
 });
