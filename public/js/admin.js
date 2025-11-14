@@ -57,7 +57,7 @@
   let adminTabSections = {};
 
   function cacheDomRefs() {
-    adminNavLink = document.getElementById("adminNavLink");
+    adminNavLink = document.getElementById("adminNav");
     adminSection = document.getElementById("adminSection");
     adminDashboard = document.getElementById("adminDashboard");
 
@@ -282,10 +282,8 @@
     }
   }
 
-  // ----- Init -----------------------------------------------------
-
+// ----- Init -----------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-  // existing boot-up logic
   cacheDomRefs();
   attachEventListeners();
   refreshAdminUI();
@@ -294,7 +292,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Wire up Admin nav link ---
   const adminNav = document.getElementById("adminNav");
-
   if (!adminNav) {
     console.warn("[Admin] #adminNav link not found in DOM");
     return;
@@ -305,17 +302,15 @@ document.addEventListener("DOMContentLoaded", () => {
   adminNav.addEventListener("click", (event) => {
     event.preventDefault();
     console.log("[Admin] Admin nav clicked");
-    openAdminEntry(); // this should open login modal or dashboard
 
-    function openAdminEntry() {
-  // decide whether to show login modal or dashboard
-  if (isAdminAuthenticated && isAdminAuthenticated()) {
-    showAdminDashboard();
-  } else {
-    openLoginModal();
-  }
-}
+    // Decide what to show:
+    if (isAdminAuthed()) {
+      // Already logged in → go straight to dashboard
+      refreshAdminUI();
+      scrollToAdminSection();
+    } else {
+      // Not logged in → open the login modal
+      openLoginModal();
+    }
   });
 });
-  
-})();
