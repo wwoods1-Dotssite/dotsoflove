@@ -1,122 +1,96 @@
-/* ---------- CONTACT SECTION ---------- */
-#contact {
-  background: linear-gradient(180deg, #bfb7ff, #a98eff);
-  padding: 4rem 1rem;
-  text-align: center;
-  color: #222;
+/* ============================
+   Contact Section Layout
+   ============================ */
+
+.contact-section {
+  padding: 4rem 1.5rem 5rem;
 }
 
-#contact .section-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #4b50d1;
-  margin-bottom: 0.5rem;
-}
-
-#contact .section-subtitle {
-  color: #333;
-  font-size: 1rem;
-  margin-bottom: 2rem;
-}
-
-/* ---------- FORM CARD ---------- */
 .contact-form {
-  background: #fdfdff;
-  max-width: 850px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 2.5rem;
-  border-radius: 16px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-  text-align: left;
+  padding: 2.5rem 2.75rem;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 18px 40px rgba(80, 51, 158, 0.18);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem 1.75rem;
 }
 
-/* ---------- FORM LAYOUT ---------- */
-.form-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.form-group {
-  flex: 1;
+/* Each field block */
+.contact-form .field {
   display: flex;
   flex-direction: column;
+  gap: 0.35rem;
 }
 
-.form-group.full-width {
-  width: 100%;
+/* Span whole row */
+.contact-form .field-span-2 {
+  grid-column: 1 / -1;
 }
 
-/* ---------- INPUTS ---------- */
-label {
+/* Labels */
+.contact-form label {
+  font-size: 0.9rem;
   font-weight: 600;
-  color: #4b50d1;
-  margin-bottom: 0.4rem;
+  color: #4b2f83;
 }
 
-input,
-select,
-textarea {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 0.75rem;
-  font-size: 1rem;
-  font-family: inherit;
-  transition: border-color 0.2s ease;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: #7365e3;
+/* Inputs / selects / textareas */
+.contact-form input,
+.contact-form select,
+.contact-form textarea {
+  border-radius: 999px;
+  border: 1px solid #d7c8ff;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(115, 101, 227, 0.15);
+  background: #f9f7ff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease;
 }
 
-/* ---------- BUTTON ---------- */
-.btn-primary {
-  background: linear-gradient(90deg, #7365e3, #9b7bff);
-  color: white;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 10px;
-  padding: 0.9rem 2rem;
-  cursor: pointer;
-  display: block;
-  margin: 2rem auto 1rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* Textareas – slightly different radius */
+.contact-form textarea {
+  border-radius: 16px;
+  resize: vertical;
+  min-height: 120px;
 }
 
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(115, 101, 227, 0.3);
+/* Focus state */
+.contact-form input:focus,
+.contact-form select:focus,
+.contact-form textarea:focus {
+  border-color: #7b5cff;
+  box-shadow: 0 0 0 3px rgba(123, 92, 255, 0.18);
+  background-color: #ffffff;
 }
 
-/* ---------- STATUS MESSAGE ---------- */
-.form-status {
-  text-align: center;
-  margin-top: 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
+/* Button row */
+.contact-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
 }
 
-.form-status.success {
-  color: #1aaf5d;
+/* Make sure the main button style is centered nicely on mobile */
+.contact-actions .button-main {
+  padding-inline: 2.5rem;
 }
 
-.form-status.error {
-  color: #d9534f;
-}
-
-/* ---------- RESPONSIVE ---------- */
-@media (max-width: 768px) {
-  .form-row {
-    flex-direction: column;
+/* Responsive: stack on small screens */
+@media (max-width: 720px) {
+  .contact-form {
+    padding: 1.75rem 1.5rem;
+    grid-template-columns: 1fr;
   }
 
-  .contact-form {
-    padding: 1.5rem;
+  .contact-form .field-span-2 {
+    grid-column: 1 / 2;
+  }
+
+  .contact-actions {
+    justify-content: center;
   }
 }
