@@ -525,14 +525,14 @@
 }
 
 /* shown when JS adds .visible */
-.modal.visible {
+/*.modal.visible {
   display: flex;
 }
 
-/* explicit hidden state */
+
 .modal.hidden {
   display: none;
-}
+} */
 
 /* Specific styling for the admin login modal content */
 #adminLoginModal .modal-content {
