@@ -524,15 +524,17 @@
   padding: 1.5rem;
 }
 
-/* shown when JS adds .visible */
-/*.modal.visible {
-  display: flex;
+/* ---------------------------------
+   Modal visibility helpers
+---------------------------------- */
+
+.modal.show {
+  display: flex !important;
 }
 
-
 .modal.hidden {
-  display: none;
-} */
+  display: none !important;
+}
 
 /* Specific styling for the admin login modal content */
 #adminLoginModal .modal-content {
