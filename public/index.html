@@ -182,6 +182,38 @@
 <footer>
   © 2025 Dot’s of Love Pet Sitting. All rights reserved.
 </footer>
+<!-- =========================
+     Image Gallery Modal
+     ========================= -->
+<div id="imageModal" class="image-modal">
+  <div class="image-modal-backdrop"></div>
 
+  <div class="image-modal-content">
+    <button type="button" class="image-modal-close close" aria-label="Close">
+      &times;
+    </button>
+
+    <img id="modalImage" class="image-modal-img" src="" alt="Pet photo" />
+
+    <div id="caption" class="image-modal-caption"></div>
+
+    <button
+      type="button"
+      id="prevBtn"
+      class="image-modal-nav image-modal-prev"
+      aria-label="Previous image"
+    >
+      ‹
+    </button>
+    <button
+      type="button"
+      id="nextBtn"
+      class="image-modal-nav image-modal-next"
+      aria-label="Next image"
+    >
+      ›
+    </button>
+  </div>
+</div>
 </body>
 </html>
