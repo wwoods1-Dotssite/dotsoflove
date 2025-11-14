@@ -649,8 +649,6 @@
 
 #adminLoginModal {
   /* start hidden */
-  display: none;
-
   position: fixed;
   inset: 0;
   z-index: 10000;
