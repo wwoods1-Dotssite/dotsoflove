@@ -110,9 +110,9 @@
   }
 }
 
-/* ========================================
+/* ================================
    Gallery Image Modal
-======================================== */
+================================ */
 
 .image-modal {
   /* start hidden */
@@ -125,9 +125,10 @@
   background: rgba(0, 0, 0, 0.65);
   align-items: center;
   justify-content: center;
+  padding: 1rem;
 }
 
-/* JS will toggle this class */
+/* JS adds .open */
 .image-modal.open {
   display: flex;
 }
@@ -135,17 +136,17 @@
 .image-modal-backdrop {
   position: absolute;
   inset: 0;
+  background: transparent; /* the dark overlay comes from .image-modal */
 }
 
 .image-modal-content {
   position: relative;
-  z-index: 1;
-  max-width: 900px;
-  width: 90%;
-  max-height: 90vh;
-  background: #fff;
+  background: #ffffff;
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.55);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+  max-width: min(900px, 95vw);
+  max-height: 90vh;
+  width: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -155,31 +156,19 @@
 
 .image-modal-img {
   max-width: 100%;
-  max-height: 60vh;
+  max-height: 70vh;
   object-fit: contain;
   border-radius: 12px;
 }
 
 .image-modal-caption {
   margin-top: 0.75rem;
-  font-size: 0.95rem;
-  color: #4b5563;
+  font-weight: 500;
   text-align: center;
 }
 
-/* close “X” */
-.image-modal-close {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  border: none;
-  background: transparent;
-  font-size: 1.75rem;
-  line-height: 1;
-  cursor: pointer;
-}
+/* Nav buttons */
 
-/* prev / next arrows */
 .image-modal-nav {
   position: absolute;
   top: 50%;
@@ -187,15 +176,13 @@
   border: none;
   background: rgba(15, 23, 42, 0.65);
   color: #fff;
-  font-size: 2.2rem;
-  line-height: 1;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 40px;
+  height: 40px;
   border-radius: 999px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
 .image-modal-prev {
@@ -206,6 +193,19 @@
   right: 0.75rem;
 }
 
+/* Close button (top-right X) */
+
+.image-modal-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #4b5563;
+}
 /* Prevent background scroll when modal is open */
 .no-scroll {
   overflow: hidden;
