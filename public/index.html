@@ -278,44 +278,25 @@
       <button class="admin-tab" data-section="adminReviews">⭐ Reviews</button>
     </div>
 
-<!-- Admin Login Modal -->
-<div id="adminLoginModal" class="admin-login-modal" aria-hidden="true">
-  <div class="admin-login-backdrop"></div>
+<!-- ============================================================
+     ADMIN LOGIN MODAL
+============================================================ -->
+<div id="adminLoginModal" class="modal">
+  <div class="modal-content">
+    <button id="adminLoginClose" class="close-btn">&times;</button>
 
-  <div class="admin-login-dialog">
-    <button
-      type="button"
-      id="adminLoginClose"
-      class="admin-login-close"
-      aria-label="Close admin login"
-    >
-      ×
-    </button>
+    <h2>Admin Login</h2>
 
-    <h2 class="admin-login-title">Admin Login</h2>
+    <form id="adminLoginForm">
+      <label>Username</label>
+      <input id="adminUsername" type="text" autocomplete="username" />
 
-    <form id="adminLoginForm" class="admin-login-form">
-      <label for="adminUsername">Username</label>
-      <input
-        type="text"
-        id="adminUsername"
-        autocomplete="username"
-        required
-      />
+      <label>Password</label>
+      <input id="adminPassword" type="password" autocomplete="current-password" />
 
-      <label for="adminPassword">Password</label>
-      <input
-        type="password"
-        id="adminPassword"
-        autocomplete="current-password"
-        required
-      />
-
-      <div class="admin-login-actions">
+      <div class="modal-actions">
         <button type="submit" class="btn-primary">Login</button>
-        <button type="button" id="adminLoginCancel" class="btn-secondary">
-          Cancel
-        </button>
+        <button id="adminLoginCancel" class="btn-secondary">Cancel</button>
       </div>
     </form>
   </div>
