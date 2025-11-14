@@ -26,7 +26,8 @@
     adminPetsSection,
     adminRatesSection,
     adminContactsSection,
-    adminReviewsSection;
+    adminReviewsSection,
+    adminTabsRow;
 
   // -----------------------------
   // Cache DOM elements
@@ -44,6 +45,7 @@
     adminPanel = document.getElementById("adminPanel");
     adminHeader = document.getElementById("adminHeader");
     adminLogoutBtn = document.getElementById("adminLogoutBtn");
+    adminTabsRow = document.querySelector(".admin-tabs-row");
 
     // Tab buttons and sections
     adminTabs = document.querySelectorAll(".admin-tab");
@@ -82,14 +84,6 @@
   // -----------------------------
 function setActiveAdminTab(tabName) {
   if (!adminPanel || !adminTabsRow) return;
-
-  if (data && data.success && data.token) {
-  adminToken = data.token;
-  localStorage.setItem(ADMIN_TOKEN_KEY, adminToken);
-  closeLoginModal();
-  showAdminPanel();
-  setActiveAdminTab("pets"); // default tab after login
-}
 
   // Hide all admin-section containers
   const sections = document.querySelectorAll(".admin-section");
@@ -195,7 +189,7 @@ function setActiveAdminTab(tabName) {
     show(adminHeader);
 
     // Default to Pets section
-    activateTab("adminPets");
+    setActiveAdminTab("adminPets");
   }
 
   // -----------------------------
@@ -248,7 +242,7 @@ function setActiveAdminTab(tabName) {
     adminTabs.forEach((btn) => {
       btn.addEventListener("click", () => {
         const section = btn.dataset.section;
-        activateTab(section);
+        setActiveAdminTab(section);
       });
     });
   }
