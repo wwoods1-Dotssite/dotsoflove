@@ -314,56 +314,32 @@
     <div id="caption" class="image-modal-caption"></div>
   </div>
 </div>
+
 <!-- ============================================================
      ADMIN LOGIN MODAL
 ============================================================ -->
-<!-- ============================================================
-     ADMIN LOGIN MODAL
-============================================================ -->
-<div id="adminLoginModal" class="admin-modal" style="display:none;">
-  <div class="admin-modal-content">
-    <button id="adminLoginClose" class="admin-modal-close" type="button">
-      ×
-    </button>
+<!-- Admin Login Modal - must be outside #adminPanel -->
+<div id="adminLoginModal" class="modal" aria-hidden="true">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Admin Login</h3>
+      <button id="adminLoginClose" class="close-btn" type="button">&times;</button>
+    </div>
+    <form id="adminLoginForm" class="modal-body">
+      <label for="adminUsername">Username</label>
+      <input id="adminUsername" type="text" autocomplete="username" />
 
-    <h2>Admin Login</h2>
+      <label for="adminPassword">Password</label>
+      <input id="adminPassword" type="password" autocomplete="current-password" />
 
-    <form id="adminLoginForm">
-      <div class="form-row">
-        <label for="adminUsername">Username</label>
-        <input
-          type="text"
-          id="adminUsername"
-          name="username"
-          autocomplete="username"
-          required
-        />
-      </div>
-
-      <div class="form-row">
-        <label for="adminPassword">Password</label>
-        <input
-          type="password"
-          id="adminPassword"
-          name="password"
-          autocomplete="current-password"
-          required
-        />
-      </div>
-
-      <div class="form-actions">
+      <div class="modal-actions">
         <button type="submit" class="btn-primary">Login</button>
-        <button
-          type="button"
-          id="adminLoginCancel"
-          class="btn-danger"
-        >
-          Cancel
-        </button>
+        <button type="button" id="adminLoginCancel" class="btn-secondary">Cancel</button>
       </div>
     </form>
   </div>
 </div>
+
 
 </body>
 </html> 
