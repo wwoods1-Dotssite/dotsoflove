@@ -137,77 +137,123 @@
   </p>
 
 <form id="contactForm" class="contact-form">
-  <!-- Row 1: Name + Email -->
-  <div class="field">
-    <label for="contactName">Your Name</label>
-    <input type="text" id="contactName" required />
+  <!-- Row 1: Name + Email + Phone -->
+  <div class="form-row">
+    <div class="form-field">
+      <label for="contactName">Your Name</label>
+      <input
+        type="text"
+        id="contactName"
+        name="name"
+        placeholder="Your full name"
+        required
+      />
+    </div>
+
+    <div class="form-field">
+      <label for="contactEmail">Email</label>
+      <input
+        type="email"
+        id="contactEmail"
+        name="email"
+        placeholder="you@example.com"
+        required
+      />
+    </div>
+
+    <div class="form-field">
+      <label for="contactPhone">Phone Number</label>
+      <input
+        type="tel"
+        id="contactPhone"
+        name="phone"
+        placeholder="(555) 123-4567"
+      />
+    </div>
   </div>
 
-  <div class="field">
-    <label for="contactEmail">Email</label>
-    <input type="email" id="contactEmail" required />
+  <!-- Row 2: Best time + Service -->
+  <div class="form-row">
+    <div class="form-field">
+      <label for="bestTime">Best Time to Reach You</label>
+      <select id="bestTime" name="best_time">
+        <option value="">Choose a time…</option>
+        <option value="Morning (before noon)">Morning (before noon)</option>
+        <option value="MidDay (noon - 5)">MidDay (noon - 5)</option>
+        <option value="Evening (after 5pm)">Evening (after 5pm)</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="serviceNeeded">Service Needed</label>
+      <select id="serviceNeeded" name="service" required>
+        <option value="">Choose a service…</option>
+        <option value="Pet Sitting (overnight at your location)">
+          Pet Sitting (overnight at your location)
+        </option>
+        <option value="Dog Walking">Dog Walking</option>
+        <option value="Pet Visits (feeding and walking)">
+          Pet Visits (feeding and walking)
+        </option>
+        <option value="Pet Sitting (in my home)">
+          Pet Sitting (in my home)
+        </option>
+      </select>
+    </div>
   </div>
 
-  <!-- Row 2: Phone + Best Time -->
-  <div class="field">
-    <label for="contactPhone">Phone Number</label>
-    <input type="text" id="contactPhone" />
+  <!-- Row 3: Dates -->
+  <div class="form-row">
+    <div class="form-field">
+      <label for="startDate">Start Date</label>
+      <input
+        type="date"
+        id="startDate"
+        name="start_date"
+      />
+    </div>
+
+    <div class="form-field">
+      <label for="endDate">End Date</label>
+      <input
+        type="date"
+        id="endDate"
+        name="end_date"
+      />
+    </div>
   </div>
 
-  <div class="field">
-    <label for="contactBestTime">Best Time to Reach You</label>
-    <select id="contactBestTime">
-      <option value="">Select a time…</option>
-      <option value="Morning (before noon)">Morning (before noon)</option>
-      <option value="MidDay (noon - 5)">MidDay (noon - 5)</option>
-      <option value="Evening (after 5pm)">Evening (after 5pm)</option>
-      <option value="Any Time">8 AM to 9 PM</option>
-    </select>
+  <!-- Row 4: Pet info -->
+  <div class="form-row">
+    <div class="form-field full-width">
+      <label for="petInfo">Tell me about your pet(s)</label>
+      <textarea
+        id="petInfo"
+        name="pet_info"
+        rows="3"
+        placeholder="Pet's name, breed, age, special needs, etc."
+      ></textarea>
+    </div>
   </div>
 
-  <!-- Row 3: Service -->
-  <div class="field field-span-2">
-    <label for="contactService">Service Needed</label>
-    <select id="contactService">
-      <option value="Pet Sitting (overnight at your location)">
-        Pet Sitting (overnight at your location)
-      </option>
-      <option value="Dog Walking">Dog Walking</option>
-      <option value="Pet Visits (feeding and walking)">
-        Pet Visits (feeding and walking)
-      </option>
-      <option value="Pet Sitting (in my home)">
-        Pet Sitting (in my home)
-      </option>
-    </select>
+  <!-- Row 5: Additional message -->
+  <div class="form-row">
+    <div class="form-field full-width">
+      <label for="additionalMessage">Additional Message</label>
+      <textarea
+        id="additionalMessage"
+        name="message"
+        rows="3"
+        placeholder="Anything else you'd like to share?"
+      ></textarea>
+    </div>
   </div>
 
-  <!-- Row 4: Dates -->
-  <div class="field">
-    <label for="contactStart">Start Date</label>
-    <input type="date" id="contactStart" />
-  </div>
-
-  <div class="field">
-    <label for="contactEnd">End Date</label>
-    <input type="date" id="contactEnd" />
-  </div>
-
-  <!-- Row 5: Pet info -->
-  <div class="field field-span-2">
-    <label for="contactPetInfo">Tell me about your pet(s)</label>
-    <textarea id="contactPetInfo" rows="3"></textarea>
-  </div>
-
-  <!-- Row 6: Extra message -->
-  <div class="field field-span-2">
-    <label for="contactMessage">Additional Message</label>
-    <textarea id="contactMessage" rows="3"></textarea>
-  </div>
-
-  <!-- Row 7: Button -->
-  <div class="field field-span-2 contact-actions">
-    <button type="submit" class="button-main">Send Request</button>
+  <!-- Submit -->
+  <div class="form-actions">
+    <button type="submit" class="primary-btn">
+      Send Request
+    </button>
   </div>
 </form>
 </section>
