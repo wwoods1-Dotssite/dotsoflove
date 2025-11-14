@@ -72,14 +72,22 @@
 function openLoginModal() {
   if (!adminLoginModal) return;
   console.log("[Admin] Opening login modal…");
-  adminLoginModal.style.display = "flex";
+  // remove any inline display:none that might exist
+  adminLoginModal.style.display = "";
+  // add our explicit “visible” flag
+  adminLoginModal.classList.add("visible");
   adminLoginModal.setAttribute("aria-hidden", "false");
 }
 
 function closeLoginModal() {
   if (!adminLoginModal) return;
-  adminLoginModal.style.display = "none";
+
+  console.log("[Admin] Closing login modal…");
+
+  adminLoginModal.classList.remove("visible");
   adminLoginModal.setAttribute("aria-hidden", "true");
+  // optional: also force-hide via inline style for safety
+  adminLoginModal.style.display = "none";
 }
 
   // -----------------------------
