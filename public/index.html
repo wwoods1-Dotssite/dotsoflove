@@ -1,685 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Dot's of Love Pet Sitting</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dot's of Love Pet Sitting</title>
 
-    <!-- Core styles -->
-    <link rel="stylesheet" href="/css/styles.css" />
-    <link rel="stylesheet" href="/css/gallery.css" />
-    <link rel="stylesheet" href="/css/rates.css" />
-    <link rel="stylesheet" href="/css/contact.css" />
-    <link rel="stylesheet" href="/css/admin.css" />
-    <!-- If you later split reviews styles, include /css/reviews.css as well -->
-  </head>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="gallery.css" />
+  <link rel="stylesheet" href="rates.css" />
+  <link rel="stylesheet" href="contact.css" />
+  <link rel="stylesheet" href="admin.css" />
 
-  <body>
-    <!-- ===========================
-         Sticky Site Header / Nav
-    ============================ -->
-    <header class="site-header">
-      <div class="container nav-container">
-        <div class="brand">
-          <span class="brand-paw">🐾</span>
-          <span class="brand-text">Dot's of Love Pet Sitting</span>
-        </div>
+  <script src="gallery.js" defer></script>
+  <script src="rates.js" defer></script>
+  <script src="contact.js" defer></script>
+  <script src="reviews.js" defer></script>
+  <script src="admin.js" defer></script>
+</head>
 
-        <nav class="main-nav">
-          <ul class="nav-links">
-            <li><a href="#about" class="nav-link active">About</a></li>
-            <li><a href="#gallery" class="nav-link">Gallery</a></li>
-            <li><a href="#reviews" class="nav-link">Reviews</a></li>
-            <li><a href="#rates" class="nav-link">Rates</a></li>
-            <li><a href="#contact" class="nav-link">Contact</a></li>
-            <li><a href="#admin" class="nav-link">Admin</a></li>
-          </ul>
-        </nav>
-      </div>
-    </header>
+<body>
 
-    <main>
-      <!-- ===========================
-           ABOUT
-      ============================ -->
-      <section id="about" class="section about-section">
-        <div class="container">
-          <h1>Hi, I'm Dorothy!</h1>
-          <p class="lead">
-            Your trusted neighborhood pet sitter (call me Dot or Dotty)!
-          </p>
+<!-- ============================================================
+     HEADER — Sticky Navigation (Option A)
+============================================================ -->
+<header>
+  <div class="header-content">
+    <div class="site-title">
+      🐾 Dot's of Love Pet Sitting
+    </div>
 
-          <div class="about-grid">
-            <div class="about-text">
-              <p>
-                I’ve cared for dogs, cats, and all sorts of pets for years — from
-                energetic puppies to dignified seniors. I offer loving care that
-                keeps your companions happy and relaxed while you’re away.
-              </p>
-              <ul class="about-list">
-                <li>Experienced with dogs, cats, and small animals</li>
-                <li>Pet sitting in your home for minimal stress</li>
-                <li>Flexible scheduling and custom care routines</li>
-              </ul>
-            </div>
+    <nav class="nav-links">
+      <a href="#about">About</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#reviews">Reviews</a>
+      <a href="#rates">Rates</a>
+      <a href="#contact">Contact</a>
+      <a href="#admin" id="adminNav">Admin</a>
+    </nav>
+  </div>
+</header>
 
-            <div class="about-card">
-              <h2>Featured Service</h2>
-              <h3>Dog Walking</h3>
-              <p>
-                30–60 minute walks to keep your dog happy and healthy with
-                plenty of sniffing and exercise.
-              </p>
-              <p class="about-note">
-                💜 I treat your pets with the same care I give my own.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+<!-- ============================================================
+     ABOUT SECTION
+============================================================ -->
+<section id="about">
+  <h2 class="section-title">Hi, I'm Dorothy!</h2>
+  <p class="section-subtitle">
+    Your trusted neighborhood pet sitter (call me Dot or Dotty!)
+  </p>
 
-      <!-- ===========================
-           GALLERY
-      ============================ -->
-      <section id="gallery" class="section gallery-section">
-        <div class="container">
-          <h2>Pet Gallery</h2>
-          <p class="section-subtitle">
-            Meet my fur family and some of the wonderful pets I’ve cared for!
-          </p>
-
-          <div class="gallery-columns">
-            <div class="gallery-column">
-              <h3>🐾 Dorothy's Pet Family</h3>
-              <div id="dorothyGallery" class="pet-card-grid"></div>
-            </div>
-
-            <div class="gallery-column">
-              <h3>⭐ Happy Clients</h3>
-              <div id="clientGallery" class="pet-card-grid"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===========================
-           PUBLIC REVIEWS
-      ============================ -->
-<section id="reviews" class="section reviews-section">
-  <div class="section-inner">
-    <h2 class="section-title">Happy Clients</h2>
-    <p class="section-subtitle">
-      See what pet parents are saying about Dot’s of Love.
+  <div class="container">
+    <h3>About Me</h3>
+    <p>
+      I’ve cared for dogs, cats, and all sorts of pets for years — from energetic puppies
+      to dignified seniors. I offer loving care that keeps your companions happy and relaxed
+      while you’re away.
     </p>
 
-    <div class="reviews-public-list" id="publicReviewsContainer">
-      <!-- public reviews rendered here by reviews.js -->
-    </div>
-
-    <div class="reviews-cta">
-      <button id="openReviewModalBtn" class="btn-primary">
-        Share Your Experience
-      </button>
-    </div>
+    <ul>
+      <li>🐾 Experienced with dogs, cats, and small animals</li>
+      <li>🏡 In-your-home comfort, where your pets feel safest</li>
+      <li>🚶 Friendly neighborhood dog walker</li>
+      <li>💜 Personalized care for every unique pet</li>
+    </ul>
   </div>
 </section>
 
-<!-- Public “Submit a Review” Modal -->
-<div id="publicReviewModal" class="modal">
+<!-- ============================================================
+     GALLERY SECTION
+============================================================ -->
+<section id="gallery">
+  <h2 class="section-title">Dotty's Pet Family</h2>
+  <div id="petGallery"></div>
+</section>
+
+<!-- ============================================================
+     REVIEWS PUBLIC SECTION (Option A)
+============================================================ -->
+<section id="reviews">
+  <h2 class="section-title">Happy Clients</h2>
+  <p class="section-subtitle">
+    See what pet parents are saying about Dot’s of Love.
+  </p>
+
+  <div style="text-align:center; margin-bottom:25px;">
+    <button class="button-main" id="openReviewModal">Share Your Experience</button>
+  </div>
+
+  <div id="publicReviewsContainer"></div>
+</section>
+
+<!-- ============================================================
+     PUBLIC REVIEW SUBMISSION MODAL
+============================================================ -->
+<div id="reviewModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h3 class="modal-title">Share Your Experience</h3>
-      <button type="button" class="close-btn" id="closePublicReviewModal">
-        &times;
-      </button>
+      <h3>Share Your Experience</h3>
+      <button class="close-btn" onclick="closeReviewModal()">×</button>
     </div>
+
     <div class="modal-body">
-      <form id="publicReviewForm">
-        <label for="reviewerName">Your Name</label>
-        <input
-          type="text"
-          id="reviewerName"
-          name="reviewerName"
-          placeholder="e.g., Emma Smutzer"
-          required
-        />
+      <input type="text" id="reviewerName" placeholder="Your name" />
+      <select id="reviewStars">
+        <option value="5">⭐️⭐️⭐️⭐️⭐️ (5)</option>
+        <option value="4">⭐️⭐️⭐️⭐️ (4)</option>
+        <option value="3">⭐️⭐️⭐️ (3)</option>
+        <option value="2">⭐️⭐️ (2)</option>
+        <option value="1">⭐️ (1)</option>
+      </select>
+      <textarea id="reviewText" rows="4" placeholder="Write your review…"></textarea>
 
-        <label for="reviewRating">Rating</label>
-        <select id="reviewRating" name="reviewRating" required>
-          <option value="5">5 – Excellent</option>
-          <option value="4">4 – Great</option>
-          <option value="3">3 – Good</option>
-          <option value="2">2 – Fair</option>
-          <option value="1">1 – Poor</option>
-        </select>
-
-        <label for="reviewText">Review</label>
-        <textarea
-          id="reviewText"
-          name="reviewText"
-          rows="4"
-          placeholder="Tell others about your pet’s stay with Dotty..."
-          required
-        ></textarea>
-
-        <div class="modal-actions">
-          <button type="submit" id="submitPublicReviewBtn" class="btn-primary">
-            Submit Review
-          </button>
-          <button type="button" id="cancelPublicReviewBtn" class="btn-secondary">
-            Cancel
-          </button>
-        </div>
-      </form>
+      <button class="btn-primary" id="submitReviewBtn">Submit Review</button>
+      <button class="btn-danger" onclick="closeReviewModal()">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- Make sure this is near the bottom of <body>, after admin.js etc. -->
-<script src="/js/reviews.js" defer></script>
+<!-- ============================================================
+     RATES SECTION
+============================================================ -->
+<section id="rates">
+  <h2 class="section-title">Service Rates</h2>
+  <p class="section-subtitle">Affordable, caring options for every pet</p>
 
-      <!-- ===========================
-           RATES
-      ============================ -->
-      <section id="rates" class="section rates-section">
-        <div class="container">
-          <h2>Rates &amp; Services</h2>
-          <p class="section-subtitle">
-            Transparent, simple pricing so you always know what to expect.
-          </p>
+  <div id="ratesContainer"></div>
+</section>
 
-          <div id="ratesCards" class="rates-grid">
-            <!-- Populated by rates.js -->
-          </div>
-        </div>
-      </section>
+<!-- ============================================================
+     CONTACT FORM
+============================================================ -->
+<section id="contact">
+  <h2 class="section-title">Contact Me</h2>
+  <p class="section-subtitle">
+    Send a request — I’d love to care for your furry family member!
+  </p>
 
-      <!-- ===========================
-           CONTACT
-      ============================ -->
-      <section id="contact" class="section contact-section">
-        <div class="container">
-          <h2>Contact &amp; Booking</h2>
-          <p class="section-subtitle">
-            Tell me a little about your pet and what you’re looking for. I’ll
-            get back to you as soon as possible!
-          </p>
+  <div id="contactFormContainer"></div>
+</section>
 
-          <form id="contactForm" class="contact-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="name">Name *</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  autocomplete="name"
-                  required
-                />
-              </div>
+<!-- ============================================================
+     ADMIN DASHBOARD
+============================================================ -->
+<section id="admin" style="display:none;">
+  <div class="admin-container">
 
-              <div class="form-group">
-                <label for="email">Email *</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  autocomplete="email"
-                  required
-                />
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  autocomplete="tel"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="best_time">Best Time to Reach You</label>
-                <select id="best_time" name="best_time">
-                  <option value="">Anytime</option>
-                  <option value="morning">Morning</option>
-                  <option value="afternoon">Afternoon</option>
-                  <option value="evening">Evening</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="service">Service Needed</label>
-              <select id="service" name="service">
-                <option value="overnight">Pet Sitting (Overnight)</option>
-                <option value="visits">Drop-In Visits</option>
-                <option value="playtime">Playtime &amp; Enrichment</option>
-                <option value="dog_walking">Dog Walking</option>
-              </select>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="start_date">Start Date</label>
-                <input type="date" id="start_date" name="start_date" />
-              </div>
-
-              <div class="form-group">
-                <label for="end_date">End Date</label>
-                <input type="date" id="end_date" name="end_date" />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="pet_info">Tell me about your pet(s)</label>
-              <textarea
-                id="pet_info"
-                name="pet_info"
-                rows="3"
-                placeholder="Pet's name, breed, age, special needs, etc."
-              ></textarea>
-            </div>
-
-            <div class="form-group">
-              <label for="message">Additional Message</label>
-              <textarea
-                id="message"
-                name="message"
-                rows="3"
-                placeholder="Anything else I should know?"
-              ></textarea>
-            </div>
-
-            <button type="submit" class="btn-primary" id="contactSubmitBtn">
-              Send Request
-            </button>
-
-            <p id="contactStatus" class="form-status"></p>
-          </form>
-        </div>
-      </section>
-
-      <!-- ===========================
-           ADMIN
-      ============================ -->
-      <section id="admin" class="section admin-section">
-        <div class="container">
-          <h2>Admin Dashboard</h2>
-
-          <!-- Admin Login Panel -->
-          <div id="adminLoginPanel" class="admin-login-card">
-            <form id="adminLoginForm">
-              <div class="form-group">
-                <label for="adminUsername">Username</label>
-                <input
-                  type="text"
-                  id="adminUsername"
-                  name="username"
-                  autocomplete="username"
-                  required
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="adminPassword">Password</label>
-                <input
-                  type="password"
-                  id="adminPassword"
-                  name="password"
-                  autocomplete="current-password"
-                  required
-                />
-              </div>
-
-              <button type="submit" id="adminLoginBtn" class="btn-primary">
-                Login
-              </button>
-
-              <p id="adminLoginStatus" class="form-status"></p>
-            </form>
-          </div>
-
-          <!-- Admin Dashboard (hidden until logged in) -->
-          <div id="adminDashboard" class="admin-dashboard hidden">
-            <div class="admin-top-row">
-              <div class="admin-tabs">
-                <button
-                  class="admin-tab active"
-                  data-tab="pets"
-                  id="adminTabPets"
-                >
-                  🐾 Pets
-                </button>
-                <button class="admin-tab" data-tab="rates" id="adminTabRates">
-                  💲 Rates
-                </button>
-                <button
-                  class="admin-tab"
-                  data-tab="contacts"
-                  id="adminTabContacts"
-                >
-                  ✉️ Contacts
-                </button>
-                <button
-                  class="admin-tab"
-                  data-tab="reviews"
-                  id="adminTabReviews"
-                >
-                  ⭐ Reviews
-                </button>
-              </div>
-
-              <button id="adminLogoutBtn" class="btn-danger">Logout</button>
-            </div>
-
-            <!-- Pets Panel -->
-            <div class="admin-panel" id="adminPetsPanel">
-              <div class="admin-panel-header">
-                <h3>Manage Pets</h3>
-                <button id="addPetBtn" class="btn-primary">Add New Pet</button>
-              </div>
-              <div id="adminPetsList" class="admin-card-grid">
-                <!-- Pet cards populated by admin.js -->
-              </div>
-            </div>
-
-            <!-- Rates Panel -->
-            <div class="admin-panel hidden" id="adminRatesPanel">
-              <div class="admin-panel-header">
-                <h3>Manage Rates</h3>
-                <button id="addRateBtn" class="btn-primary">
-                  Add New Rate
-                </button>
-              </div>
-              <div id="adminRatesList" class="admin-card-grid">
-                <!-- Rate cards populated by admin.js -->
-              </div>
-            </div>
-
-            <!-- Contacts Panel -->
-            <div class="admin-panel hidden" id="adminContactsPanel">
-              <div class="admin-panel-header">
-                <h3>Contact Requests</h3>
-              </div>
-              <div id="adminContactsList" class="admin-card-grid">
-                <!-- Contact requests populated by admin.js -->
-              </div>
-            </div>
-
-            <!-- Reviews Panel -->
-            <div class="admin-panel hidden" id="adminReviewsPanel">
-              <div class="admin-panel-header">
-                <h3>Manage Reviews</h3>
-              </div>
-              <div id="adminReviewsList" class="admin-card-grid">
-                <!-- Pending + approved reviews for admin actions -->
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="site-footer">
-      <div class="container">
-        <p>
-          © 2025 Dot’s of Love Pet Sitting. All rights reserved.
-        </p>
-      </div>
-    </footer>
-
-    <!-- ===========================
-         MODALS
-    ============================ -->
-
-    <!-- Add / Edit Pet Modal -->
-    <div id="petModal" class="modal hidden">
-      <div class="modal-backdrop" data-close="petModal"></div>
-      <div class="modal-content">
-        <button class="modal-close" data-close="petModal">&times;</button>
-        <h3 id="petModalTitle">Add New Pet</h3>
-
-        <form id="petForm" enctype="multipart/form-data">
-          <input type="hidden" id="petIdInput" />
-
-          <div class="form-group">
-            <label for="petNameInput">Pet Name</label>
-            <input type="text" id="petNameInput" required />
-          </div>
-
-          <div class="form-group">
-            <label for="petDescriptionInput">Story Description</label>
-            <textarea
-              id="petDescriptionInput"
-              rows="3"
-              placeholder="Short story or care notes…"
-            ></textarea>
-          </div>
-
-          <div class="form-group checkbox-group">
-            <label>
-              <input type="checkbox" id="isDorothyPetInput" />
-              Dorothy’s Pet
-            </label>
-          </div>
-
-          <div class="form-group">
-            <label for="petImagesInput">Upload Photos</label>
-            <input
-              type="file"
-              id="petImagesInput"
-              name="images"
-              accept="image/*"
-              multiple
-            />
-            <p class="field-help">
-              You can also add more photos later from the admin dashboard.
-            </p>
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" id="savePetBtn" class="btn-primary">
-              Save Changes
-            </button>
-            <button
-              type="button"
-              class="btn-secondary"
-              data-close="petModal"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
+    <div style="text-align:right;">
+      <button id="logoutBtn" class="btn-danger">Logout</button>
     </div>
 
-    <!-- Add / Edit Rate Modal -->
-    <div id="rateModal" class="modal hidden">
-      <div class="modal-backdrop" data-close="rateModal"></div>
-      <div class="modal-content">
-        <button class="modal-close" data-close="rateModal">&times;</button>
-        <h3 id="rateModalTitle">Add New Rate</h3>
+    <h2>Admin Dashboard</h2>
 
-        <form id="rateForm">
-          <input type="hidden" id="rateIdInput" />
-
-          <div class="form-group">
-            <label for="serviceTypeInput">Service Type</label>
-            <input
-              type="text"
-              id="serviceTypeInput"
-              placeholder="e.g. Overnight Stay, Day Visits"
-              required
-            />
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="ratePerUnitInput">Rate Per Unit</label>
-              <input
-                type="number"
-                id="ratePerUnitInput"
-                step="0.01"
-                min="0"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="unitTypeInput">Unit Type</label>
-              <select id="unitTypeInput" required>
-                <option value="per_visit">Per Visit</option>
-                <option value="per_day">Per Day</option>
-                <option value="per_night">Per Night</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="rateDescriptionInput">Description</label>
-            <textarea
-              id="rateDescriptionInput"
-              rows="3"
-              placeholder="Short description of this service…"
-            ></textarea>
-          </div>
-
-          <div class="form-group checkbox-group">
-            <label>
-              <input type="checkbox" id="isFeaturedInput" />
-              Feature this service
-            </label>
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" id="saveRateBtn" class="btn-primary">
-              Save Changes
-            </button>
-            <button
-              type="button"
-              class="btn-secondary"
-              data-close="rateModal"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
+    <!-- Admin Navigation -->
+    <div style="display:flex; gap:12px; margin-top:20px;">
+      <button class="admin-tab" data-section="adminPets">🐾 Pets</button>
+      <button class="admin-tab" data-section="adminRates">💲 Rates</button>
+      <button class="admin-tab" data-section="adminContacts">📬 Contacts</button>
+      <button class="admin-tab" data-section="adminReviews">⭐ Reviews</button>
     </div>
 
-    <!-- Public "Leave a Review" Modal -->
-    <div id="publicReviewModal" class="modal hidden">
-      <div class="modal-backdrop" data-close="publicReviewModal"></div>
-      <div class="modal-content">
-        <button
-          class="modal-close"
-          data-close="publicReviewModal"
-        >&times;</button>
-        <h3>Share Your Experience</h3>
+    <!-- Admin Sections -->
+    <div id="adminPets" class="admin-section"></div>
+    <div id="adminRates" class="admin-section"></div>
+    <div id="adminContacts" class="admin-section"></div>
+    <div id="adminReviews" class="admin-section"></div>
 
-        <form id="publicReviewForm">
-          <div class="form-group">
-            <label for="reviewerNameInput">Your Name</label>
-            <input
-              type="text"
-              id="reviewerNameInput"
-              name="reviewer_name"
-              required
-            />
-          </div>
+  </div>
+</section>
 
-          <div class="form-group">
-            <label for="reviewerLocationInput">Location (optional)</label>
-            <input
-              type="text"
-              id="reviewerLocationInput"
-              name="reviewer_location"
-              placeholder="City, Neighborhood, etc."
-            />
-          </div>
+<!-- ============================================================
+     FOOTER
+============================================================ -->
+<footer>
+  © 2025 Dot’s of Love Pet Sitting. All rights reserved.
+</footer>
 
-          <div class="form-group">
-            <label for="reviewRatingInput">Rating</label>
-            <select id="reviewRatingInput" name="rating" required>
-              <option value="5">⭐️⭐️⭐️⭐️⭐️ (5)</option>
-              <option value="4">⭐️⭐️⭐️⭐️ (4)</option>
-              <option value="3">⭐️⭐️⭐️ (3)</option>
-              <option value="2">⭐️⭐️ (2)</option>
-              <option value="1">⭐️ (1)</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="reviewTextInput">Your Review</label>
-            <textarea
-              id="reviewTextInput"
-              name="review_text"
-              rows="4"
-              placeholder="Tell other pet parents about your experience…"
-              required
-            ></textarea>
-          </div>
-
-          <div class="modal-actions">
-            <button
-              type="button"
-              id="submitPublicReviewBtn"
-              class="btn-primary"
-            >
-              Submit Review
-            </button>
-            <button
-              type="button"
-              class="btn-secondary"
-              data-close="publicReviewModal"
-            >
-              Cancel
-            </button>
-          </div>
-
-          <p id="publicReviewStatus" class="form-status"></p>
-        </form>
-      </div>
-    </div>
-
-    <!-- ===========================
-         Scripts
-    ============================ -->
-    <script src="/js/gallery.js"></script>
-    <script src="/js/rates.js"></script>
-    <script src="/js/contact.js"></script>
-    <script src="/js/reviews.js"></script>
-    <script src="/js/admin.js"></script>
-
-    <!-- Small helper for highlighting active nav item on scroll -->
-    <script>
-      (function () {
-        const links = Array.from(document.querySelectorAll(".nav-link"));
-        const sections = links
-          .map((link) => document.querySelector(link.getAttribute("href")))
-          .filter(Boolean);
-
-        function onScroll() {
-          const y = window.scrollY + 120; // offset for sticky header
-          let current = sections[0];
-          for (const section of sections) {
-            if (section.offsetTop <= y) current = section;
-          }
-          links.forEach((link) => {
-            link.classList.toggle(
-              "active",
-              link.getAttribute("href") === "#" + current.id
-            );
-          });
-        }
-
-        window.addEventListener("scroll", onScroll, { passive: true });
-        onScroll();
-      })();
-    </script>
-  </body>
+</body>
 </html>
