@@ -288,7 +288,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showAdminPanel();
   } else {
     console.log("[Admin] No admin token – public view.");
-    hideAdminPanel();
   }
 });
 })();
