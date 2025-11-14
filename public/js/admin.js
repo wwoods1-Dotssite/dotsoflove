@@ -792,48 +792,6 @@ window.checkAdminAuth = function () {
     }
   }
 
-// =====================================================
-// Admin nav + login handling (safe to append at bottom)
-// =====================================================
-(() => {
-  const TOKEN_KEY = "dotsAdminToken";
-
-  // Sections
-  const adminNav = document.getElementById("navAdmin");
-  const adminSection =
-    document.getElementById("adminDashboard") ||
-    document.getElementById("adminSection") ||
-    document.getElementById("admin");
-
-  const customerSections = [
-    document.getElementById("about"),
-    document.getElementById("gallery"),
-    document.getElementById("reviews"),
-    document.getElementById("rates"),
-    document.getElementById("contact"),
-  ].filter(Boolean);
-
-  // Modal + form
-  const loginModal = document.getElementById("adminLoginModal");
-  const loginForm = document.getElementById("adminLoginForm");
-  const usernameInput = document.getElementById("adminUsername");
-  const passwordInput = document.getElementById("adminPassword");
-  const cancelBtn = document.getElementById("adminLoginCancel");
-  const logoutBtn = document.getElementById("adminLogoutBtn"); // optional
-
-  function hasToken() {
-    return !!localStorage.getItem(TOKEN_KEY);
-  }
-
-  function showAdmin() {
-    if (!adminSection) return;
-
-    // Hide public sections
-    customerSections.forEach((sec) => {
-      if (!sec) return;
-      sec.dataset.prevDisplay = sec.style.display || "";
-      sec.style.display = "none";
-    });
 
     // Show dashboard
     adminSection.style.display = "block";
