@@ -856,6 +856,46 @@ function initAdminTabsAndButtons() {
   });
 }
 
+// ==========================================
+// Simple Admin Tab Controller (Pets / Rates / Contacts / Reviews)
+// ==========================================
+(function initAdminTabs() {
+  // Run only on pages that actually have the admin dashboard
+  const tabButtons = document.querySelectorAll("[data-admin-tab]");
+  const sections = document.querySelectorAll("[data-admin-section]");
+  if (!tabButtons.length || !sections.length) {
+    return;
+  }
+
+  function activateTab(tabName) {
+    sections.forEach((section) => {
+      if (section.dataset.adminSection === tabName) {
+        section.style.display = "";
+      } else {
+        section.style.display = "none";
+      }
+    });
+
+    tabButtons.forEach((btn) => {
+      const isActive = btn.dataset.adminTab === tabName;
+      btn.classList.toggle("active", isActive);
+      btn.setAttribute("aria-pressed", String(isActive));
+    });
+  }
+
+  tabButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const target = btn.dataset.adminTab;
+      if (target) {
+        activateTab(target);
+      }
+    });
+  });
+
+  // Default tab when admin dashboard loads
+  activateTab("pets");
+})();
+
 // -----------------------------
 // DOM Ready
 // -----------------------------
