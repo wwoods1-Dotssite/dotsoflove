@@ -213,10 +213,10 @@ document.addEventListener("DOMContentLoaded", () => {
       clientGrid.innerHTML = "";
 
       dorothyPets.forEach((pet) =>
-        dorothyGrid.appendChild(createPetCard(p))
+        dorothyGrid.appendChild(createPetCard(pet))
       );
       clientPets.forEach((pet) =>
-        clientGrid.appendChild(createPetCard(p))
+        clientGrid.appendChild(createPetCard(pet))
       );
 
       attachThumbnailClicks(dorothyGrid);
