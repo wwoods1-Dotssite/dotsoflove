@@ -94,7 +94,7 @@ function showLoginModal() {
   console.log("[Admin] Showing login modal…");
 
   adminLoginModal.classList.remove("hidden");
-  adminLoginModal.classList.add("visible");
+  adminLoginModal.classList.add("show");
   adminLoginModal.setAttribute("aria-hidden", "false");
 }
 
@@ -103,7 +103,7 @@ function hideLoginModal() {
 
   console.log("[Admin] Hiding login modal…");
 
-  adminLoginModal.classList.remove("visible");
+  adminLoginModal.classList.remove("show");
   adminLoginModal.classList.add("hidden");
   adminLoginModal.setAttribute("aria-hidden", "true");
 }
