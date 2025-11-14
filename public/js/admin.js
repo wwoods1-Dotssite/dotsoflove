@@ -103,8 +103,8 @@ function hideLoginModal() {
 
   console.log("[Admin] Hiding login modal…");
 
-  adminLoginModal.classList.remove("hidden");
-  adminLoginModal.classList.add("show");
+  adminLoginModal.classList.remove("show");
+  adminLoginModal.classList.add("hidden");
   adminLoginModal.setAttribute("aria-hidden", "true");
 }
   // -----------------------------
