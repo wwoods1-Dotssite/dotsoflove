@@ -284,13 +284,16 @@
 
   // ----- Init -----------------------------------------------------
 
-  document.addEventListener("DOMContentLoaded", () => {
-    cacheDomRefs();
-    attachEventListeners();
-    refreshAdminUI();
-    emitAuthChanged();
-    log("Admin login module initialized.");
-     const adminNav = document.getElementById("adminNav");
+document.addEventListener("DOMContentLoaded", () => {
+  // existing boot-up logic
+  cacheDomRefs();
+  attachEventListeners();
+  refreshAdminUI();
+  emitAuthChanged();
+  log("Admin login module initialized.");
+
+  // --- Wire up Admin nav link ---
+  const adminNav = document.getElementById("adminNav");
 
   if (!adminNav) {
     console.warn("[Admin] #adminNav link not found in DOM");
@@ -302,8 +305,17 @@
   adminNav.addEventListener("click", (event) => {
     event.preventDefault();
     console.log("[Admin] Admin nav clicked");
-    openAdminEntry(); // or whatever your entry function is called
+    openAdminEntry(); // this should open login modal or dashboard
 
+    function openAdminEntry() {
+  // decide whether to show login modal or dashboard
+  if (isAdminAuthenticated && isAdminAuthenticated()) {
+    showAdminDashboard();
+  } else {
+    openLoginModal();
+  }
+}
   });
+});
   
 })();
