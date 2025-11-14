@@ -1,10 +1,10 @@
 // admin.js
-// Admin dashboard logic for Dot's of Love Pet Sitting
-// Plain browser JS (no modules), compatible with CommonJS backend.
+// Dot's of Love Pet Sitting - Admin Dashboard
+// CommonJS-style browser script (no bundler needed)
 
-// ------------------------------
-// Mini helpers
-// ------------------------------
+// -----------------------------
+// Small helpers
+// -----------------------------
 function $(selector) {
   return document.querySelector(selector);
 }
@@ -13,813 +13,865 @@ function $all(selector) {
   return Array.from(document.querySelectorAll(selector));
 }
 
-function show(el) {
-  if (el) el.classList.remove("hidden");
+function toast(message, type = "info") {
+  // Minimal console-based "toast"
+  const prefix = type === "error" ? "❌" : type === "success" ? "✅" : "ℹ️";
+  console.log(`${prefix} ${message}`);
 }
 
-function hide(el) {
-  if (el) el.classList.add("hidden");
+// Add auth header if token exists
+function authHeaders(extra = {}) {
+  const token = localStorage.getItem("adminToken");
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extra,
+  };
 }
 
-// Expose modal helpers globally for inline HTML onclick handlers
+// For multipart form uploads
+function authHeadersFormData() {
+  const token = localStorage.getItem("adminToken");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+// -----------------------------
+// API helpers
+// -----------------------------
+async function apiGet(path) {
+  const res = await fetch(path, {
+    headers: authHeaders(),
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(`GET ${path} failed: ${res.status}`);
+  return res.json();
+}
+
+async function apiPost(path, body, isFormData = false) {
+  const opts = {
+    method: "POST",
+    credentials: "include",
+  };
+
+  if (isFormData) {
+    opts.body = body;
+    opts.headers = authHeadersFormData();
+  } else {
+    opts.body = JSON.stringify(body || {});
+    opts.headers = authHeaders();
+  }
+
+  const res = await fetch(path, opts);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`POST ${path} failed: ${res.status} ${text}`);
+  }
+  return res.json().catch(() => ({}));
+}
+
+async function apiPut(path, body, isFormData = false) {
+  const opts = {
+    method: "PUT",
+    credentials: "include",
+  };
+
+  if (isFormData) {
+    opts.body = body;
+    opts.headers = authHeadersFormData();
+  } else {
+    opts.body = JSON.stringify(body || {});
+    opts.headers = authHeaders();
+  }
+
+  const res = await fetch(path, opts);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`PUT ${path} failed: ${res.status} ${text}`);
+  }
+  return res.json().catch(() => ({}));
+}
+
+async function apiDelete(path) {
+  const res = await fetch(path, {
+    method: "DELETE",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`DELETE ${path} failed: ${res.status} ${text}`);
+  }
+  return res.json().catch(() => ({}));
+}
+
+// -----------------------------
+// Admin state
+// -----------------------------
+const AdminState = {
+  currentTab: "pets",
+  pets: [],
+  rates: [],
+  contacts: [],
+  reviews: [],
+  editingPetId: null,
+  editingRateId: null,
+  editingReviewId: null,
+};
+
+// -----------------------------
+// DOM references (lazy)
+// -----------------------------
+const Dom = {
+  get loginSection() {
+    return $("#adminLoginSection");
+  },
+  get dashboard() {
+    return $("#adminDashboard");
+  },
+  get loginForm() {
+    return $("#adminLoginForm");
+  },
+  get logoutBtn() {
+    return $("#adminLogoutBtn");
+  },
+
+  // Tabs
+  get tabs() {
+    return $all(".admin-tab");
+  },
+  get sections() {
+    return $all(".admin-section-panel");
+  },
+
+  // Lists
+  get petsList() {
+    return $("#adminPetsList");
+  },
+  get ratesList() {
+    return $("#adminRatesList");
+  },
+  get contactsList() {
+    return $("#adminContactsList");
+  },
+  get reviewsList() {
+    return $("#adminReviewsList");
+  },
+
+  // Action buttons
+  get addPetBtn() {
+    return $("#addPetBtn");
+  },
+  get addRateBtn() {
+    return $("#addRateBtn");
+  },
+
+  // Pet modal
+  get petModal() {
+    return $("#petModal");
+  },
+  get petModalTitle() {
+    return $("#petModalTitle");
+  },
+  get petForm() {
+    return $("#petForm");
+  },
+  get petNameInput() {
+    return $("#petName");
+  },
+  get petDescriptionInput() {
+    return $("#petDescription");
+  },
+  get petDorothyCheckbox() {
+    return $("#isDorothyPet");
+  },
+  get petImagesInput() {
+    return $("#petImages");
+  },
+  get savePetBtn() {
+    return $("#savePetBtn");
+  },
+
+  // Rate modal
+  get rateModal() {
+    return $("#rateModal");
+  },
+  get rateModalTitle() {
+    return $("#rateModalTitle");
+  },
+  get rateForm() {
+    return $("#rateForm");
+  },
+  get serviceTypeInput() {
+    return $("#serviceType");
+  },
+  get ratePerUnitInput() {
+    return $("#ratePerUnit");
+  },
+  get unitTypeSelect() {
+    return $("#unitType");
+  },
+  get rateDescriptionInput() {
+    return $("#rateDescription");
+  },
+  get isFeaturedCheckbox() {
+    return $("#isFeatured");
+  },
+  get saveRateBtn() {
+    return $("#saveRateBtn");
+  },
+};
+
+// -----------------------------
+// Modal helpers (vanilla CSS modals)
+// -----------------------------
 function openModal(id) {
-  const el = document.getElementById(id);
-  if (el) el.classList.add("modal-open");
+  const el = typeof id === "string" ? $("#" + id) : id;
+  if (!el) return;
+  el.classList.add("is-open");
+  document.body.classList.add("modal-open");
 }
 
 function closeModal(id) {
-  const el = document.getElementById(id);
-  if (el) el.classList.remove("modal-open");
+  const el = typeof id === "string" ? $("#" + id) : id;
+  if (!el) return;
+  el.classList.remove("is-open");
+  document.body.classList.remove("modal-open");
 }
 
-window.openModal = openModal;
-window.closeModal = closeModal;
+// -----------------------------
+// Rendering helpers
+// -----------------------------
 
-// ------------------------------
-// State
-// ------------------------------
-let adminToken = null;       // Not strictly required yet, but ready if needed
-let currentPetId = null;     // null = add mode, non-null = edit pet
-let currentRateId = null;    // null = add mode, non-null = edit rate
-
-// ------------------------------
-// DOM references
-// ------------------------------
-
-// Login
-const adminLoginSection = $("#adminLogin");
-const adminLoginForm = $("#adminLoginForm");
-const adminUsernameInput = $("#adminUsername");
-const adminPasswordInput = $("#adminPassword");
-const adminLoginStatus = $("#adminLoginStatus");
-
-// Main admin dashboard
-const adminSection = $("#admin");
-const adminLogoutBtn = $("#adminLogoutBtn");
-
-// Tabs + panels
-const adminTabButtons = $all(".admin-tab-btn");
-const petsPanel = $("#adminPetsSection");
-const ratesPanel = $("#adminRatesSection");
-const contactsPanel = $("#adminContactsSection");
-const reviewsPanel = $("#adminReviewsSection"); // <- ADMIN reviews panel
-
-// Pets
-const petsList = $("#adminPetsList");
-const addPetBtn = $("#addPetBtn");
-const petModal = $("#petModal");
-const petForm = $("#addPetForm");
-const savePetBtn = $("#savePetBtn");
-
-// Rates
-const ratesList = $("#adminRatesList");
-const addRateBtn = $("#addRateBtn");
-const rateModal = $("#rateModal");
-const rateForm = $("#addRateForm");
-const saveRateBtn = $("#saveRateBtn");
-
-// Contacts
-const contactsList = $("#adminContactsList");
-
-// Reviews (admin moderation)
-const reviewsList = $("#adminReviewsList");
-
-// ------------------------------
-// Generic API helper
-// ------------------------------
-async function apiRequest(url, options = {}) {
-  const opts = {
-    method: options.method || "GET",
-    headers: options.headers || {},
-    body: options.body || null
-  };
-
-  if (opts.body && !(opts.body instanceof FormData)) {
-    opts.headers["Content-Type"] = "application/json";
-    opts.body = JSON.stringify(opts.body);
-  }
-
-  if (adminToken) {
-    opts.headers["Authorization"] = `Bearer ${adminToken}`;
-  }
-
-  const res = await fetch(url, opts);
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`${res.status} ${res.statusText}: ${text}`);
-  }
-
-  const ct = res.headers.get("content-type") || "";
-  if (ct.includes("application/json")) {
-    return res.json();
-  }
-  return res.text();
-}
-
-// ------------------------------
-// Auth
-// ------------------------------
-async function handleAdminLogin(event) {
-  event.preventDefault();
-  if (!adminUsernameInput || !adminPasswordInput) return;
-
-  const username = adminUsernameInput.value.trim();
-  const password = adminPasswordInput.value.trim();
-
-  if (!username || !password) {
-    if (adminLoginStatus) {
-      adminLoginStatus.textContent = "Please enter username and password.";
-      adminLoginStatus.classList.add("error");
-    }
+function renderPets() {
+  if (!Dom.petsList) return;
+  const pets = AdminState.pets || [];
+  if (!pets.length) {
+    Dom.petsList.innerHTML =
+      '<p class="admin-empty">No pets yet. Click "Add New Pet" to get started.</p>';
     return;
   }
 
-  try {
-    if (adminLoginStatus) {
-      adminLoginStatus.textContent = "Signing in…";
-      adminLoginStatus.classList.remove("error", "success");
-    }
-
-    const data = await apiRequest("/api/admin/auth", {
-      method: "POST",
-      body: { username, password }
-    });
-
-    if (!data.success) {
-      if (adminLoginStatus) {
-        adminLoginStatus.textContent = data.message || "Invalid credentials.";
-        adminLoginStatus.classList.add("error");
-      }
-      return;
-    }
-
-    adminToken = data.token || "admin-token";
-
-    if (adminLoginStatus) {
-      adminLoginStatus.textContent = "Logged in successfully.";
-      adminLoginStatus.classList.remove("error");
-      adminLoginStatus.classList.add("success");
-    }
-
-    // Show admin dashboard, hide login panel
-    hide(adminLoginSection);
-    show(adminSection);
-
-    // Default to Pets tab
-    switchAdminTab("pets");
-
-    // Initial loads
-    loadPets();
-    loadRates();
-    loadContacts();
-    loadAdminReviews();
-  } catch (err) {
-    console.error("Admin login failed:", err);
-    if (adminLoginStatus) {
-      adminLoginStatus.textContent =
-        "Login failed. Please verify credentials and try again.";
-      adminLoginStatus.classList.add("error");
-    }
-  }
-}
-
-function handleAdminLogout() {
-  adminToken = null;
-  // Just toggle sections for now (no localStorage for token)
-  show(adminLoginSection);
-  hide(adminSection);
-}
-
-// ------------------------------
-// Tab switching
-// ------------------------------
-function switchAdminTab(tabName) {
-  const map = {
-    pets: petsPanel,
-    rates: ratesPanel,
-    contacts: contactsPanel,
-    reviews: reviewsPanel
-  };
-
-  // Highlight the active tab button
-  adminTabButtons.forEach((btn) => {
-    const isActive = btn.dataset.tab === tabName;
-    btn.classList.toggle("active", isActive);
-  });
-
-  // Show only the active panel
-  Object.entries(map).forEach(([key, panel]) => {
-    if (!panel) return;
-    if (key === tabName) show(panel);
-    else hide(panel);
-  });
-
-  // Lazy load per-tab data
-  if (tabName === "pets") loadPets();
-  if (tabName === "rates") loadRates();
-  if (tabName === "contacts") loadContacts();
-  if (tabName === "reviews") loadAdminReviews();
-}
-
-// ------------------------------
-// PETS
-// ------------------------------
-async function loadPets() {
-  if (!petsList) return;
-  try {
-    const pets = await apiRequest("/api/pets");
-    renderPets(pets);
-  } catch (err) {
-    console.error("Error loading pets:", err);
-    petsList.innerHTML =
-      '<p class="admin-empty">Error loading pets. Please try again.</p>';
-  }
-}
-
-function renderPets(pets) {
-  if (!petsList) return;
-
-  if (!Array.isArray(pets) || pets.length === 0) {
-    petsList.innerHTML =
-      '<p class="admin-empty">No pets yet. Use "Add Pet" to create one.</p>';
-    return;
-  }
-
-  const html = pets
+  Dom.petsList.innerHTML = pets
     .map((pet) => {
       const images = Array.isArray(pet.images) ? pet.images : [];
-      const badge = pet.is_dorothy_pet
-        ? '<span class="badge badge-dorothy">Dorothy\'s Pet</span>'
-        : "";
       const thumbs =
-        images.length > 0
-          ? images
+        images.length === 0
+          ? '<div class="pet-thumb pet-thumb-empty">No images yet</div>'
+          : images
               .map(
                 (img) => `
-          <div class="admin-thumb" draggable="true"
-               data-image-id="${img.id}" data-pet-id="${pet.id}">
-            <img src="${img.image_url}" alt="${pet.pet_name}" />
-            <button class="thumb-delete-btn"
-                    data-image-id="${img.id}"
-                    title="Remove image">🗑</button>
-          </div>`
+        <div class="pet-thumb" data-image-id="${img.id}">
+          <img src="${img.image_url}" alt="${pet.pet_name}" />
+          <button class="thumb-delete-btn" data-image-id="${img.id}" title="Delete image">✕</button>
+        </div>`
               )
-              .join("")
-          : '<div class="admin-thumb admin-thumb-empty">No images yet</div>';
+              .join("");
+
+      const dorothyBadge = pet.is_dorothy_pet
+        ? '<span class="badge-dorothy">Dorothy\'s Pet</span>'
+        : "";
 
       return `
-      <article class="admin-card admin-pet-card" data-pet-id="${pet.id}">
+      <article class="admin-card pet-card" data-pet-id="${pet.id}">
         <header class="admin-card-header">
           <div>
-            <h3>${pet.pet_name || "Untitled Pet"}</h3>
-            ${badge}
+            <h3>${pet.pet_name || "Unnamed Pet"}</h3>
+            ${dorothyBadge}
           </div>
           <div class="admin-card-actions">
-            <button class="btn-secondary btn-xs pet-edit-btn" data-id="${pet.id}">Edit</button>
-            <button class="btn-danger btn-xs pet-delete-btn" data-id="${pet.id}">Delete</button>
+            <button class="btn-secondary pet-edit-btn" data-pet-id="${pet.id}">Edit</button>
+            <button class="btn-danger pet-delete-btn" data-pet-id="${pet.id}">Delete</button>
           </div>
         </header>
-        <p>${pet.story_description || ""}</p>
-        <div class="admin-pet-thumbs" data-pet-id="${pet.id}">
+        <p class="admin-card-subtitle">${pet.story_description || ""}</p>
+        <div class="pet-thumbs-row">
           ${thumbs}
         </div>
-        <p class="admin-card-meta">Drag to reorder images</p>
+        <p class="pet-thumbs-hint">
+          Drag to reorder photos • Click ✕ to remove photo
+        </p>
       </article>
-    `;
+      `;
     })
     .join("");
 
-  petsList.innerHTML = html;
-
-  wirePetEvents();
+  // Wire up edit/delete and image-delete and drag events
+  wirePetCardEvents();
 }
 
-function wirePetEvents() {
+function renderRates() {
+  if (!Dom.ratesList) return;
+  const rates = AdminState.rates || [];
+  if (!rates.length) {
+    Dom.ratesList.innerHTML =
+      '<p class="admin-empty">No rates yet. Click "Add New Rate" to add one.</p>';
+    return;
+  }
+
+  Dom.ratesList.innerHTML = rates
+    .map((rate) => {
+      const featuredBadge = rate.is_featured
+        ? '<span class="badge-featured">Featured</span>'
+        : "";
+      const unit =
+        rate.unit_type === "per_day"
+          ? "per day"
+          : rate.unit_type === "per_night"
+          ? "per night"
+          : "per visit";
+
+      return `
+      <article class="admin-card rate-card" data-rate-id="${rate.id}">
+        <header class="admin-card-header">
+          <div>
+            <h3>${rate.service_type}</h3>
+            ${featuredBadge}
+          </div>
+          <div class="admin-card-actions">
+            <button class="btn-secondary rate-edit-btn" data-rate-id="${rate.id}">Edit</button>
+            <button class="btn-danger rate-delete-btn" data-rate-id="${rate.id}">Delete</button>
+          </div>
+        </header>
+        <p class="admin-card-subtitle">$${Number(rate.rate_per_unit).toFixed(
+          2
+        )} <span class="rate-unit">${unit}</span></p>
+        <p class="admin-card-description">${rate.description || ""}</p>
+      </article>
+      `;
+    })
+    .join("");
+
+  wireRateCardEvents();
+}
+
+function renderContacts() {
+  if (!Dom.contactsList) return;
+  const contacts = AdminState.contacts || [];
+  if (!contacts.length) {
+    Dom.contactsList.innerHTML =
+      '<p class="admin-empty">No pending contact requests 🎉</p>';
+    return;
+  }
+
+  Dom.contactsList.innerHTML = contacts
+    .map((c) => {
+      const dates =
+        c.start_date && c.end_date
+          ? `${c.start_date} → ${c.end_date}`
+          : c.start_date
+          ? c.start_date
+          : "Not specified";
+
+      return `
+      <article class="admin-card contact-card" data-contact-id="${c.id}">
+        <header class="admin-card-header">
+          <div>
+            <h3>${c.name}</h3>
+            <p class="admin-card-subtitle">${c.email} · ${
+        c.phone || "No phone"
+      }</p>
+          </div>
+          <div class="admin-card-actions">
+            <button class="btn-primary contact-mark-btn" data-contact-id="${
+              c.id
+            }">
+              Mark Contacted
+            </button>
+          </div>
+        </header>
+        <dl class="contact-meta">
+          <div><dt>Best Time</dt><dd>${c.best_time || "N/A"}</dd></div>
+          <div><dt>Service</dt><dd>${c.service || "N/A"}</dd></div>
+          <div><dt>Dates</dt><dd>${dates}</dd></div>
+        </dl>
+        <p class="admin-card-description"><strong>Pet Info:</strong> ${
+          c.pet_info || "N/A"
+        }</p>
+        <p class="admin-card-description"><strong>Message:</strong> ${
+          c.message || "N/A"
+        }</p>
+      </article>
+      `;
+    })
+    .join("");
+
+  wireContactCardEvents();
+}
+
+function renderReviews() {
+  if (!Dom.reviewsList) return;
+  const reviews = AdminState.reviews || [];
+  if (!reviews.length) {
+    Dom.reviewsList.innerHTML =
+      '<p class="admin-empty">No pending reviews at this time.</p>';
+    return;
+  }
+
+  Dom.reviewsList.innerHTML = reviews
+    .map((r) => {
+      const stars = "⭐".repeat(Math.max(1, Math.min(5, r.rating || 5)));
+      const dateStr = r.created_at
+        ? new Date(r.created_at).toLocaleDateString()
+        : "";
+      return `
+      <article class="admin-card review-card" data-review-id="${r.id}">
+        <header class="admin-card-header">
+          <div>
+            <h3>${r.reviewer_name}</h3>
+            <p class="admin-card-subtitle">${dateStr}</p>
+          </div>
+          <div class="admin-card-actions">
+            <span class="review-stars">${stars}</span>
+            <button class="btn-primary review-approve-btn" data-review-id="${
+              r.id
+            }">Approve</button>
+            <button class="btn-danger review-delete-btn" data-review-id="${
+              r.id
+            }">Delete</button>
+          </div>
+        </header>
+        <p class="admin-card-description">${r.review_text || ""}</p>
+      </article>
+      `;
+    })
+    .join("");
+
+  wireReviewCardEvents();
+}
+
+// -----------------------------
+// Wire per-card actions
+// -----------------------------
+function wirePetCardEvents() {
   // Edit pet
   $all(".pet-edit-btn").forEach((btn) => {
-    btn.addEventListener("click", () => openPetEditor(btn.dataset.id));
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.petId;
+      openPetEditor(id);
+    });
   });
 
   // Delete pet
   $all(".pet-delete-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      const id = btn.dataset.id;
-      if (!confirm("Delete this pet and all its images?")) return;
+      const id = btn.dataset.petId;
+      if (!confirm("Delete this pet and all images?")) return;
       try {
-        await apiRequest(`/api/pets/${id}`, { method: "DELETE" });
-        loadPets();
+        await apiDelete(`/api/pets/${id}`);
+        toast("Pet deleted", "success");
+        await loadPets();
       } catch (err) {
-        console.error("Error deleting pet:", err);
-        alert("Could not delete pet.");
+        console.error(err);
+        toast("Failed to delete pet", "error");
       }
     });
   });
 
-  // Delete single image
+  // Delete individual image
   $all(".thumb-delete-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
       const imgId = btn.dataset.imageId;
-      if (!confirm("Remove this photo?")) return;
+      if (!confirm("Delete this photo?")) return;
       try {
-        await apiRequest(`/api/pets/images/${imgId}`, { method: "DELETE" });
-        loadPets();
+        await apiDelete(`/api/pets/images/${imgId}`);
+        toast("Image deleted", "success");
+        await loadPets();
       } catch (err) {
-        console.error("Error deleting image:", err);
-        alert("Could not delete image.");
+        console.error(err);
+        toast("Failed to delete image", "error");
       }
     });
   });
 
-  // Drag and drop reordering
-  setupImageReorder();
+  // (Optional) drag-and-drop for reordering could be added here later
 }
 
-function setupImageReorder() {
-  const containers = $all(".admin-pet-thumbs[data-pet-id]");
-  containers.forEach((container) => {
-    const petId = container.dataset.petId;
-
-    container.addEventListener("dragstart", (e) => {
-      const item = e.target.closest(".admin-thumb");
-      if (!item || !item.dataset.imageId) return;
-      item.classList.add("dragging");
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", item.dataset.imageId);
+function wireRateCardEvents() {
+  $all(".rate-edit-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.rateId;
+      openRateEditor(id);
     });
+  });
 
-    container.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      const dragging = container.querySelector(".dragging");
-      if (!dragging) return;
-      const after = getThumbAfter(container, e.clientX);
-      if (!after) container.appendChild(dragging);
-      else container.insertBefore(dragging, after);
-    });
-
-    container.addEventListener("drop", async (e) => {
-      e.preventDefault();
-      const dragging = container.querySelector(".dragging");
-      if (dragging) dragging.classList.remove("dragging");
-
-      const order = Array.from(
-        container.querySelectorAll(".admin-thumb[data-image-id]")
-      ).map((el) => el.dataset.imageId);
-
+  $all(".rate-delete-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.rateId;
+      if (!confirm("Delete this rate?")) return;
       try {
-        await apiRequest(`/api/pets/${petId}/images/reorder`, {
-          method: "PUT",
-          body: { order }
-        });
-        loadPets();
+        await apiDelete(`/api/rates/${id}`);
+        toast("Rate deleted", "success");
+        await loadRates();
       } catch (err) {
-        console.error("Error saving image order:", err);
+        console.error(err);
+        toast("Failed to delete rate", "error");
       }
-    });
-
-    container.addEventListener("dragend", () => {
-      const dragging = container.querySelector(".dragging");
-      if (dragging) dragging.classList.remove("dragging");
     });
   });
 }
 
-function getThumbAfter(container, x) {
-  const items = [
-    ...container.querySelectorAll(".admin-thumb[data-image-id]:not(.dragging)")
-  ];
-  return items.reduce(
-    (closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = x - box.left - box.width / 2;
-      if (offset < 0 && offset > closest.offset) {
-        return { offset, element: child };
+function wireContactCardEvents() {
+  $all(".contact-mark-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.contactId;
+      if (!confirm("Mark this contact as handled?")) return;
+      try {
+        await apiPut(`/api/contacts/${id}/contacted`, {});
+        toast("Contact marked as contacted", "success");
+        await loadContacts();
+      } catch (err) {
+        console.error(err);
+        toast("Failed to update contact", "error");
       }
-      return closest;
-    },
-    { offset: Number.NEGATIVE_INFINITY, element: null }
-  ).element;
+    });
+  });
 }
 
-// Open "Add Pet" modal
-function openNewPetModal() {
-  currentPetId = null;
-  if (petForm) petForm.reset();
-  const chk = $("#isDorothyPet");
-  if (chk) chk.checked = false;
-  openModal("petModal");
+function wireReviewCardEvents() {
+  $all(".review-approve-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.reviewId;
+      try {
+        await apiPut(`/api/admin/reviews/${id}/approve`, {});
+        toast("Review approved", "success");
+        await loadReviews();
+      } catch (err) {
+        console.error(err);
+        toast("Failed to approve review", "error");
+      }
+    });
+  });
+
+  $all(".review-delete-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.reviewId;
+      if (!confirm("Delete this review?")) return;
+      try {
+        await apiDelete(`/api/admin/reviews/${id}`);
+        toast("Review deleted", "success");
+        await loadReviews();
+      } catch (err) {
+        console.error(err);
+        toast("Failed to delete review", "error");
+      }
+    });
+  });
 }
 
-// Open "Edit Pet" modal
-async function openPetEditor(id) {
+// -----------------------------
+// Load data
+// -----------------------------
+async function loadPets() {
   try {
-    const pet = await apiRequest(`/api/pets/${id}`);
-    currentPetId = pet.id;
-
-    if (petForm) {
-      petForm.reset();
-      $("#petName").value = pet.pet_name || "";
-      $("#petDescription").value = pet.story_description || "";
-      const chk = $("#isDorothyPet");
-      if (chk) chk.checked = !!pet.is_dorothy_pet;
-    }
-
-    openModal("petModal");
+    const pets = await apiGet("/api/pets");
+    AdminState.pets = Array.isArray(pets) ? pets : [];
+    renderPets();
   } catch (err) {
-    console.error("Error loading pet:", err);
-    alert("Unable to load pet details.");
+    console.error(err);
+    toast("Failed to load pets", "error");
   }
 }
 
-// Save pet (new or edit)
-async function handleSavePet(e) {
-  if (e) e.preventDefault();
-  if (!petForm) return;
+async function loadRates() {
+  try {
+    const rates = await apiGet("/api/rates");
+    AdminState.rates = Array.isArray(rates) ? rates : [];
+    renderRates();
+  } catch (err) {
+    console.error(err);
+    toast("Failed to load rates", "error");
+  }
+}
 
-  const nameInput = $("#petName");
-  if (!nameInput || !nameInput.value.trim()) {
-    alert("Pet name is required.");
+async function loadContacts() {
+  try {
+    const contacts = await apiGet("/api/contacts");
+    AdminState.contacts = Array.isArray(contacts) ? contacts : [];
+    renderContacts();
+  } catch (err) {
+    console.error(err);
+    toast("Failed to load contacts", "error");
+  }
+}
+
+async function loadReviews() {
+  try {
+    const reviews = await apiGet("/api/admin/reviews");
+    AdminState.reviews = Array.isArray(reviews) ? reviews : [];
+    renderReviews();
+  } catch (err) {
+    console.error(err);
+    toast("Failed to load reviews", "error");
+  }
+}
+
+// -----------------------------
+// Pet modal logic
+// -----------------------------
+function resetPetForm() {
+  if (!Dom.petForm) return;
+  Dom.petForm.reset();
+  AdminState.editingPetId = null;
+}
+
+function openPetEditor(petId) {
+  if (!Dom.petModal) return;
+  if (!petId) {
+    // New pet
+    resetPetForm();
+    Dom.petModalTitle.textContent = "Add New Pet";
+    AdminState.editingPetId = null;
+    openModal(Dom.petModal);
     return;
   }
 
-  const formData = new FormData(petForm);
-  const chk = $("#isDorothyPet");
-  formData.set("is_dorothy_pet", chk && chk.checked ? "true" : "false");
-  formData.set("pet_name", nameInput.value.trim());
-  formData.set(
-    "story_description",
-    ($("#petDescription").value || "").trim()
-  );
+  // Editing existing pet - populate from state
+  const pet = AdminState.pets.find((p) => String(p.id) === String(petId));
+  if (!pet) {
+    toast("Pet not found in state", "error");
+    return;
+  }
+
+  Dom.petModalTitle.textContent = `Edit Pet: ${pet.pet_name}`;
+  Dom.petNameInput.value = pet.pet_name || "";
+  Dom.petDescriptionInput.value = pet.story_description || "";
+  Dom.petDorothyCheckbox.checked = !!pet.is_dorothy_pet;
+  Dom.petImagesInput.value = ""; // clear file input
+  AdminState.editingPetId = pet.id;
+
+  openModal(Dom.petModal);
+}
+
+async function handleSavePet() {
+  if (!Dom.petForm) return;
+  const fd = new FormData();
+
+  fd.append("pet_name", Dom.petNameInput.value.trim());
+  fd.append("story_description", Dom.petDescriptionInput.value.trim());
+  fd.append("is_dorothy_pet", Dom.petDorothyCheckbox.checked ? "true" : "false");
+
+  const files = Dom.petImagesInput.files;
+  if (files && files.length > 0) {
+    for (const file of files) {
+      fd.append("images", file);
+    }
+  }
 
   try {
-    if (currentPetId) {
-      await apiRequest(`/api/pets/${currentPetId}`, {
-        method: "PUT",
-        body: formData
-      });
+    if (AdminState.editingPetId) {
+      await apiPut(`/api/pets/${AdminState.editingPetId}`, fd, true);
+      toast("Pet updated successfully", "success");
     } else {
-      await apiRequest("/api/pets", {
-        method: "POST",
-        body: formData
-      });
+      await apiPost("/api/pets", fd, true);
+      toast("Pet created successfully", "success");
     }
-    closeModal("petModal");
-    loadPets();
+    closeModal(Dom.petModal);
+    resetPetForm();
+    await loadPets();
   } catch (err) {
-    console.error("Error saving pet:", err);
+    console.error(err);
     alert("Could not save pet.");
   }
 }
 
-// ------------------------------
-// RATES
-// ------------------------------
-async function loadRates() {
-  if (!ratesList) return;
-  try {
-    const rates = await apiRequest("/api/rates");
-    renderRates(rates);
-  } catch (err) {
-    console.error("Error loading rates:", err);
-    ratesList.innerHTML =
-      '<p class="admin-empty">Error loading rates. Please try again.</p>';
-  }
+// -----------------------------
+// Rate modal logic
+// -----------------------------
+function resetRateForm() {
+  if (!Dom.rateForm) return;
+  Dom.rateForm.reset();
+  AdminState.editingRateId = null;
 }
 
-function renderRates(rates) {
-  if (!ratesList) return;
-
-  if (!Array.isArray(rates) || rates.length === 0) {
-    ratesList.innerHTML =
-      '<p class="admin-empty">No rates yet. Use "Add Rate" to create one.</p>';
+function openRateEditor(rateId) {
+  if (!Dom.rateModal) return;
+  if (!rateId) {
+    resetRateForm();
+    Dom.rateModalTitle.textContent = "Add New Rate";
+    AdminState.editingRateId = null;
+    openModal(Dom.rateModal);
     return;
   }
 
-  const html = rates
-    .map((r) => {
-      const featured = r.is_featured
-        ? '<span class="badge badge-featured">Featured</span>'
-        : "";
-      return `
-      <article class="admin-card" data-rate-id="${r.id}">
-        <header class="admin-card-header">
-          <div>
-            <h3>${r.service_type}</h3>
-            ${featured}
-          </div>
-          <div class="admin-card-actions">
-            <button class="btn-secondary btn-xs rate-edit-btn" data-id="${r.id}">Edit</button>
-            <button class="btn-danger btn-xs rate-delete-btn" data-id="${r.id}">Delete</button>
-          </div>
-        </header>
-        <p class="admin-rate-amount">
-          $${Number(r.rate_per_unit).toFixed(2)}
-          <span class="admin-rate-unit">${r.unit_type}</span>
-        </p>
-        <p>${r.description || ""}</p>
-      </article>
-    `;
-    })
-    .join("");
-
-  ratesList.innerHTML = html;
-
-  $all(".rate-edit-btn").forEach((btn) =>
-    btn.addEventListener("click", () => openRateEditor(btn.dataset.id))
-  );
-  $all(".rate-delete-btn").forEach((btn) =>
-    btn.addEventListener("click", () => deleteRate(btn.dataset.id))
-  );
-}
-
-async function openRateEditor(id) {
-  try {
-    const rate = await apiRequest(`/api/rates/${id}`);
-    currentRateId = rate.id;
-
-    if (rateForm) {
-      rateForm.reset();
-      $("#serviceType").value = rate.service_type || "";
-      $("#ratePerUnit").value = rate.rate_per_unit || "";
-      $("#unitType").value = rate.unit_type || "per_visit";
-      $("#rateDescription").value = rate.description || "";
-      const chk = $("#isFeatured");
-      if (chk) chk.checked = !!rate.is_featured;
-    }
-
-    openModal("rateModal");
-  } catch (err) {
-    console.error("Error loading rate:", err);
-    alert("Unable to load rate.");
-  }
-}
-
-function openNewRateModal() {
-  currentRateId = null;
-  if (rateForm) {
-    rateForm.reset();
-    $("#unitType").value = "per_visit";
-    const chk = $("#isFeatured");
-    if (chk) chk.checked = false;
-  }
-  openModal("rateModal");
-}
-
-async function handleSaveRate(e) {
-  if (e) e.preventDefault();
-  if (!rateForm) return;
-
-  const serviceType = $("#serviceType").value.trim();
-  const rateVal = $("#ratePerUnit").value;
-  const unitType = $("#unitType").value;
-  const description = ($("#rateDescription").value || "").trim();
-  const isFeatured = $("#isFeatured").checked;
-
-  if (!serviceType || !rateVal) {
-    alert("Service type and rate are required.");
+  const rate = AdminState.rates.find((r) => String(r.id) === String(rateId));
+  if (!rate) {
+    toast("Rate not found in state", "error");
     return;
   }
 
+  Dom.rateModalTitle.textContent = `Edit Rate: ${rate.service_type}`;
+  Dom.serviceTypeInput.value = rate.service_type || "";
+  Dom.ratePerUnitInput.value = rate.rate_per_unit || "";
+  Dom.unitTypeSelect.value = rate.unit_type || "per_visit";
+  Dom.rateDescriptionInput.value = rate.description || "";
+  Dom.isFeaturedCheckbox.checked = !!rate.is_featured;
+  AdminState.editingRateId = rate.id;
+
+  openModal(Dom.rateModal);
+}
+
+async function handleSaveRate() {
   const payload = {
-    service_type: serviceType,
-    rate_per_unit: rateVal,
-    unit_type: unitType,
-    description,
-    is_featured: isFeatured
+    service_type: Dom.serviceTypeInput.value.trim(),
+    rate_per_unit: Number(Dom.ratePerUnitInput.value || 0),
+    unit_type: Dom.unitTypeSelect.value,
+    description: Dom.rateDescriptionInput.value.trim(),
+    is_featured: Dom.isFeaturedCheckbox.checked,
   };
 
   try {
-    if (currentRateId) {
-      await apiRequest(`/api/rates/${currentRateId}`, {
-        method: "PUT",
-        body: payload
-      });
+    if (AdminState.editingRateId) {
+      await apiPut(`/api/rates/${AdminState.editingRateId}`, payload);
+      toast("Rate updated successfully", "success");
     } else {
-      await apiRequest("/api/rates", {
-        method: "POST",
-        body: payload
-      });
+      await apiPost("/api/rates", payload);
+      toast("Rate created successfully", "success");
     }
-    closeModal("rateModal");
-    loadRates();
+    closeModal(Dom.rateModal);
+    resetRateForm();
+    await loadRates();
   } catch (err) {
-    console.error("Error saving rate:", err);
+    console.error(err);
     alert("Could not save rate.");
   }
 }
 
-async function deleteRate(id) {
-  if (!confirm("Delete this rate?")) return;
+// -----------------------------
+// Tabs logic
+// -----------------------------
+function switchAdminTab(tabKey) {
+  AdminState.currentTab = tabKey;
+
+  // Tabs
+  Dom.tabs.forEach((btn) => {
+    const target = btn.dataset.target; // "pets" | "rates" | "contacts" | "reviews"
+    if (target === tabKey) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+
+  // Panels
+  Dom.sections.forEach((panel) => {
+    const section = panel.dataset.section;
+    if (section === tabKey) {
+      panel.classList.remove("hidden");
+    } else {
+      panel.classList.add("hidden");
+    }
+  });
+}
+
+// -----------------------------
+// Login / logout
+// -----------------------------
+async function handleAdminLogin(ev) {
+  ev.preventDefault();
+  const form = Dom.loginForm;
+  if (!form) return;
+
+  const username = form.adminUsername.value.trim();
+  const password = form.adminPassword.value;
+
   try {
-    await apiRequest(`/api/rates/${id}`, { method: "DELETE" });
-    loadRates();
+    const res = await apiPost("/api/admin/auth", { username, password });
+    if (!res || !res.success || !res.token) {
+      alert("Invalid admin credentials.");
+      return;
+    }
+    localStorage.setItem("adminToken", res.token);
+    toast("Admin login successful", "success");
+    enterAdminDashboard();
   } catch (err) {
-    console.error("Error deleting rate:", err);
-    alert("Could not delete rate.");
+    console.error(err);
+    alert("Admin login failed.");
   }
 }
 
-// ------------------------------
-// CONTACTS
-// ------------------------------
-async function loadContacts() {
-  if (!contactsList) return;
-  try {
-    const contacts = await apiRequest("/api/contacts");
-    renderContacts(contacts);
-  } catch (err) {
-    console.error("Error loading contacts:", err);
-    contactsList.innerHTML =
-      '<p class="admin-empty">Error loading contacts. Please try again.</p>';
-  }
+function enterAdminDashboard() {
+  if (Dom.loginSection) Dom.loginSection.classList.add("hidden");
+  if (Dom.dashboard) Dom.dashboard.classList.remove("hidden");
+
+  // Attach all listeners
+  initAdminTabsAndButtons();
+
+  // Load all datasets in background
+  loadPets();
+  loadRates();
+  loadContacts();
+  loadReviews();
 }
 
-function renderContacts(contacts) {
-  if (!contactsList) return;
-
-  if (!Array.isArray(contacts) || contacts.length === 0) {
-    contactsList.innerHTML =
-      '<p class="admin-empty">No pending contact requests.</p>';
-    return;
-  }
-
-  const html = contacts
-    .map((c) => {
-      const date =
-        c.created_at &&
-        new Date(c.created_at).toLocaleDateString(undefined, {
-          year: "numeric",
-          month: "short",
-          day: "numeric"
-        });
-      return `
-      <article class="admin-card" data-contact-id="${c.id}">
-        <header class="admin-card-header">
-          <div>
-            <h3>${c.name}</h3>
-            <p class="admin-card-sub">${c.email}</p>
-          </div>
-          <div class="admin-card-actions">
-            <button class="btn-primary btn-xs contact-mark-btn" data-id="${c.id}">
-              Mark Contacted
-            </button>
-          </div>
-        </header>
-        <p><strong>Phone:</strong> ${c.phone || "N/A"}</p>
-        <p><strong>Best Time:</strong> ${c.best_time || "N/A"}</p>
-        <p><strong>Service:</strong> ${c.service || "N/A"}</p>
-        <p><strong>Dates:</strong> ${c.dates || ""}</p>
-        <p><strong>Pet Info:</strong> ${c.pet_info || ""}</p>
-        <p><strong>Message:</strong> ${c.message || ""}</p>
-        <p class="admin-card-meta">Submitted on ${date || "Unknown date"}</p>
-      </article>
-    `;
-    })
-    .join("");
-
-  contactsList.innerHTML = html;
-
-  $all(".contact-mark-btn").forEach((btn) =>
-    btn.addEventListener("click", () => markContacted(btn.dataset.id))
-  );
+function handleAdminLogout() {
+  localStorage.removeItem("adminToken");
+  if (Dom.dashboard) Dom.dashboard.classList.add("hidden");
+  if (Dom.loginSection) Dom.loginSection.classList.remove("hidden");
 }
 
-async function markContacted(id) {
-  if (!confirm("Mark this request as contacted?")) return;
-  try {
-    await apiRequest(`/api/contacts/${id}/contacted`, { method: "PUT" });
-    loadContacts();
-  } catch (err) {
-    console.error("Error marking contacted:", err);
-    alert("Could not update contact.");
-  }
-}
-
-// ------------------------------
-// REVIEWS (Admin moderation)
-// ------------------------------
-async function loadAdminReviews() {
-  if (!reviewsList) return;
-  try {
-    // This assumes your backend exposes pending/admin reviews at:
-    // GET /api/admin/reviews
-    const reviews = await apiRequest("/api/admin/reviews");
-    renderAdminReviews(reviews);
-  } catch (err) {
-    console.error("Error loading admin reviews:", err);
-    reviewsList.innerHTML =
-      '<p class="admin-empty">Error loading reviews. Please try again.</p>';
-  }
-}
-
-function renderAdminReviews(reviews) {
-  if (!reviewsList) return;
-
-  if (!Array.isArray(reviews) || reviews.length === 0) {
-    reviewsList.innerHTML =
-      '<p class="admin-empty">No pending reviews right now.</p>';
-    return;
-  }
-
-  const html = reviews
-    .map((r) => {
-      const date =
-        r.created_at &&
-        new Date(r.created_at).toLocaleDateString(undefined, {
-          year: "numeric",
-          month: "short",
-          day: "numeric"
-        });
-      const stars = "⭐".repeat(Number(r.rating || 5));
-      const name = r.customer_name || r.reviewer_name || "Anonymous";
-
-      return `
-      <article class="admin-card admin-review-card" data-review-id="${r.id}">
-        <header class="admin-card-header">
-          <div>
-            <h3>${name}</h3>
-            <p class="admin-card-sub">${stars}</p>
-          </div>
-        </header>
-        <p>${r.review_text || ""}</p>
-        <p class="admin-card-meta">Submitted on ${date || "Unknown date"}</p>
-        <div class="admin-card-actions">
-          <button class="btn-primary btn-xs review-approve-btn" data-id="${r.id}">
-            Approve
-          </button>
-          <button class="btn-danger btn-xs review-delete-btn" data-id="${r.id}">
-            Delete
-          </button>
-        </div>
-      </article>
-    `;
-    })
-    .join("");
-
-  reviewsList.innerHTML = html;
-
-  $all(".review-approve-btn").forEach((btn) =>
-    btn.addEventListener("click", () => approveReview(btn.dataset.id))
-  );
-  $all(".review-delete-btn").forEach((btn) =>
-    btn.addEventListener("click", () => deleteReview(btn.dataset.id))
-  );
-}
-
-async function approveReview(id) {
-  if (!confirm("Approve this review so it shows on the public site?")) return;
-  try {
-    await apiRequest(`/api/admin/reviews/${id}/approve`, { method: "PUT" });
-    loadAdminReviews();
-  } catch (err) {
-    console.error("Error approving review:", err);
-    alert("Could not approve review.");
-  }
-}
-
-async function deleteReview(id) {
-  if (!confirm("Delete this review?")) return;
-  try {
-    await apiRequest(`/api/admin/reviews/${id}`, { method: "DELETE" });
-    loadAdminReviews();
-  } catch (err) {
-    console.error("Error deleting review:", err);
-    alert("Could not delete review.");
-  }
-}
-
-// ------------------------------
+// -----------------------------
 // Init
-// ------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("🛠 Admin JS loaded");
-
-  // Hide all admin panels by default (until a tab is selected)
-  hide(petsPanel);
-  hide(ratesPanel);
-  hide(contactsPanel);
-  hide(reviewsPanel);
-
-  if (adminLoginForm) {
-    adminLoginForm.addEventListener("submit", handleAdminLogin);
-  }
-
-  if (adminLogoutBtn) {
-    adminLogoutBtn.addEventListener("click", handleAdminLogout);
-  }
-
-  adminTabButtons.forEach((btn) => {
+// -----------------------------
+function initAdminTabsAndButtons() {
+  // Tabs
+  Dom.tabs.forEach((btn) => {
     btn.addEventListener("click", () => {
-      const tab = btn.dataset.tab;
-      if (!tab) return;
-      switchAdminTab(tab);
+      const target = btn.dataset.target;
+      switchAdminTab(target);
     });
   });
 
-  if (addPetBtn) addPetBtn.addEventListener("click", openNewPetModal);
-  if (savePetBtn) savePetBtn.addEventListener("click", handleSavePet);
+  // Default tab
+  switchAdminTab(AdminState.currentTab || "pets");
 
-  if (addRateBtn) addRateBtn.addEventListener("click", openNewRateModal);
-  if (saveRateBtn) saveRateBtn.addEventListener("click", handleSaveRate);
+  // Add buttons
+  if (Dom.addPetBtn) {
+    Dom.addPetBtn.addEventListener("click", () => openPetEditor(null));
+  }
+  if (Dom.addRateBtn) {
+    Dom.addRateBtn.addEventListener("click", () => openRateEditor(null));
+  }
+
+  // Save buttons
+  if (Dom.savePetBtn) {
+    Dom.savePetBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      handleSavePet();
+    });
+  }
+  if (Dom.saveRateBtn) {
+    Dom.saveRateBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      handleSaveRate();
+    });
+  }
+
+  // Close modals via [data-close-modal]
+  $all("[data-close-modal]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const target = btn.dataset.closeModal;
+      closeModal(target);
+    });
+  });
+}
+
+// -----------------------------
+// DOM Ready
+// -----------------------------
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Admin JS loaded");
+
+  if (Dom.loginForm) {
+    Dom.loginForm.addEventListener("submit", handleAdminLogin);
+  }
+  if (Dom.logoutBtn) {
+    Dom.logoutBtn.addEventListener("click", handleAdminLogout);
+  }
+
+  // Auto-enter if token present
+  const token = localStorage.getItem("adminToken");
+  if (token) {
+    enterAdminDashboard();
+  }
 });
