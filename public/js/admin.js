@@ -8,52 +8,45 @@
   // -----------------------------
   let isLoggedIn = false;
 
-  // -----------------------------
-  // Cached DOM References
-  // -----------------------------
-  let adminNavLink,
+// Cached DOM references
+let adminNavLink,
     adminLoginModal,
     adminLoginForm,
-    adminLoginClose,
-    adminLoginCancel,
+    adminLoginCloseBtn,
+    adminLoginCancelBtn,
     adminPanel,
     adminHeader,
     adminLogoutBtn,
-    adminTabsRow,
     adminTabs,
-    adminSections;
+    adminSections,
+    adminPetsSection,
+    adminRatesSection,
+    adminContactsSection,
+    adminReviewsSection;
 
-  // -----------------------------
-  // Cache DOM elements
-  // -----------------------------
-  function cacheDom() {
-    adminNavLink = document.getElementById("adminNav");
+// Cache DOM elements
+function cacheDom() {
+  adminNavLink = document.getElementById("adminNav");
 
-    // Login modal bits
-    adminLoginModal = document.getElementById("adminLoginModal");
-    adminLoginForm = document.getElementById("adminLoginForm");
-    adminLoginClose = document.getElementById("adminLoginClose");
-    adminLoginCancel = document.getElementById("adminLoginCancel");
+  // Login modal
+  adminLoginModal = document.getElementById("adminLoginModal");
+  adminLoginForm = document.getElementById("adminLoginForm");
+  adminLoginCloseBtn = document.getElementById("adminLoginClose");
+  adminLoginCancelBtn = document.getElementById("adminLoginCancel");
 
-    // Admin panel + header + tabs
-    adminPanel = document.getElementById("adminPanel");
-    adminHeader = document.getElementById("adminHeader");
-    adminLogoutBtn = document.getElementById("adminLogoutBtn");
-    adminTabsRow = document.querySelector(".admin-tabs-row");
+  // Admin panel
+  adminPanel = document.getElementById("adminPanel");
+  adminHeader = document.getElementById("adminHeader");
+  adminLogoutBtn = document.getElementById("adminLogoutBtn");
 
-    // Tab buttons and content sections
-    adminTabs = document.querySelectorAll(".admin-tab");
-    adminSections = document.querySelectorAll(".admin-section");
-
-    console.log("[Admin] cacheDom()", {
-      adminNavLink,
-      adminLoginModal,
-      adminPanel,
-      adminTabsRow,
-      tabsCount: adminTabs.length,
-      sectionCount: adminSections.length,
-    });
-  }
+  // Tabs + sections
+  adminTabs = document.querySelectorAll(".admin-tab");
+  adminSections = document.querySelectorAll(".admin-section");
+  adminPetsSection = document.getElementById("adminPets");
+  adminRatesSection = document.getElementById("adminRates");
+  adminContactsSection = document.getElementById("adminContacts");
+  adminReviewsSection = document.getElementById("adminReviews");
+}
 
   // -----------------------------
   // Utility: Show/Hide Elements
@@ -69,25 +62,33 @@
   // -----------------------------
   // Admin Login Modal
   // -----------------------------
-function openLoginModal() {
-  if (!adminLoginModal) return;
-  console.log("[Admin] Opening login modal…");
-  // remove any inline display:none that might exist
+
+function showLoginModal() {
+  if (!adminLoginModal) {
+    console.error("[Admin] adminLoginModal is missing in DOM");
+    return;
+  }
+
+  console.log("[Admin] Showing login modal…");
+
+  // Clear any inline style that might hide it
   adminLoginModal.style.display = "";
-  // add our explicit “visible” flag
+
+  // Use class + aria to control visibility
   adminLoginModal.classList.add("visible");
   adminLoginModal.setAttribute("aria-hidden", "false");
 }
 
-function closeLoginModal() {
+function hideLoginModal() {
   if (!adminLoginModal) return;
 
-  console.log("[Admin] Closing login modal…");
+  console.log("[Admin] Hiding login modal…");
 
   adminLoginModal.classList.remove("visible");
   adminLoginModal.setAttribute("aria-hidden", "true");
-  // optional: also force-hide via inline style for safety
-  adminLoginModal.style.display = "none";
+
+  // Optional: if you want a hard hide as well, keep this line:
+  // adminLoginModal.style.display = "none";
 }
 
   // -----------------------------
@@ -160,7 +161,7 @@ function closeLoginModal() {
         isLoggedIn = true;
         localStorage.setItem("adminToken", data.token);
 
-        closeLoginModal();
+        hideLoginModal();
         showAdminPanel();
       } else {
         console.warn("[Admin] Auth response not successful:", data);
@@ -225,7 +226,7 @@ function closeLoginModal() {
         if (isLoggedIn) {
           showAdminPanel();
         } else {
-          openLoginModal();
+          showLoginModal();
         }
       });
     }
@@ -234,14 +235,14 @@ function closeLoginModal() {
     if (adminLoginClose) {
       adminLoginClose.addEventListener("click", (e) => {
         e.preventDefault();
-        closeLoginModal();
+        hideLoginModal();
       });
     }
 
     if (adminLoginCancel) {
       adminLoginCancel.addEventListener("click", (e) => {
         e.preventDefault();
-        closeLoginModal();
+        hideLoginModal();
       });
     }
 
