@@ -213,68 +213,82 @@ function hideLoginModal() {
     }
   }
 
-  // -----------------------------
-  // Event Listeners
-  // -----------------------------
-  function addListeners() {
-    // Click “Admin” in sticky nav
-    if (adminNavLink) {
-      adminNavLink.addEventListener("click", (e) => {
-        e.preventDefault();
-        console.log("[Admin] Admin nav clicked");
+ // -----------------------------
+// Event Listeners
+// -----------------------------
+function addListeners() {
+  // Click “Admin” in sticky nav
+  if (adminNavLink) {
+    adminNavLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      console.log("[Admin] Admin nav clicked");
 
-        if (isLoggedIn) {
-          showAdminPanel();
-        } else {
-          showLoginModal();
-        }
-      });
-    }
+      if (isLoggedIn) {
+        // already authenticated -> jump straight to dashboard
+        showAdminPanel();
+      } else {
+        // not logged in -> open login modal
+        showLoginModal();
+      }
+    });
+  }
 
-    // Login modal close / cancel
-    if (adminLoginClose) {
-      adminLoginClose.addEventListener("click", (e) => {
-        e.preventDefault();
-        hideLoginModal();
-      });
-    }
+  // Login modal close / cancel
+  if (adminLoginClose) {
+    adminLoginClose.addEventListener("click", (e) => {
+      e.preventDefault();
+      hideLoginModal();
+    });
+  }
 
-    if (adminLoginCancel) {
-      adminLoginCancel.addEventListener("click", (e) => {
-        e.preventDefault();
-        hideLoginModal();
-      });
-    }
+  if (adminLoginCancel) {
+    adminLoginCancel.addEventListener("click", (e) => {
+      e.preventDefault();
+      hideLoginModal();
+    });
+  }
 
-    // Login submit
-    if (adminLoginForm) {
-      adminLoginForm.addEventListener("submit", handleLoginSubmit);
-    }
+  // Login submit
+  if (adminLoginForm) {
+    adminLoginForm.addEventListener("submit", handleLoginSubmit);
+  }
 
-    // Logout
-    if (adminLogoutBtn) {
-      adminLogoutBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        handleLogout();
-      });
-    }
+  // Logout
+  if (adminLogoutBtn) {
+    adminLogoutBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      handleLogout();
+    });
+  }
 
-    // Tab switch buttons
+  // Tab switch buttons
+  if (adminTabs && adminTabs.forEach) {
     adminTabs.forEach((btn) => {
       btn.addEventListener("click", () => {
-        const sectionId = btn.dataset.section; // e.g. "adminPets"
+        // data-section="adminPets" etc.
+        const sectionId = btn.dataset.section;
         setActiveAdminTab(sectionId);
       });
     });
   }
-
+}
   // -----------------------------
   // Initialize
   // -----------------------------
-  document.addEventListener("DOMContentLoaded", () => {
-    console.log("[Admin] Initializing admin.js…");
-    cacheDom();
-    addListeners();
-    restoreLoginState();
-  });
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("[Admin] Initializing admin.js…");
+  cacheDom();
+  addListeners();
+
+  // restore prior session if any
+  isLoggedIn = localStorage.getItem("dotsAdminToken") === "true";
+
+  if (isLoggedIn) {
+    console.log("[Admin] Restoring logged-in session");
+    showAdminPanel();
+  } else {
+    console.log("[Admin] No admin token – public view.");
+    hideAdminPanel();
+  }
+});
 })();
