@@ -1,118 +1,157 @@
 // ============================================================
 // ADMIN PANEL CONTROLLER
 // ============================================================
-
 (() => {
   // -----------------------------
   // State
   // -----------------------------
   let isLoggedIn = false;
 
-// Cached DOM references
-let adminNavLink,
-    adminLoginModal,
-    adminLoginForm,
-    adminLoginCloseBtn,
-    adminLoginCancelBtn,
-    adminPanel,
-    adminHeader,
-    adminLogoutBtn,
-    adminTabs,
-    adminSections,
-    adminPetsSection,
-    adminRatesSection,
-    adminContactsSection,
-    adminReviewsSection;
+  // -----------------------------
+  // Cached DOM references
+  // -----------------------------
+  let adminNavLink;
+  let adminLoginModal;
+  let adminLoginForm;
+  let adminLoginCloseBtn;
+  let adminLoginCancelBtn;
 
-// Cache DOM elements
-function cacheDom() {
-  adminNavLink = document.getElementById("adminNav");
+  let adminPanel;
+  let adminHeader;
+  let adminLogoutBtn;
+  let adminTabsRow;
+  let adminTabs;
+  let adminSections;
 
-  // Login modal
-  adminLoginModal = document.getElementById("adminLoginModal");
-  adminLoginForm = document.getElementById("adminLoginForm");
-  adminLoginCloseBtn = document.getElementById("adminLoginClose");
-  adminLoginCancelBtn = document.getElementById("adminLoginCancel");
+  let adminPetsSection;
+  let adminRatesSection;
+  let adminContactsSection;
+  let adminReviewsSection;
 
-  // Admin panel
-  adminPanel = document.getElementById("adminPanel");
-  adminHeader = document.getElementById("adminHeader");
-  adminLogoutBtn = document.getElementById("adminLogoutBtn");
-
-  // Tabs + sections
-  adminTabs = document.querySelectorAll(".admin-tab");
-  adminSections = document.querySelectorAll(".admin-section");
-  adminPetsSection = document.getElementById("adminPets");
-  adminRatesSection = document.getElementById("adminRates");
-  adminContactsSection = document.getElementById("adminContacts");
-  adminReviewsSection = document.getElementById("adminReviews");
-}
+  // Single key for localStorage
+  const ADMIN_TOKEN_KEY = "adminToken";
 
   // -----------------------------
-  // Utility: Show/Hide Elements
+  // Cache DOM elements
+  // -----------------------------
+  function cacheDom() {
+    adminNavLink = document.getElementById("adminNav");
+
+    // Login modal
+    adminLoginModal = document.getElementById("adminLoginModal");
+    adminLoginForm = document.getElementById("adminLoginForm");
+    adminLoginCloseBtn = document.getElementById("adminLoginClose");
+    adminLoginCancelBtn = document.getElementById("adminLoginCancel");
+
+    // Admin panel + header + tabs
+    adminPanel = document.getElementById("adminPanel");
+    adminHeader = document.getElementById("adminHeader");
+    adminLogoutBtn = document.getElementById("adminLogoutBtn");
+    adminTabsRow = document.querySelector(".admin-tabs-row");
+
+    // Tabs + sections
+    adminTabs = document.querySelectorAll(".admin-tab");
+    adminSections = document.querySelectorAll(".admin-section");
+
+    adminPetsSection = document.getElementById("adminPets");
+    adminRatesSection = document.getElementById("adminRates");
+    adminContactsSection = document.getElementById("adminContacts");
+    adminReviewsSection = document.getElementById("adminReviews");
+
+    console.log("[Admin] cacheDom()", {
+      adminNavLink,
+      adminLoginModal,
+      adminPanel,
+      adminHeader,
+      adminTabsRow,
+      tabsCount: adminTabs.length,
+      sectionsCount: adminSections.length,
+    });
+  }
+
+  // -----------------------------
+  // Utility: Show / Hide
   // -----------------------------
   function show(el, display = "block") {
-    if (el) el.style.display = display;
+    if (!el) return;
+    el.style.display = display;
   }
 
   function hide(el) {
-    if (el) el.style.display = "none";
+    if (!el) return;
+    el.style.display = "none";
   }
 
   // -----------------------------
-  // Admin Login Modal
+  // Login Modal
   // -----------------------------
+  function showLoginModal() {
+    if (!adminLoginModal) {
+      console.error("[Admin] adminLoginModal is missing in DOM");
+      return;
+    }
 
-function showLoginModal() {
-  if (!adminLoginModal) {
-    console.error("[Admin] adminLoginModal is missing in DOM");
-    return;
+    console.log("[Admin] Showing login modal…");
+
+    // Clear any inline display style
+    adminLoginModal.style.display = "";
+    adminLoginModal.classList.add("visible");
+    adminLoginModal.setAttribute("aria-hidden", "false");
   }
 
-  console.log("[Admin] Showing login modal…");
+  function hideLoginModal() {
+    if (!adminLoginModal) return;
 
-  // Clear any inline style that might hide it
-  adminLoginModal.style.display = "";
+    console.log("[Admin] Hiding login modal…");
 
-  // Use class + aria to control visibility
-  adminLoginModal.classList.add("visible");
-  adminLoginModal.setAttribute("aria-hidden", "false");
-}
-
-function hideLoginModal() {
-  if (!adminLoginModal) return;
-
-  console.log("[Admin] Hiding login modal…");
-
-  adminLoginModal.classList.remove("visible");
-  adminLoginModal.setAttribute("aria-hidden", "true");
-
-  // Optional: if you want a hard hide as well, keep this line:
-  // adminLoginModal.style.display = "none";
-}
+    adminLoginModal.classList.remove("visible");
+    adminLoginModal.setAttribute("aria-hidden", "true");
+    // optional hard hide:
+    // adminLoginModal.style.display = "none";
+  }
 
   // -----------------------------
-  // Switch Active Admin Tab
-  //   sectionId is the actual DOM id:
-//   "adminPets" | "adminRates" | "adminContacts" | "adminReviews"
-// -----------------------------
+  // Admin Panel Show / Hide
+  // -----------------------------
+  function showAdminPanel() {
+    if (!adminPanel) return;
+    console.log("[Admin] Showing admin panel…");
+
+    show(adminPanel, "block");
+    show(adminHeader, "flex");
+    if (adminTabsRow) show(adminTabsRow, "flex");
+
+    // default tab
+    setActiveAdminTab("adminPets");
+  }
+
+  function hideAdminPanel() {
+    console.log("[Admin] Hiding admin panel…");
+    hide(adminPanel);
+  }
+
+  // -----------------------------
+  // Switch active tab
+  // sectionId: "adminPets" | "adminRates" | "adminContacts" | "adminReviews"
+  // -----------------------------
   function setActiveAdminTab(sectionId) {
-    if (!adminPanel || !adminTabsRow) return;
+    if (!adminPanel) return;
 
     console.log("[Admin] Switching to tab:", sectionId);
 
-    // Hide all admin sections, show only requested one
+    // Show only the matching section
     adminSections.forEach((sec) => {
+      if (!sec) return;
       sec.style.display = sec.id === sectionId ? "block" : "none";
     });
 
-    // Update tab button "active" class
+    // Update tab button state
     adminTabs.forEach((btn) => {
       const isActive = btn.dataset.section === sectionId;
       btn.classList.toggle("active", isActive);
     });
 
-    // Optional: call loaders if they exist
+    // Trigger data loaders if they exist
     try {
       if (sectionId === "adminReviews" && typeof loadAdminReviews === "function") {
         loadAdminReviews();
@@ -129,13 +168,12 @@ function hideLoginModal() {
   }
 
   // -----------------------------
-  // Login Form Submission
+  // Login submit
   // -----------------------------
   async function handleLoginSubmit(e) {
     e.preventDefault();
     console.log("[Admin] Login attempt…");
 
-    // IMPORTANT: match the IDs in index.html
     const usernameInput = document.getElementById("adminUsername");
     const passwordInput = document.getElementById("adminPassword");
 
@@ -150,7 +188,7 @@ function hideLoginModal() {
       });
 
       if (!res.ok) {
-        console.warn("[Admin] Auth request failed with status", res.status);
+        console.warn("[Admin] Auth failed with status", res.status);
         alert("Invalid credentials.");
         return;
       }
@@ -159,7 +197,7 @@ function hideLoginModal() {
       if (data && data.success && data.token) {
         console.log("[Admin] Login successful");
         isLoggedIn = true;
-        localStorage.setItem("adminToken", data.token);
+        localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
 
         hideLoginModal();
         showAdminPanel();
@@ -174,120 +212,95 @@ function hideLoginModal() {
   }
 
   // -----------------------------
-  // Logout Handler
+  // Logout
   // -----------------------------
   function handleLogout() {
     console.log("[Admin] Logging out…");
-    localStorage.removeItem("adminToken");
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
     isLoggedIn = false;
-    hide(adminPanel);
+    hideAdminPanel();
     alert("Logged out.");
   }
 
   // -----------------------------
-  // Show Admin Panel
-  // -----------------------------
-  function showAdminPanel() {
-    console.log("[Admin] Showing admin panel…");
-
-    show(adminPanel, "block");
-    show(adminHeader, "flex");      // header is flex row in CSS
-    if (adminTabsRow) show(adminTabsRow, "flex");
-
-    // Default tab: Pets
-    setActiveAdminTab("adminPets");
-  }
-
-  // -----------------------------
-  // On Page Load — restore login state
+  // Restore login on load
   // -----------------------------
   function restoreLoginState() {
-    const token = localStorage.getItem("adminToken");
+    const token = localStorage.getItem(ADMIN_TOKEN_KEY);
     if (token) {
       console.log("[Admin] Restoring logged-in session");
       isLoggedIn = true;
       showAdminPanel();
     } else {
-      hide(adminPanel);
       console.log("[Admin] No admin token — public view.");
+      hideAdminPanel();
     }
   }
 
- // -----------------------------
-// Event Listeners
-// -----------------------------
-function addListeners() {
-  // Click “Admin” in sticky nav
-  if (adminNavLink) {
-    adminNavLink.addEventListener("click", (e) => {
-      e.preventDefault();
-      console.log("[Admin] Admin nav clicked");
+  // -----------------------------
+  // Event listeners
+  // -----------------------------
+  function addListeners() {
+    // Nav click
+    if (adminNavLink) {
+      adminNavLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        console.log("[Admin] Admin nav clicked");
 
-      if (isLoggedIn) {
-        // already authenticated -> jump straight to dashboard
-        showAdminPanel();
-      } else {
-        // not logged in -> open login modal
-        showLoginModal();
-      }
-    });
-  }
-
-  // Login modal close / cancel
-  if (adminLoginClose) {
-    adminLoginClose.addEventListener("click", (e) => {
-      e.preventDefault();
-      hideLoginModal();
-    });
-  }
-
-  if (adminLoginCancel) {
-    adminLoginCancel.addEventListener("click", (e) => {
-      e.preventDefault();
-      hideLoginModal();
-    });
-  }
-
-  // Login submit
-  if (adminLoginForm) {
-    adminLoginForm.addEventListener("submit", handleLoginSubmit);
-  }
-
-  // Logout
-  if (adminLogoutBtn) {
-    adminLogoutBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      handleLogout();
-    });
-  }
-
-  // Tab switch buttons
-  if (adminTabs && adminTabs.forEach) {
-    adminTabs.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        // data-section="adminPets" etc.
-        const sectionId = btn.dataset.section;
-        setActiveAdminTab(sectionId);
+        if (isLoggedIn) {
+          showAdminPanel();
+        } else {
+          showLoginModal();
+        }
       });
-    });
-  }
-}
-  // -----------------------------
-  // Initialize
-  // -----------------------------
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("[Admin] Initializing admin.js…");
-  cacheDom();
-  addListeners();
+    }
 
-  // restore prior session if any
-  isLoggedIn = localStorage.getItem("dotsAdminToken") === "true";
+    // Modal close / cancel
+    if (adminLoginCloseBtn) {
+      adminLoginCloseBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        hideLoginModal();
+      });
+    }
 
-  if (isLoggedIn) {
-    console.log("[Admin] Restoring logged-in session");
-    showAdminPanel();
-  } else {
-    console.log("[Admin] No admin token – public view.");
+    if (adminLoginCancelBtn) {
+      adminLoginCancelBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        hideLoginModal();
+      });
+    }
+
+    // Login form submit
+    if (adminLoginForm) {
+      adminLoginForm.addEventListener("submit", handleLoginSubmit);
+    }
+
+    // Logout button
+    if (adminLogoutBtn) {
+      adminLogoutBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        handleLogout();
+      });
+    }
+
+    // Tab buttons
+    if (adminTabs && adminTabs.forEach) {
+      adminTabs.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const sectionId = btn.dataset.section;
+          setActiveAdminTab(sectionId);
+        });
+      });
+    }
   }
-});
+
+  // -----------------------------
+  // Init
+  // -----------------------------
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("[Admin] Initializing admin.js…");
+    cacheDom();
+    addListeners();
+    restoreLoginState();
+  });
 })();
