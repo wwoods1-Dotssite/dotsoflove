@@ -1,8 +1,9 @@
-// public/js/admin.js
+// admin.js
 // Admin dashboard logic for Dot's of Love Pet Sitting
+// Plain browser JS (no modules), compatible with CommonJS backend.
 
 // ------------------------------
-// Small helpers
+// Mini helpers
 // ------------------------------
 function $(selector) {
   return document.querySelector(selector);
@@ -20,42 +21,48 @@ function hide(el) {
   if (el) el.classList.add("hidden");
 }
 
-// Expose modal helpers globally (for existing onclick="closeModal('...')" etc.)
+// Expose modal helpers globally for inline HTML onclick handlers
 function openModal(id) {
   const el = document.getElementById(id);
   if (el) el.classList.add("modal-open");
 }
+
 function closeModal(id) {
   const el = document.getElementById(id);
   if (el) el.classList.remove("modal-open");
 }
+
 window.openModal = openModal;
 window.closeModal = closeModal;
 
 // ------------------------------
 // State
 // ------------------------------
-let adminToken = null;
-let currentPetId = null;
-let currentRateId = null;
+let adminToken = null;       // Not strictly required yet, but ready if needed
+let currentPetId = null;     // null = add mode, non-null = edit pet
+let currentRateId = null;    // null = add mode, non-null = edit rate
 
 // ------------------------------
-// DOM refs
+// DOM references
 // ------------------------------
+
+// Login
 const adminLoginSection = $("#adminLogin");
 const adminLoginForm = $("#adminLoginForm");
 const adminUsernameInput = $("#adminUsername");
 const adminPasswordInput = $("#adminPassword");
 const adminLoginStatus = $("#adminLoginStatus");
 
+// Main admin dashboard
 const adminSection = $("#admin");
 const adminLogoutBtn = $("#adminLogoutBtn");
 
+// Tabs + panels
 const adminTabButtons = $all(".admin-tab-btn");
 const petsPanel = $("#adminPetsSection");
 const ratesPanel = $("#adminRatesSection");
 const contactsPanel = $("#adminContactsSection");
-const reviewsPanel = $("#adminReviewsSection");
+const reviewsPanel = $("#adminReviewsSection"); // <- ADMIN reviews panel
 
 // Pets
 const petsList = $("#adminPetsList");
@@ -74,11 +81,11 @@ const saveRateBtn = $("#saveRateBtn");
 // Contacts
 const contactsList = $("#adminContactsList");
 
-// Reviews
+// Reviews (admin moderation)
 const reviewsList = $("#adminReviewsList");
 
 // ------------------------------
-// API helper
+// Generic API helper
 // ------------------------------
 async function apiRequest(url, options = {}) {
   const opts = {
@@ -148,17 +155,21 @@ async function handleAdminLogin(event) {
     }
 
     adminToken = data.token || "admin-token";
+
     if (adminLoginStatus) {
       adminLoginStatus.textContent = "Logged in successfully.";
       adminLoginStatus.classList.remove("error");
       adminLoginStatus.classList.add("success");
     }
 
-    show(adminSection);
+    // Show admin dashboard, hide login panel
     hide(adminLoginSection);
+    show(adminSection);
 
+    // Default to Pets tab
     switchAdminTab("pets");
-    // Load everything once on login
+
+    // Initial loads
     loadPets();
     loadRates();
     loadContacts();
@@ -175,6 +186,7 @@ async function handleAdminLogin(event) {
 
 function handleAdminLogout() {
   adminToken = null;
+  // Just toggle sections for now (no localStorage for token)
   show(adminLoginSection);
   hide(adminSection);
 }
@@ -190,17 +202,20 @@ function switchAdminTab(tabName) {
     reviews: reviewsPanel
   };
 
+  // Highlight the active tab button
   adminTabButtons.forEach((btn) => {
     const isActive = btn.dataset.tab === tabName;
     btn.classList.toggle("active", isActive);
   });
 
+  // Show only the active panel
   Object.entries(map).forEach(([key, panel]) => {
     if (!panel) return;
     if (key === tabName) show(panel);
     else hide(panel);
   });
 
+  // Lazy load per-tab data
   if (tabName === "pets") loadPets();
   if (tabName === "rates") loadRates();
   if (tabName === "contacts") loadContacts();
@@ -208,7 +223,7 @@ function switchAdminTab(tabName) {
 }
 
 // ------------------------------
-// Pets
+// PETS
 // ------------------------------
 async function loadPets() {
   if (!petsList) return;
@@ -242,9 +257,12 @@ function renderPets(pets) {
           ? images
               .map(
                 (img) => `
-          <div class="admin-thumb" draggable="true" data-image-id="${img.id}" data-pet-id="${pet.id}">
+          <div class="admin-thumb" draggable="true"
+               data-image-id="${img.id}" data-pet-id="${pet.id}">
             <img src="${img.image_url}" alt="${pet.pet_name}" />
-            <button class="thumb-delete-btn" data-image-id="${img.id}" title="Remove image">🗑</button>
+            <button class="thumb-delete-btn"
+                    data-image-id="${img.id}"
+                    title="Remove image">🗑</button>
           </div>`
               )
               .join("")
@@ -278,7 +296,7 @@ function renderPets(pets) {
 }
 
 function wirePetEvents() {
-  // Edit
+  // Edit pet
   $all(".pet-edit-btn").forEach((btn) => {
     btn.addEventListener("click", () => openPetEditor(btn.dataset.id));
   });
@@ -314,7 +332,7 @@ function wirePetEvents() {
     });
   });
 
-  // Drag & drop reorder
+  // Drag and drop reordering
   setupImageReorder();
 }
 
@@ -384,7 +402,7 @@ function getThumbAfter(container, x) {
   ).element;
 }
 
-// Open modal for new pet
+// Open "Add Pet" modal
 function openNewPetModal() {
   currentPetId = null;
   if (petForm) petForm.reset();
@@ -393,7 +411,7 @@ function openNewPetModal() {
   openModal("petModal");
 }
 
-// Open modal for existing pet
+// Open "Edit Pet" modal
 async function openPetEditor(id) {
   try {
     const pet = await apiRequest(`/api/pets/${id}`);
@@ -414,7 +432,7 @@ async function openPetEditor(id) {
   }
 }
 
-// Save pet (new or existing)
+// Save pet (new or edit)
 async function handleSavePet(e) {
   if (e) e.preventDefault();
   if (!petForm) return;
@@ -455,7 +473,7 @@ async function handleSavePet(e) {
 }
 
 // ------------------------------
-// Rates
+// RATES
 // ------------------------------
 async function loadRates() {
   if (!ratesList) return;
@@ -491,17 +509,14 @@ function renderRates(rates) {
             ${featured}
           </div>
           <div class="admin-card-actions">
-            <button class="btn-secondary btn-xs rate-edit-btn" data-id="${
-              r.id
-            }">Edit</button>
-            <button class="btn-danger btn-xs rate-delete-btn" data-id="${
-              r.id
-            }">Delete</button>
+            <button class="btn-secondary btn-xs rate-edit-btn" data-id="${r.id}">Edit</button>
+            <button class="btn-danger btn-xs rate-delete-btn" data-id="${r.id}">Delete</button>
           </div>
         </header>
-        <p class="admin-rate-amount">$${Number(r.rate_per_unit).toFixed(
-          2
-        )} <span class="admin-rate-unit">${r.unit_type}</span></p>
+        <p class="admin-rate-amount">
+          $${Number(r.rate_per_unit).toFixed(2)}
+          <span class="admin-rate-unit">${r.unit_type}</span>
+        </p>
         <p>${r.description || ""}</p>
       </article>
     `;
@@ -606,7 +621,7 @@ async function deleteRate(id) {
 }
 
 // ------------------------------
-// Contacts
+// CONTACTS
 // ------------------------------
 async function loadContacts() {
   if (!contactsList) return;
@@ -646,9 +661,9 @@ function renderContacts(contacts) {
             <p class="admin-card-sub">${c.email}</p>
           </div>
           <div class="admin-card-actions">
-            <button class="btn-primary btn-xs contact-mark-btn" data-id="${
-              c.id
-            }">Mark Contacted</button>
+            <button class="btn-primary btn-xs contact-mark-btn" data-id="${c.id}">
+              Mark Contacted
+            </button>
           </div>
         </header>
         <p><strong>Phone:</strong> ${c.phone || "N/A"}</p>
@@ -682,11 +697,13 @@ async function markContacted(id) {
 }
 
 // ------------------------------
-// Reviews (Admin)
+// REVIEWS (Admin moderation)
 // ------------------------------
 async function loadAdminReviews() {
   if (!reviewsList) return;
   try {
+    // This assumes your backend exposes pending/admin reviews at:
+    // GET /api/admin/reviews
     const reviews = await apiRequest("/api/admin/reviews");
     renderAdminReviews(reviews);
   } catch (err) {
@@ -715,23 +732,25 @@ function renderAdminReviews(reviews) {
           day: "numeric"
         });
       const stars = "⭐".repeat(Number(r.rating || 5));
+      const name = r.customer_name || r.reviewer_name || "Anonymous";
+
       return `
       <article class="admin-card admin-review-card" data-review-id="${r.id}">
         <header class="admin-card-header">
           <div>
-            <h3>${r.customer_name || r.reviewer_name || "Anonymous"}</h3>
+            <h3>${name}</h3>
             <p class="admin-card-sub">${stars}</p>
           </div>
         </header>
         <p>${r.review_text || ""}</p>
         <p class="admin-card-meta">Submitted on ${date || "Unknown date"}</p>
         <div class="admin-card-actions">
-          <button class="btn-primary btn-xs review-approve-btn" data-id="${
-            r.id
-          }">Approve</button>
-          <button class="btn-danger btn-xs review-delete-btn" data-id="${
-            r.id
-          }">Delete</button>
+          <button class="btn-primary btn-xs review-approve-btn" data-id="${r.id}">
+            Approve
+          </button>
+          <button class="btn-danger btn-xs review-delete-btn" data-id="${r.id}">
+            Delete
+          </button>
         </div>
       </article>
     `;
@@ -776,6 +795,12 @@ async function deleteReview(id) {
 document.addEventListener("DOMContentLoaded", () => {
   console.log("🛠 Admin JS loaded");
 
+  // Hide all admin panels by default (until a tab is selected)
+  hide(petsPanel);
+  hide(ratesPanel);
+  hide(contactsPanel);
+  hide(reviewsPanel);
+
   if (adminLoginForm) {
     adminLoginForm.addEventListener("submit", handleAdminLogin);
   }
@@ -793,10 +818,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   if (addPetBtn) addPetBtn.addEventListener("click", openNewPetModal);
-  if (savePetBtn)
-    savePetBtn.addEventListener("click", (e) => handleSavePet(e));
+  if (savePetBtn) savePetBtn.addEventListener("click", handleSavePet);
 
   if (addRateBtn) addRateBtn.addEventListener("click", openNewRateModal);
-  if (saveRateBtn)
-    saveRateBtn.addEventListener("click", (e) => handleSaveRate(e));
+  if (saveRateBtn) saveRateBtn.addEventListener("click", handleSaveRate);
 });
