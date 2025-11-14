@@ -105,25 +105,78 @@
       <!-- ===========================
            PUBLIC REVIEWS
       ============================ -->
-      <section id="reviews" class="section reviews-section">
-        <div class="container">
-          <div class="section-header-with-button">
-            <div>
-              <h2>Happy Clients</h2>
-              <p class="section-subtitle">
-                See what pet parents are saying about Dot’s of Love.
-              </p>
-            </div>
-            <button id="openPublicReviewModal" class="btn-primary">
-              Share Your Experience
-            </button>
-          </div>
+<section id="reviews" class="section reviews-section">
+  <div class="section-inner">
+    <h2 class="section-title">Happy Clients</h2>
+    <p class="section-subtitle">
+      See what pet parents are saying about Dot’s of Love.
+    </p>
 
-          <div id="publicReviewsList" class="reviews-grid">
-            <!-- Populated by reviews.js with approved reviews -->
-          </div>
+    <div class="reviews-public-list" id="publicReviewsContainer">
+      <!-- public reviews rendered here by reviews.js -->
+    </div>
+
+    <div class="reviews-cta">
+      <button id="openReviewModalBtn" class="btn-primary">
+        Share Your Experience
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Public “Submit a Review” Modal -->
+<div id="publicReviewModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Share Your Experience</h3>
+      <button type="button" class="close-btn" id="closePublicReviewModal">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="publicReviewForm">
+        <label for="reviewerName">Your Name</label>
+        <input
+          type="text"
+          id="reviewerName"
+          name="reviewerName"
+          placeholder="e.g., Emma Smutzer"
+          required
+        />
+
+        <label for="reviewRating">Rating</label>
+        <select id="reviewRating" name="reviewRating" required>
+          <option value="5">5 – Excellent</option>
+          <option value="4">4 – Great</option>
+          <option value="3">3 – Good</option>
+          <option value="2">2 – Fair</option>
+          <option value="1">1 – Poor</option>
+        </select>
+
+        <label for="reviewText">Review</label>
+        <textarea
+          id="reviewText"
+          name="reviewText"
+          rows="4"
+          placeholder="Tell others about your pet’s stay with Dotty..."
+          required
+        ></textarea>
+
+        <div class="modal-actions">
+          <button type="submit" id="submitPublicReviewBtn" class="btn-primary">
+            Submit Review
+          </button>
+          <button type="button" id="cancelPublicReviewBtn" class="btn-secondary">
+            Cancel
+          </button>
         </div>
-      </section>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Make sure this is near the bottom of <body>, after admin.js etc. -->
+<script src="/js/reviews.js" defer></script>
 
       <!-- ===========================
            RATES
