@@ -100,6 +100,118 @@
   font-size: 1.05rem;
 }
 
+/* ===== Featured Rate styling ===== */
+
+#featuredRateCard {
+  max-width: 640px;
+  margin: 2rem auto 0;
+}
+
+.featured-rate-card {
+  background: linear-gradient(135deg, #7c5cff, #b794f4);
+  color: #fff;
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 16px 40px rgba(76, 39, 133, 0.45);
+  position: relative;
+  overflow: hidden;
+}
+
+.featured-rate-card .featured-pill {
+  display: inline-block;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  margin-bottom: 0.75rem;
+}
+
+.featured-rate-card .featured-rate-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.featured-rate-card .featured-rate-price {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.featured-rate-card .featured-rate-price .amount {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-right: 0.25rem;
+}
+
+.featured-rate-card .featured-rate-price .unit {
+  opacity: 0.9;
+}
+
+/* Public rates grid */
+
+.rates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.rate-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+  padding: 1rem 1.25rem;
+  position: relative;
+}
+
+.rate-card .rate-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.rate-card .rate-price {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.rate-card .rate-price .amount {
+  font-weight: 700;
+}
+
+.rate-card .rate-price .unit {
+  opacity: 0.75;
+}
+
+.rate-card .rate-description {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+/* Highlight the featured card in the grid too */
+
+.rate-card.featured {
+  border: 2px solid #7c5cff;
+  box-shadow: 0 12px 30px rgba(124, 92, 255, 0.25);
+}
+
+.rate-card.featured .rate-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(124, 92, 255, 0.12);
+  color: #5a3ae0;
+  font-weight: 600;
+}
+
 /* ---------- Responsive Layout ---------- */
 @media (max-width: 900px) {
   .rates-grid {
