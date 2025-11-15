@@ -85,6 +85,17 @@ header {
   color: #333;
 }
 
+
+#about .container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+#about .container ul {
+  text-align: left; /* keep bullet list readable */
+  display: inline-block;
+}
 /* ============================================================
    BUTTONS
 ============================================================ */
