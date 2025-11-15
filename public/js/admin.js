@@ -532,7 +532,7 @@
     try {
       // TODO: adjust to match your backend
       const res = await fetch(`/api/admin/reviews/${id}/approve`, {
-        method: "PATCH"
+        method: "PUT"
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
     } catch (err) {
