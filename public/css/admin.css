@@ -695,7 +695,40 @@
 
 .btn-small.btn-danger {
   background: #ef4444;
-}----------------------------
+}
+
+/* ===== ADMIN RATE MODAL ===== */
+
+.rate-modal .modal-body input,
+.rate-modal .modal-body select,
+.rate-modal .modal-body textarea {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.featured-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+  font-weight: 600;
+}
+
+.rate-modal .modal-header h3 {
+  margin: 0;
+}
+
+.rate-modal .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/*----------------------------
    RESPONSIVE
 ---------------------------------- */
 
