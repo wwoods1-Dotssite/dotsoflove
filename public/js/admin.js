@@ -29,7 +29,6 @@
   let adminRatesSection;
   let adminContactsSection;
   let adminReviewsSection;
-  let adminRatesCache = []; // holds last fetched rates for admin
 
   // -----------------------------
   // Init
