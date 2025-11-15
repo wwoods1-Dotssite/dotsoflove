@@ -438,6 +438,75 @@
     </form>
   </div>
 </div>
+
+<!-- ============================================================
+     ADMIN PET MODAL (ADD / EDIT)
+============================================================ -->
+<div id="petModal" class="modal hidden" aria-hidden="true">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="petModalTitle">Add Pet</h3>
+      <button
+        id="petModalClose"
+        class="close-btn"
+        type="button"
+        aria-label="Close"
+      >
+        &times;
+      </button>
+    </div>
+
+    <form id="petForm" class="modal-body" enctype="multipart/form-data">
+      <label for="petName">Pet Name</label>
+      <input
+        id="petName"
+        name="pet_name"
+        type="text"
+        required
+      />
+
+      <label for="petStory">Story / Description</label>
+      <textarea
+        id="petStory"
+        name="story_description"
+        rows="4"
+        placeholder="Tell Dotty's visitors about this pet"
+      ></textarea>
+
+      <label class="checkbox-row">
+        <input
+          id="petIsDorothy"
+          type="checkbox"
+          name="is_dorothy_pet"
+        />
+        This is one of Dorothy’s pets
+      </label>
+
+      <label for="petImages">Photos (optional)</label>
+      <input
+        id="petImages"
+        name="images"
+        type="file"
+        accept="image/*"
+        multiple
+      />
+      <p class="modal-help-text">
+        You can add photos now or later. Existing images stay unless you delete them via separate tools.
+      </p>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn-primary">Save Pet</button>
+        <button
+          type="button"
+          id="petModalCancel"
+          class="btn-secondary"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>  
   
   <!-- ============================================================
      SCRIPTS
