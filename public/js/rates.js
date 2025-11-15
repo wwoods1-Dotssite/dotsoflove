@@ -1,73 +1,153 @@
-/* =========================================
-   rates.js — Dynamic Service Rate Renderer
-   ========================================= */
+// public/js/rates.js
+// Public-facing rates display with "featured" support
 
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("💲 Loading Rates...");
-  const API_URL = "/api/rates";
+document.addEventListener("DOMContentLoaded", () => {
+  const ratesContainer = document.getElementById("ratesContainer");
+  const featuredRateCard = document.getElementById("featuredRateCard");
 
-  const featuredContainer = document.createElement("div");
-  featuredContainer.classList.add("rates-featured");
-
-  const gridContainer = document.createElement("div");
-  gridContainer.classList.add("rates-grid");
-
-  const section = document.getElementById("rates");
-  if (!section) {
-    console.error("❌ Rates section not found in HTML");
+  if (!ratesContainer) {
+    console.warn("[Rates] #ratesContainer not found; skipping rates.js");
     return;
   }
 
-  section.innerHTML = `
-    <h2 class="section-title">Service Rates</h2>
-    <p class="section-subtitle">Affordable, caring options for every pet</p>
-  `;
+  async function loadRates() {
+    try {
+      console.log("[Rates] Fetching rates…");
+      const res = await fetch("/api/rates");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const rates = await res.json();
 
-  section.appendChild(featuredContainer);
-  section.appendChild(gridContainer);
+      if (!Array.isArray(rates) || !rates.length) {
+        ratesContainer.innerHTML =
+          '<p class="rates-empty">Rates are coming soon. Please check back.</p>';
+        if (featuredRateCard) featuredRateCard.innerHTML = "";
+        return;
+      }
 
-  try {
-    const res = await fetch(API_URL);
-    const rates = await res.json();
+      // Filter to active ones only
+      const activeRates = rates.filter((r) => r.is_active !== false);
 
-    if (!Array.isArray(rates)) throw new Error("Invalid rates data");
+      // Find a featured rate (if any)
+      const featured = activeRates.find((r) => r.is_featured);
 
-    const featured = rates.find(r => r.is_featured);
-    const standard = rates.filter(r => !r.is_featured);
+      // Sort list for public display: featured first, then by created_at or id
+      const sorted = [...activeRates].sort((a, b) => {
+        if (a.is_featured && !b.is_featured) return -1;
+        if (!a.is_featured && b.is_featured) return 1;
 
-    // Render featured card
-    if (featured) {
-      const card = createRateCard(featured, true);
-      featuredContainer.appendChild(card);
+        if (a.created_at && b.created_at) {
+          return new Date(a.created_at) - new Date(b.created_at);
+        }
+        return (a.id || 0) - (b.id || 0);
+      });
+
+      // ---------- Render featured card into ABOUT section ----------
+      if (featuredRateCard) {
+        if (featured) {
+          featuredRateCard.innerHTML = createFeaturedRateCard(featured);
+        } else {
+          featuredRateCard.innerHTML = "";
+        }
+      }
+
+      // ---------- Render full rates list ----------
+      ratesContainer.innerHTML = createRatesGrid(sorted);
+    } catch (err) {
+      console.error("[Rates] Error loading rates:", err);
+      ratesContainer.innerHTML =
+        '<p class="rates-error">Sorry, rates are unavailable right now.</p>';
+      if (featuredRateCard) featuredRateCard.innerHTML = "";
+    }
+  }
+
+  function formatPrice(rate) {
+    const num = Number(rate.rate_per_unit);
+    if (Number.isNaN(num)) return rate.rate_per_unit || "";
+    return `$${num.toFixed(2)}`;
+  }
+
+  function formatUnit(unitType) {
+    switch (unitType) {
+      case "per_visit":
+        return "per visit";
+      case "per_day":
+        return "per day";
+      case "per_night":
+        return "per night";
+      default:
+        return unitType || "";
+    }
+  }
+
+  function createFeaturedRateCard(rate) {
+    const price = formatPrice(rate);
+    const unit = formatUnit(rate.unit_type);
+
+    return `
+      <article class="featured-rate-card">
+        <div class="featured-pill">Featured Service</div>
+        <h3 class="featured-rate-title">${escapeHtml(rate.service_type || "")}</h3>
+        <p class="featured-rate-price">
+          <span class="amount">${price}</span>
+          ${unit ? `<span class="unit"> ${escapeHtml(unit)}</span>` : ""}
+        </p>
+        ${
+          rate.description
+            ? `<p class="featured-rate-description">${escapeHtml(
+                rate.description
+              )}</p>`
+            : ""
+        }
+      </article>
+    `;
+  }
+
+  function createRatesGrid(rates) {
+    if (!rates.length) {
+      return '<p class="rates-empty">Rates are coming soon.</p>';
     }
 
-    // Render remaining cards
-    standard.forEach(rate => {
-      const card = createRateCard(rate, false);
-      gridContainer.appendChild(card);
-    });
-  } catch (err) {
-    console.error("❌ Failed to load rates:", err);
-    section.innerHTML += `<p class="error">Could not load service rates.</p>`;
+    const cards = rates
+      .map((r) => {
+        const price = formatPrice(r);
+        const unit = formatUnit(r.unit_type);
+        const isFeatured = !!r.is_featured;
+
+        return `
+          <article class="rate-card ${isFeatured ? "featured" : ""}">
+            ${
+              isFeatured
+                ? '<div class="rate-badge">Featured</div>'
+                : ""
+            }
+            <h3 class="rate-title">${escapeHtml(r.service_type || "")}</h3>
+            <p class="rate-price">
+              <span class="amount">${price}</span>
+              ${unit ? `<span class="unit"> ${escapeHtml(unit)}</span>` : ""}
+            </p>
+            ${
+              r.description
+                ? `<p class="rate-description">${escapeHtml(
+                    r.description
+                  )}</p>`
+                : ""
+            }
+          </article>
+        `;
+      })
+      .join("");
+
+    return `<div class="rates-grid">${cards}</div>`;
   }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  loadRates();
 });
-
-function createRateCard(rate, isFeatured) {
-  const card = document.createElement("div");
-  card.classList.add("rate-card");
-  if (isFeatured) card.classList.add("featured");
-
-  const badge = isFeatured
-    ? `<div class="featured-badge">⭐ Featured Service</div>`
-    : "";
-
-  card.innerHTML = `
-    ${badge}
-    <h3>${rate.service_type}</h3>
-    <p>${rate.description || ""}</p>
-    <strong>$${parseFloat(rate.rate_per_unit).toFixed(2)} ${
-      rate.unit_type.replace("_", " ")
-    }</strong>
-  `;
-  return card;
-}
