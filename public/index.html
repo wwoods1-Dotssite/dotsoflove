@@ -342,28 +342,33 @@
 </div>
 
 <!-- ============================================================
-     ADMIN LOGIN MODAL
+     ADMIN DASHBOARD
 ============================================================ -->
-<div id="adminLoginModal"
-     class="modal hidden"
-     aria-hidden="true">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>Admin Login</h3>
-      <button id="adminLoginClose" class="close-btn" type="button">&times;</button>
+<div id="adminPanel" style="display:none;">
+  <!-- Sticky admin top bar -->
+  <div id="adminTopBar" class="admin-top-bar">
+    <div class="admin-top-title">
+      <h2>Admin Dashboard</h2>
     </div>
-    <form id="adminLoginForm" class="modal-body">
-      <label for="adminUsername">Username</label>
-      <input id="adminUsername" type="text" autocomplete="username" />
 
-      <label for="adminPassword">Password</label>
-      <input id="adminPassword" type="password" autocomplete="current-password" />
+    <nav class="admin-top-tabs">
+      <button class="admin-tab" data-section="adminPets">🐾 Pets</button>
+      <button class="admin-tab" data-section="adminRates">💲 Rates</button>
+      <button class="admin-tab" data-section="adminContacts">📬 Contacts</button>
+      <button class="admin-tab" data-section="adminReviews">⭐ Reviews</button>
+    </nav>
 
-      <div class="modal-actions">
-        <button type="submit" class="btn-primary">Login</button>
-        <button type="button" id="adminLoginCancel" class="btn-secondary">Cancel</button>
-      </div>
-    </form>
+    <button id="adminLogoutBtn" class="btn-danger admin-logout-btn">
+      Logout
+    </button>
+  </div>
+
+  <!-- Admin content sections -->
+  <div class="admin-sections-wrapper">
+    <div id="adminPets" class="admin-section"></div>
+    <div id="adminRates" class="admin-section"></div>
+    <div id="adminContacts" class="admin-section"></div>
+    <div id="adminReviews" class="admin-section"></div>
   </div>
 </div>
 
