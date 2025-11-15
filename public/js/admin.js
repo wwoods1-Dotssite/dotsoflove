@@ -496,7 +496,7 @@ function renderPetImageManager(images) {
         <li class="image-item" data-id="${img.id}">
           <img src="${img.image_url}" class="thumb">
           <div class="img-actions">
-            <button class="btn-small btn-danger js-delete-img" data-id="${img.id}">Delete</button>
+         <button type="button" class="btn-small btn-danger js-delete-img" data-id="${img.id}"> Delete </button>
             <span class="drag-handle">☰</span>
           </div>
         </li>
@@ -542,15 +542,33 @@ petModal.addEventListener("click", async (e) => {
   const btn = e.target.closest(".js-delete-img");
   if (!btn) return;
 
-  const imgId = btn.dataset.id;
-  const petId = petForm.dataset.petId;
+  // 🛑 Stop this click from submitting the form or closing the modal
+  e.preventDefault();
+  e.stopPropagation();
 
-  if (!confirm("Delete this image permanently?")) return;
+  const imgId = btn.dataset.id;
+  const petId = petForm?.dataset.petId;
+
+  if (!petId || !imgId) {
+    console.error("[Admin] Missing petId or imgId for delete", { petId, imgId });
+    return;
+  }
+
+  if (!window.confirm("Delete this image permanently?")) return;
 
   try {
-    const res = await fetch(`/api/pets/${petId}/images/${imgId}`, { method: "DELETE" });
-    if (!res.ok) throw new Error();
+    console.log("[Admin] Deleting pet image", { petId, imgId });
 
+    const res = await fetch(`/api/pets/${petId}/images/${imgId}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      console.error("[Admin] Delete image HTTP error:", res.status);
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    // Re-fetch the pet to refresh the image list
     const refreshed = await (await fetch(`/api/pets/${petId}`)).json();
     renderPetImageManager(refreshed.images);
   } catch (err) {
