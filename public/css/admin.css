@@ -527,6 +527,40 @@
   margin-bottom: 0.75rem;
 }
 
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.5);
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-error {
+  color: #b91c1c;
+  margin-top: 0.5rem;
+}
+
+.btn-small {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: #6366f1;
+  color: #fff;
+  margin-right: 0.25rem;
+}
+
+.btn-small.btn-danger {
+  background: #ef4444;
+}
 /* ---------------------------------
    RESPONSIVE
 ---------------------------------- */
