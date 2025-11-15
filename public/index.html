@@ -291,31 +291,6 @@
 </section>
 
 <!-- ============================================================
-     ADMIN DASHBOARD
-============================================================ -->
-<div id="adminPanel" style="display:none;">
-  <div id="adminHeader">
-    <h2>Admin Dashboard</h2>
-    <button id="adminLogoutBtn" class="btn-danger">Logout</button>
-  </div>
-
-  <div class="admin-tabs-row" style="display:flex; gap:12px; margin-top:20px;">
-    <div class="admin-tabs">
-      <button class="admin-tab" data-section="adminPets">🐾 Pets</button>
-      <button class="admin-tab" data-section="adminRates">💲 Rates</button>
-      <button class="admin-tab" data-section="adminContacts">📬 Contacts</button>
-      <button class="admin-tab" data-section="adminReviews">⭐ Reviews</button>
-    </div>
-
-    <div id="adminPets" class="admin-section"></div>
-    <div id="adminRates" class="admin-section"></div>
-    <div id="adminContacts" class="admin-section"></div>
-    <div id="adminReviews" class="admin-section"></div>
-  </div> <!-- /.admin-tabs-row -->
-</div> <!-- /#adminPanel -->
-</section>
-
-<!-- ============================================================
      FOOTER
 ============================================================ -->
 <footer>
@@ -338,6 +313,52 @@
     <button type="button" id="nextBtn" class="image-modal-nav image-modal-next">&#10095;</button>
 
     <div id="caption" class="image-modal-caption"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     ADMIN LOGIN MODAL
+============================================================ -->
+<div id="adminLoginModal" class="modal hidden" aria-hidden="true">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Admin Login</h3>
+      <button
+        id="adminLoginClose"
+        class="close-btn"
+        type="button"
+        aria-label="Close"
+      >
+        &times;
+      </button>
+    </div>
+
+    <form id="adminLoginForm" class="modal-body">
+      <label for="adminUsername">Username</label>
+      <input
+        id="adminUsername"
+        type="text"
+        autocomplete="username"
+      />
+
+      <label for="adminPassword">Password</label>
+      <input
+        id="adminPassword"
+        type="password"
+        autocomplete="current-password"
+      />
+
+      <div class="modal-actions">
+        <button type="submit" class="btn-primary">Login</button>
+        <button
+          type="button"
+          id="adminLoginCancel"
+          class="btn-secondary"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
