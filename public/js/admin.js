@@ -423,7 +423,7 @@
 
     try {
       // TODO: adjust if your admin reviews endpoint is different
-      const res = await fetch("/api/reviews");
+      const res = await fetch("/api/admin/reviews");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const reviews = await res.json();
 
@@ -531,7 +531,7 @@
   async function approveReview(id) {
     try {
       // TODO: adjust to match your backend
-      const res = await fetch(`/api/reviews/${id}/approve`, {
+      const res = await fetch(`/api/admin/reviews/${id}/approve`, {
         method: "PATCH"
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -543,7 +543,7 @@
 
   async function deleteReview(id) {
     try {
-      const res = await fetch(`/api/reviews/${id}`, {
+      const res = await fetch(`/api/admin/reviews/${id}`, {
         method: "DELETE"
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
