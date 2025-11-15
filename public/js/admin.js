@@ -29,6 +29,7 @@
   let adminRatesSection;
   let adminContactsSection;
   let adminReviewsSection;
+  let adminRatesCache = []; // holds last fetched rates for admin
 
   // -----------------------------
   // Init
@@ -148,6 +149,16 @@
       });
     }
   }
+
+  // review actions (approve / delete) via delegation
+if (adminReviewsSection) {
+  adminReviewsSection.addEventListener("click", handleReviewActions);
+}
+
+// NEW: rate actions (add / edit / delete)
+if (adminRatesSection) {
+  adminRatesSection.addEventListener("click", handleRateActions);
+}
 
   // -----------------------------
   // Login modal helpers
@@ -350,30 +361,67 @@
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const rates = await res.json();
 
-      if (!rates.length) {
-        adminRatesSection.innerHTML = "<p>No rates found.</p>";
+      adminRatesCache = Array.isArray(rates) ? rates : [];
+
+      if (!adminRatesCache.length) {
+        adminRatesSection.innerHTML = `
+          <div class="admin-rates-header">
+            <h3>Service Rates</h3>
+            <button type="button" class="btn-primary js-add-rate">
+              + Add New Rate
+            </button>
+          </div>
+          <p>No rates found yet.</p>`;
         return;
       }
 
-      const rows = rates
-        .map(
-          (r) => `
-          <tr>
-            <td>${escapeHtml(r.service_name || "")}</td>
-            <td>${escapeHtml(r.description || "")}</td>
-            <td>$${Number(r.price).toFixed(2)}</td>
-          </tr>`
-        )
+      const rows = adminRatesCache
+        .map((r) => {
+          const price = Number(r.rate_per_unit);
+          const formattedPrice = Number.isNaN(price)
+            ? (r.rate_per_unit || "")
+            : `$${price.toFixed(2)}`;
+
+          return `
+            <tr data-id="${r.id}">
+              <td>${escapeHtml(r.service_type || "")}</td>
+              <td>${escapeHtml(formatUnit(r.unit_type || ""))}</td>
+              <td>${formattedPrice}</td>
+              <td>${escapeHtml(r.description || "")}</td>
+              <td>${r.is_featured ? "⭐ Yes" : "No"}</td>
+              <td>
+                <button type="button"
+                        class="btn-small js-edit-rate"
+                        data-id="${r.id}">
+                  Edit
+                </button>
+                <button type="button"
+                        class="btn-small btn-danger js-delete-rate"
+                        data-id="${r.id}">
+                  Delete
+                </button>
+              </td>
+            </tr>`;
+        })
         .join("");
 
       adminRatesSection.innerHTML = `
-        <h3>Service Rates</h3>
+        <div class="admin-rates-header">
+          <h3>Service Rates</h3>
+          <button type="button" class="btn-primary js-add-rate">
+            + Add New Rate
+          </button>
+        </div>
+
         <table class="admin-table">
           <thead>
             <tr>
               <th>Service</th>
-              <th>Description</th>
+              <th>Unit</th>
               <th>Price</th>
+              <th>Description</th>
+              <th>Featured?</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -385,6 +433,156 @@
     }
   }
 
+  function formatUnit(unitType) {
+    switch (unitType) {
+      case "per_visit":
+        return "Per Visit";
+      case "per_day":
+        return "Per Day";
+      case "per_night":
+        return "Per Night";
+      default:
+        return unitType || "";
+    }
+  }
+
+  // Handle clicks inside the Rates section (add/edit/delete)
+  async function handleRateActions(e) {
+    const addBtn = e.target.closest(".js-add-rate");
+    const editBtn = e.target.closest(".js-edit-rate");
+    const deleteBtn = e.target.closest(".js-delete-rate");
+
+    if (addBtn) {
+      e.preventDefault();
+      await createRate();
+      await loadAdminRates();
+      return;
+    }
+
+    const id = editBtn?.dataset.id || deleteBtn?.dataset.id;
+    if (!id) return;
+
+    if (editBtn) {
+      e.preventDefault();
+      await editRate(id);
+      await loadAdminRates();
+      return;
+    }
+
+    if (deleteBtn) {
+      e.preventDefault();
+      if (!confirm("Delete this rate? This cannot be undone.")) return;
+      await deleteRate(id);
+      await loadAdminRates();
+    }
+  }
+
+  async function createRate() {
+    // This uses window.prompt style for now – we can later move this to a prettier modal if you like
+    const service_type = prompt("Service name (e.g., Overnight Stay):");
+    if (service_type === null) return; // cancelled
+
+    const rateStr = prompt("Rate per unit (e.g., 45.00):");
+    if (rateStr === null) return;
+    const rate_per_unit = rateStr.trim();
+
+    const unit_type = prompt(
+      "Unit type (per_visit, per_day, per_night):",
+      "per_day"
+    );
+    if (unit_type === null) return;
+
+    const description =
+      prompt("Short description (optional):", "") ?? "";
+
+    const isFeatured = confirm(
+      "Mark this as the FEATURED rate? (OK = Yes, Cancel = No)"
+    );
+
+    try {
+      const res = await fetch("/api/rates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service_type,
+          rate_per_unit,
+          unit_type,
+          description,
+          is_featured: isFeatured ? "true" : "false"
+        })
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      console.log("[Admin] Created new rate");
+    } catch (err) {
+      console.error("[Admin] Error creating rate:", err);
+      alert("Couldn't create rate.");
+    }
+  }
+
+  async function editRate(id) {
+    const rate = adminRatesCache.find((r) => String(r.id) === String(id));
+    if (!rate) {
+      alert("Could not find rate to edit.");
+      return;
+    }
+
+    const service_type = prompt("Service name:", rate.service_type || "");
+    if (service_type === null) return;
+
+    const rateStr = prompt(
+      "Rate per unit:",
+      rate.rate_per_unit != null ? String(rate.rate_per_unit) : ""
+    );
+    if (rateStr === null) return;
+    const rate_per_unit = rateStr.trim();
+
+    const unit_type = prompt(
+      "Unit type (per_visit, per_day, per_night):",
+      rate.unit_type || "per_day"
+    );
+    if (unit_type === null) return;
+
+    const description =
+      prompt("Short description:", rate.description || "") ?? "";
+
+    const isFeatured = confirm(
+      "Mark this as FEATURED? (OK = Yes, Cancel = No)"
+    );
+
+    try {
+      const res = await fetch(`/api/rates/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service_type,
+          rate_per_unit,
+          unit_type,
+          description,
+          is_featured: isFeatured ? "true" : "false"
+        })
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      console.log("[Admin] Updated rate", id);
+    } catch (err) {
+      console.error("[Admin] Error updating rate:", err);
+      alert("Couldn't update rate.");
+    }
+  }
+
+  async function deleteRate(id) {
+    try {
+      const res = await fetch(`/api/rates/${id}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      console.log("[Admin] Deleted rate", id);
+    } catch (err) {
+      console.error("[Admin] Error deleting rate:", err);
+      alert("Couldn't delete rate.");
+    }
+  }
   // -----------------------------
   // CONTACTS TAB
   // -----------------------------
