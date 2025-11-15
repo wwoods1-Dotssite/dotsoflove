@@ -43,14 +43,17 @@
   function cacheDom() {
     adminNavLink = document.getElementById("adminNav");
 
+    // Login modal
     adminLoginModal = document.getElementById("adminLoginModal");
     adminLoginForm = document.getElementById("adminLoginForm");
     adminLoginClose = document.getElementById("adminLoginClose");
     adminLoginCancel = document.getElementById("adminLoginCancel");
 
+    // Admin panel + logout
     adminPanel = document.getElementById("adminPanel");
     adminLogoutBtn = document.getElementById("adminLogoutBtn");
 
+    // Tabs + sections
     adminTabs = Array.from(document.querySelectorAll(".admin-tab"));
     adminSections = Array.from(document.querySelectorAll(".admin-section"));
 
@@ -64,12 +67,12 @@
       adminLoginModal,
       adminPanel,
       tabs: adminTabs.length,
-      sections: adminSections.length
+      sections: adminSections.length,
     });
   }
 
   function attachListeners() {
-    // nav
+    // Header “Admin” nav link
     if (adminNavLink) {
       adminNavLink.addEventListener("click", (e) => {
         e.preventDefault();
@@ -83,7 +86,7 @@
       });
     }
 
-    // login modal close/cancel
+    // Login modal close/cancel
     if (adminLoginClose) {
       adminLoginClose.addEventListener("click", (e) => {
         e.preventDefault();
@@ -98,12 +101,12 @@
       });
     }
 
-    // login submit
+    // Login submit
     if (adminLoginForm) {
       adminLoginForm.addEventListener("submit", handleLoginSubmit);
     }
 
-    // logout
+    // Logout
     if (adminLogoutBtn) {
       adminLogoutBtn.addEventListener("click", (e) => {
         e.preventDefault();
@@ -111,7 +114,7 @@
       });
     }
 
-    // tab buttons
+    // Tab buttons
     if (adminTabs.length) {
       adminTabs.forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -121,9 +124,28 @@
       });
     }
 
-    // review actions (approve / delete) via delegation
+    // Review actions delegation (approve / delete)
     if (adminReviewsSection) {
       adminReviewsSection.addEventListener("click", handleReviewActions);
+    }
+
+    // Contacts actions delegation (mark contacted / delete)
+    if (adminContactsSection) {
+      adminContactsSection.addEventListener("click", (evt) => {
+        const btn = evt.target.closest("button[data-action]");
+        if (!btn) return;
+
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+
+        if (!id || !action) return;
+
+        if (action === "contacted") {
+          markContacted(id);
+        } else if (action === "delete-contact") {
+          deleteContact(id);
+        }
+      });
     }
   }
 
@@ -168,8 +190,11 @@
     e.preventDefault();
     if (!adminLoginForm) return;
 
-    const username = adminLoginForm.querySelector("#adminUsername")?.value.trim();
-    const password = adminLoginForm.querySelector("#adminPassword")?.value ?? "";
+    const username = adminLoginForm
+      .querySelector("#adminUsername")
+      ?.value.trim();
+    const password =
+      adminLoginForm.querySelector("#adminPassword")?.value ?? "";
 
     if (!username || !password) {
       alert("Please enter username and password.");
@@ -179,11 +204,10 @@
     try {
       console.log("[Admin] Attempting admin login…");
 
-      // TODO: adjust URL if your backend uses a different login endpoint
       const res = await fetch("/api/admin/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
       });
 
       if (!res.ok) {
@@ -230,7 +254,7 @@
     if (!sectionId) return;
     currentTab = sectionId;
 
-    // buttons
+    // Buttons
     adminTabs.forEach((btn) => {
       if (btn.dataset.section === sectionId) {
         btn.classList.add("active");
@@ -239,7 +263,7 @@
       }
     });
 
-    // sections
+    // Sections
     adminSections.forEach((sec) => {
       if (sec.id === sectionId) {
         sec.style.display = "block";
@@ -248,7 +272,7 @@
       }
     });
 
-    // load data for this tab
+    // Load data for this tab
     switch (sectionId) {
       case "adminPets":
         loadAdminPets();
@@ -285,12 +309,12 @@
       const rows = pets
         .map(
           (p) => `
-            <tr>
-              <td>${escapeHtml(p.pet_name || "")}</td>
-              <td>${p.is_dorothy_pet ? "Dorothy" : "Client"}</td>
-              <td>${escapeHtml(p.story_description || "")}</td>
-              <td>${(p.images || []).length}</td>
-            </tr>`
+          <tr>
+            <td>${escapeHtml(p.pet_name || "")}</td>
+            <td>${p.is_dorothy_pet ? "Dorothy" : "Client"}</td>
+            <td>${escapeHtml(p.story_description || "")}</td>
+            <td>${(p.images || []).length}</td>
+          </tr>`
         )
         .join("");
 
@@ -334,11 +358,11 @@
       const rows = rates
         .map(
           (r) => `
-            <tr>
-              <td>${escapeHtml(r.service_name || "")}</td>
-              <td>${escapeHtml(r.description || "")}</td>
-              <td>$${Number(r.price).toFixed(2)}</td>
-            </tr>`
+          <tr>
+            <td>${escapeHtml(r.service_name || "")}</td>
+            <td>${escapeHtml(r.description || "")}</td>
+            <td>$${Number(r.price).toFixed(2)}</td>
+          </tr>`
         )
         .join("");
 
@@ -369,26 +393,42 @@
     adminContactsSection.innerHTML = "<p>Loading contact requests…</p>";
 
     try {
-      const res = await fetch("/api/contacts");
+      const res = await fetch("/api/admin/contacts");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const contacts = await res.json();
 
       if (!contacts.length) {
-        adminContactsSection.innerHTML = "<p>No contact requests yet.</p>";
+        adminContactsSection.innerHTML = "<p>No contact requests.</p>";
         return;
       }
 
       const rows = contacts
         .map(
           (c) => `
-            <tr>
-              <td>${escapeHtml(c.name || "")}</td>
-              <td>${escapeHtml(c.email || "")}</td>
-              <td>${escapeHtml(c.phone || "")}</td>
-              <td>${escapeHtml(c.service || "")}</td>
-              <td>${escapeHtml(c.start_date || "")}</td>
-              <td>${escapeHtml(c.message || "")}</td>
-            </tr>`
+          <tr>
+            <td>${escapeHtml(c.name || "")}</td>
+            <td>${escapeHtml(c.email || "")}</td>
+            <td>${escapeHtml(c.phone || "")}</td>
+            <td>${escapeHtml(c.service || "")}</td>
+            <td>${escapeHtml(c.start_date || "")}</td>
+            <td>${escapeHtml(c.message || "")}</td>
+            <td class="admin-actions">
+              <button
+                type="button"
+                class="btn-primary"
+                data-id="${c.id}"
+                data-action="contacted">
+                Mark Contacted
+              </button>
+              <button
+                type="button"
+                class="btn-danger"
+                data-id="${c.id}"
+                data-action="delete-contact">
+                Delete
+              </button>
+            </td>
+          </tr>`
         )
         .join("");
 
@@ -401,8 +441,9 @@
               <th>Email</th>
               <th>Phone</th>
               <th>Service</th>
-              <th>Start date</th>
+              <th>Start Date</th>
               <th>Details</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -414,6 +455,36 @@
     }
   }
 
+  async function markContacted(id) {
+    try {
+      const res = await fetch(`/api/admin/contacts/${id}/contacted`, {
+        method: "PUT",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      await loadAdminContacts();
+    } catch (err) {
+      console.error("[Admin] Error marking contact as contacted:", err);
+      alert("Couldn't mark contact as contacted.");
+    }
+  }
+
+  async function deleteContact(id) {
+    if (!confirm("Delete this contact request? This cannot be undone.")) return;
+
+    try {
+      const res = await fetch(`/api/admin/contacts/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      await loadAdminContacts();
+    } catch (err) {
+      console.error("[Admin] Error deleting contact:", err);
+      alert("Couldn't delete contact.");
+    }
+  }
+
   // -----------------------------
   // REVIEWS TAB
   // -----------------------------
@@ -422,7 +493,6 @@
     adminReviewsSection.innerHTML = "<p>Loading reviews…</p>";
 
     try {
-      // TODO: adjust if your admin reviews endpoint is different
       const res = await fetch("/api/admin/reviews");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const reviews = await res.json();
@@ -438,34 +508,34 @@
       const pendingRows = pending
         .map(
           (r) => `
-            <tr data-id="${r.id}">
-              <td>${escapeHtml(r.customer_name || "")}</td>
-              <td>${"★".repeat(r.rating || 0)}</td>
-              <td>${escapeHtml(r.review_text || "")}</td>
-              <td>
-                <button type="button"
-                        class="btn-small js-approve-review"
-                        data-id="${r.id}">
-                  Approve
-                </button>
-                <button type="button"
-                        class="btn-small btn-danger js-delete-review"
-                        data-id="${r.id}">
-                  Delete
-                </button>
-              </td>
-            </tr>`
+          <tr data-id="${r.id}">
+            <td>${escapeHtml(r.customer_name || "")}</td>
+            <td>${"★".repeat(r.rating || 0)}</td>
+            <td>${escapeHtml(r.review_text || "")}</td>
+            <td>
+              <button type="button"
+                      class="btn-small js-approve-review"
+                      data-id="${r.id}">
+                Approve
+              </button>
+              <button type="button"
+                      class="btn-small btn-danger js-delete-review"
+                      data-id="${r.id}">
+                Delete
+              </button>
+            </td>
+          </tr>`
         )
         .join("");
 
       const approvedRows = approved
         .map(
           (r) => `
-            <tr>
-              <td>${escapeHtml(r.customer_name || "")}</td>
-              <td>${"★".repeat(r.rating || 0)}</td>
-              <td>${escapeHtml(r.review_text || "")}</td>
-            </tr>`
+          <tr>
+            <td>${escapeHtml(r.customer_name || "")}</td>
+            <td>${"★".repeat(r.rating || 0)}</td>
+            <td>${escapeHtml(r.review_text || "")}</td>
+          </tr>`
         )
         .join("");
 
@@ -530,9 +600,8 @@
 
   async function approveReview(id) {
     try {
-      // TODO: adjust to match your backend
       const res = await fetch(`/api/admin/reviews/${id}/approve`, {
-        method: "PUT"
+        method: "PUT",
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
     } catch (err) {
@@ -544,7 +613,7 @@
   async function deleteReview(id) {
     try {
       const res = await fetch(`/api/admin/reviews/${id}`, {
-        method: "DELETE"
+        method: "DELETE",
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
     } catch (err) {
