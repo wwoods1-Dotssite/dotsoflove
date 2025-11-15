@@ -352,8 +352,68 @@ if (adminRatesSection) {
 // -----------------------------
 // RATES TAB (with modal form)
 // -----------------------------
-let editingRateId = null; // null = creating, number = editing
+let editingRateId = null;
+let adminRatesCache = [];
 
+// Load Rates
+async function loadAdminRates() {
+  if (!adminRatesSection) return;
+  adminRatesSection.innerHTML = "<p>Loading rates…</p>";
+
+  try {
+    const res = await fetch("/api/rates");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    adminRatesCache = await res.json();
+
+    if (!adminRatesCache.length) {
+      adminRatesSection.innerHTML = "<p>No rates found.</p>";
+      return;
+    }
+
+    const rows = adminRatesCache
+      .map(
+        (r) => `
+        <tr>
+          <td>${escapeHtml(r.service_type || "")}</td>
+          <td>${escapeHtml(r.unit_type || "")}</td>
+          <td>$${Number(r.rate_per_unit).toFixed(2)}</td>
+          <td>${escapeHtml(r.description || "")}</td>
+          <td>${r.is_featured ? "Yes" : "No"}</td>
+          <td>
+            <button class="btn-small js-edit-rate" data-id="${r.id}">Edit</button>
+            <button class="btn-small btn-danger js-delete-rate" data-id="${r.id}">Delete</button>
+          </td>
+        </tr>`
+      )
+      .join("");
+
+    adminRatesSection.innerHTML = `
+      <h3>Service Rates</h3>
+      <button class="btn-primary js-add-rate" style="margin-bottom:15px;">+ Add New Rate</button>
+
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Unit</th>
+            <th>Price</th>
+            <th>Description</th>
+            <th>Featured?</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  } catch (err) {
+    console.error("[Admin] Error loading rates", err);
+    adminRatesSection.innerHTML =
+      "<p class='admin-error'>Unable to load rates.</p>";
+  }
+}
+
+// Open Modal
 function openRateModal(rate) {
   const modal = adminRateModal;
   if (!modal) return;
@@ -363,7 +423,7 @@ function openRateModal(rate) {
     rateModalTitle.textContent = "Edit Rate";
     rateServiceType.value = rate.service_type || "";
     rateAmount.value = rate.rate_per_unit || "";
-    rateUnit.value = rate.unit_type || "per_day";
+    rateUnit.value = rate.unit_type || "";
     rateDescription.value = rate.description || "";
     rateFeatured.checked = !!rate.is_featured;
   } else {
@@ -382,6 +442,7 @@ function openRateModal(rate) {
   document.body.style.overflow = "hidden";
 }
 
+// Close Modal
 function closeRateModal() {
   adminRateModal.classList.remove("show");
   adminRateModal.classList.add("hidden");
@@ -389,32 +450,7 @@ function closeRateModal() {
   document.body.style.overflow = "";
 }
 
-async function handleRateActions(e) {
-  const addBtn = e.target.closest(".js-add-rate");
-  const editBtn = e.target.closest(".js-edit-rate");
-  const deleteBtn = e.target.closest(".js-delete-rate");
-
-  if (addBtn) {
-    openRateModal(null);
-    return;
-  }
-
-  const id = editBtn?.dataset.id || deleteBtn?.dataset.id;
-  if (!id) return;
-
-  if (editBtn) {
-    const rate = adminRatesCache.find((r) => String(r.id) === String(id));
-    if (rate) openRateModal(rate);
-    return;
-  }
-
-  if (deleteBtn) {
-    if (!confirm("Delete this rate? This cannot be undone.")) return;
-    await deleteRate(id);
-    await loadAdminRates();
-  }
-}
-
+// Save (Add/Update)
 async function saveRate(e) {
   e.preventDefault();
 
@@ -451,24 +487,54 @@ async function saveRate(e) {
   }
 }
 
+// Delete rate
 async function deleteRate(id) {
+  if (!confirm("Delete this rate? This cannot be undone.")) return;
+
   try {
     const res = await fetch(`/api/rates/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    await loadAdminRates();
   } catch (err) {
     console.error("[Admin] Error deleting rate:", err);
     alert("Could not delete rate.");
   }
 }
 
-// Inject modal event listeners
+// Handle button clicks inside the rate table
+async function handleRateActions(e) {
+  const addBtn = e.target.closest(".js-add-rate");
+  const editBtn = e.target.closest(".js-edit-rate");
+  const deleteBtn = e.target.closest(".js-delete-rate");
+
+  if (addBtn) {
+    openRateModal(null);
+    return;
+  }
+
+  const id = editBtn?.dataset.id || deleteBtn?.dataset.id;
+  if (!id) return;
+
+  if (editBtn) {
+    const rate = adminRatesCache.find((r) => String(r.id) === String(id));
+    openRateModal(rate);
+    return;
+  }
+
+  if (deleteBtn) {
+    await deleteRate(id);
+  }
+}
+
+// Attach listeners on DOM loaded
 document.addEventListener("DOMContentLoaded", () => {
-  // Modal buttons
   rateModalClose?.addEventListener("click", closeRateModal);
   rateModalCancel?.addEventListener("click", closeRateModal);
   rateModalForm?.addEventListener("submit", saveRate);
-});
-  
+
+  adminRatesSection?.addEventListener("click", handleRateActions);
+});  
   // -----------------------------
   // CONTACTS TAB
   // -----------------------------
