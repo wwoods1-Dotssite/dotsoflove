@@ -397,6 +397,49 @@
 </div>
 
 <!-- ============================================================
+     ADMIN RATE EDIT/CREATE MODAL
+============================================================ -->
+<div id="adminRateModal" class="modal hidden" aria-hidden="true">
+  <div class="modal-content rate-modal">
+    <div class="modal-header">
+      <h3 id="rateModalTitle">New Rate</h3>
+      <button id="rateModalClose" class="close-btn" type="button">&times;</button>
+    </div>
+
+    <form id="rateModalForm" class="modal-body">
+
+      <label for="rateServiceType">Service Name</label>
+      <input id="rateServiceType" type="text" required />
+
+      <label for="rateAmount">Rate (e.g. 45.00)</label>
+      <input id="rateAmount" type="number" step="0.01" required />
+
+      <label for="rateUnit">Unit</label>
+      <select id="rateUnit" required>
+        <option value="per_visit">Per Visit</option>
+        <option value="per_day">Per Day</option>
+        <option value="per_night">Per Night</option>
+      </select>
+
+      <label for="rateDescription">Description</label>
+      <textarea id="rateDescription" rows="3"></textarea>
+
+      <label class="featured-check">
+        <input type="checkbox" id="rateFeatured" />
+        Featured Service
+      </label>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn-primary">Save</button>
+        <button type="button" id="rateModalCancel" class="btn-secondary">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+  
+  <!-- ============================================================
      SCRIPTS
 ============================================================ -->
 <script src="js/gallery.js" defer></script>
