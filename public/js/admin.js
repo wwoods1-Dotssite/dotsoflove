@@ -10,15 +10,13 @@
   let isLoggedIn = false;
   let currentTab = "adminPets";
 
+  // cache for rates so Edit can pre-fill modal
+  let adminRatesCache = [];
+
   // -----------------------------
   // Cached DOM refs
   // -----------------------------
   let adminNavLink;
-  let adminLoginModal;
-  let adminLoginForm;
-  let adminLoginClose;
-  let adminLoginCancel;
-
   let adminPanel;
   let adminLogoutBtn;
 
@@ -29,10 +27,26 @@
   let adminRatesSection;
   let adminContactsSection;
   let adminReviewsSection;
-    // Pet modal state
-  let currentPetId = null;
 
-  // Pet modal DOM refs
+  // Login modal
+  let adminLoginModal;
+  let adminLoginForm;
+  let adminLoginClose;
+  let adminLoginCancel;
+
+  // Rate modal
+  let adminRateModal;
+  let rateModalTitle;
+  let rateModalForm;
+  let rateModalClose;
+  let rateModalCancel;
+  let rateServiceTypeInput;
+  let rateAmountInput;
+  let rateUnitSelect;
+  let rateDescriptionInput;
+  let rateFeaturedCheckbox;
+
+  // Pet modal
   let petModal;
   let petModalTitle;
   let petForm;
@@ -55,40 +69,48 @@
 
   function cacheDom() {
     adminNavLink = document.getElementById("adminNav");
-
-    // Login modal
-    adminLoginModal = document.getElementById("adminLoginModal");
-    adminLoginForm = document.getElementById("adminLoginForm");
-    adminLoginClose = document.getElementById("adminLoginClose");
-    adminLoginCancel = document.getElementById("adminLoginCancel");
-
-    // Admin panel + logout
-    adminPanel = document.getElementById("adminPanel");
+    adminPanel   = document.getElementById("adminPanel");
     adminLogoutBtn = document.getElementById("adminLogoutBtn");
 
-    // Tabs + sections
-    adminTabs = Array.from(document.querySelectorAll(".admin-tab"));
+    adminTabs     = Array.from(document.querySelectorAll(".admin-tab"));
     adminSections = Array.from(document.querySelectorAll(".admin-section"));
 
-    adminPetsSection = document.getElementById("adminPets");
-    adminRatesSection = document.getElementById("adminRates");
+    adminPetsSection     = document.getElementById("adminPets");
+    adminRatesSection    = document.getElementById("adminRates");
     adminContactsSection = document.getElementById("adminContacts");
-    adminReviewsSection = document.getElementById("adminReviews");
+    adminReviewsSection  = document.getElementById("adminReviews");
 
-        // Pet modal
-    petModal       = document.getElementById("petModal");
-    petModalTitle  = document.getElementById("petModalTitle");
-    petForm        = document.getElementById("petForm");
-    petModalClose  = document.getElementById("petModalClose");
-    petModalCancel = document.getElementById("petModalCancel");
-    petNameInput   = document.getElementById("petName");
-    petStoryInput  = document.getElementById("petStory");
+    // Login modal
+    adminLoginModal  = document.getElementById("adminLoginModal");
+    adminLoginForm   = document.getElementById("adminLoginForm");
+    adminLoginClose  = document.getElementById("adminLoginClose");
+    adminLoginCancel = document.getElementById("adminLoginCancel");
+
+    // Rate modal
+    adminRateModal        = document.getElementById("adminRateModal");
+    rateModalTitle        = document.getElementById("rateModalTitle");
+    rateModalForm         = document.getElementById("rateModalForm");
+    rateModalClose        = document.getElementById("rateModalClose");
+    rateModalCancel       = document.getElementById("rateModalCancel");
+    rateServiceTypeInput  = document.getElementById("rateServiceType");
+    rateAmountInput       = document.getElementById("rateAmount");
+    rateUnitSelect        = document.getElementById("rateUnit");
+    rateDescriptionInput  = document.getElementById("rateDescription");
+    rateFeaturedCheckbox  = document.getElementById("rateFeatured");
+
+    // Pet modal
+    petModal         = document.getElementById("petModal");
+    petModalTitle    = document.getElementById("petModalTitle");
+    petForm          = document.getElementById("petForm");
+    petModalClose    = document.getElementById("petModalClose");
+    petModalCancel   = document.getElementById("petModalCancel");
+    petNameInput     = document.getElementById("petName");
+    petStoryInput    = document.getElementById("petStory");
     petIsDorothyInput = document.getElementById("petIsDorothy");
-    petImagesInput = document.getElementById("petImages");
+    petImagesInput   = document.getElementById("petImages");
 
     console.log("[Admin] cacheDom()", {
       adminNavLink,
-      adminLoginModal,
       adminPanel,
       tabs: adminTabs.length,
       sections: adminSections.length,
@@ -96,7 +118,7 @@
   }
 
   function attachListeners() {
-    // Header “Admin” nav link
+    // Nav: open admin / login
     if (adminNavLink) {
       adminNavLink.addEventListener("click", (e) => {
         e.preventDefault();
@@ -117,7 +139,6 @@
         hideLoginModal();
       });
     }
-
     if (adminLoginCancel) {
       adminLoginCancel.addEventListener("click", (e) => {
         e.preventDefault();
@@ -148,65 +169,57 @@
       });
     }
 
-    // Review actions delegation (approve / delete)
+    // Reviews (approve/delete)
     if (adminReviewsSection) {
       adminReviewsSection.addEventListener("click", handleReviewActions);
     }
 
-    // Contacts actions delegation (mark contacted / delete)
+    // Contacts (contacted/delete)
     if (adminContactsSection) {
-      adminContactsSection.addEventListener("click", (evt) => {
-        const btn = evt.target.closest("button[data-action]");
-        if (!btn) return;
+      adminContactsSection.addEventListener("click", handleContactActions);
+    }
 
-        const id = btn.dataset.id;
-        const action = btn.dataset.action;
-
-        if (!id || !action) return;
-
-        if (action === "contacted") {
-          markContacted(id);
-        } else if (action === "delete-contact") {
-          deleteContact(id);
-        }
+    // Rates modal & table
+    if (rateModalClose) {
+      rateModalClose.addEventListener("click", (e) => {
+        e.preventDefault();
+        closeRateModal();
       });
     }
-  }
-
-  // review actions (approve / delete) via delegation
-if (adminReviewsSection) {
-  adminReviewsSection.addEventListener("click", handleReviewActions);
-}
-
-// NEW: rate actions (add / edit / delete)
-if (adminRatesSection) {
-  adminRatesSection.addEventListener("click", handleRateActions);
-}
-
-    // Pets: row actions (edit/delete) via delegation
-    if (adminPetsSection) {
-      adminPetsSection.addEventListener("click", handlePetActions);
+    if (rateModalCancel) {
+      rateModalCancel.addEventListener("click", (e) => {
+        e.preventDefault();
+        closeRateModal();
+      });
+    }
+    if (rateModalForm) {
+      rateModalForm.addEventListener("submit", handleRateFormSubmit);
+    }
+    if (adminRatesSection) {
+      adminRatesSection.addEventListener("click", handleRateTableClick);
     }
 
-    // Pets: modal controls
+    // Pets modal & table
     if (petModalClose) {
       petModalClose.addEventListener("click", (e) => {
         e.preventDefault();
         closePetModal();
       });
     }
-
     if (petModalCancel) {
       petModalCancel.addEventListener("click", (e) => {
         e.preventDefault();
         closePetModal();
       });
     }
-
     if (petForm) {
       petForm.addEventListener("submit", handlePetFormSubmit);
     }
-  
+    if (adminPetsSection) {
+      adminPetsSection.addEventListener("click", handlePetTableClick);
+    }
+  }
+
   // -----------------------------
   // Login modal helpers
   // -----------------------------
@@ -248,11 +261,8 @@ if (adminRatesSection) {
     e.preventDefault();
     if (!adminLoginForm) return;
 
-    const username = adminLoginForm
-      .querySelector("#adminUsername")
-      ?.value.trim();
-    const password =
-      adminLoginForm.querySelector("#adminPassword")?.value ?? "";
+    const username = adminLoginForm.querySelector("#adminUsername")?.value.trim();
+    const password = adminLoginForm.querySelector("#adminPassword")?.value ?? "";
 
     if (!username || !password) {
       alert("Please enter username and password.");
@@ -312,7 +322,7 @@ if (adminRatesSection) {
     if (!sectionId) return;
     currentTab = sectionId;
 
-    // Buttons
+    // buttons
     adminTabs.forEach((btn) => {
       if (btn.dataset.section === sectionId) {
         btn.classList.add("active");
@@ -321,7 +331,7 @@ if (adminRatesSection) {
       }
     });
 
-    // Sections
+    // sections
     adminSections.forEach((sec) => {
       if (sec.id === sectionId) {
         sec.style.display = "block";
@@ -330,7 +340,7 @@ if (adminRatesSection) {
       }
     });
 
-    // Load data for this tab
+    // load data for this tab
     switch (sectionId) {
       case "adminPets":
         loadAdminPets();
@@ -348,7 +358,7 @@ if (adminRatesSection) {
   }
 
   // -----------------------------
-  // PETS TAB (Admin CRUD)
+  // PETS TAB
   // -----------------------------
   async function loadAdminPets() {
     if (!adminPetsSection) return;
@@ -361,17 +371,15 @@ if (adminRatesSection) {
 
       if (!pets.length) {
         adminPetsSection.innerHTML = `
-          <div class="admin-pets-header">
+          <div class="admin-header-row">
             <h3>Pets</h3>
-            <button type="button" id="addPetBtn" class="btn-primary">
+            <button type="button" class="btn-primary" id="addPetBtn">
               + Add Pet
             </button>
           </div>
-          <p>No pets found yet.</p>`;
-        const addBtnEmpty = adminPetsSection.querySelector("#addPetBtn");
-        if (addBtnEmpty) {
-          addBtnEmpty.addEventListener("click", () => openPetModal("create"));
-        }
+          <p>No pets found.</p>`;
+        const addBtn = adminPetsSection.querySelector("#addPetBtn");
+        if (addBtn) addBtn.addEventListener("click", () => openPetModalForNew());
         return;
       }
 
@@ -400,9 +408,9 @@ if (adminRatesSection) {
         .join("");
 
       adminPetsSection.innerHTML = `
-        <div class="admin-pets-header">
+        <div class="admin-header-row">
           <h3>Pets</h3>
-          <button type="button" id="addPetBtn" class="btn-primary">
+          <button type="button" class="btn-primary" id="addPetBtn">
             + Add Pet
           </button>
         </div>
@@ -421,58 +429,41 @@ if (adminRatesSection) {
         </table>`;
 
       const addBtn = adminPetsSection.querySelector("#addPetBtn");
-      if (addBtn) {
-        addBtn.addEventListener("click", () => openPetModal("create"));
-      }
+      if (addBtn) addBtn.addEventListener("click", () => openPetModalForNew());
     } catch (err) {
       console.error("[Admin] Error loading pets", err);
       adminPetsSection.innerHTML =
         "<p class='admin-error'>Unable to load pets.</p>";
     }
   }
-/* ------  Pet Handlers -----*/  
-    function handlePetActions(e) {
+
+  function handlePetTableClick(e) {
     const editBtn = e.target.closest(".js-edit-pet");
     const deleteBtn = e.target.closest(".js-delete-pet");
-
-    if (!editBtn && !deleteBtn) return;
 
     const id = editBtn?.dataset.id || deleteBtn?.dataset.id;
     if (!id) return;
 
     if (editBtn) {
       e.preventDefault();
-      openPetForEdit(id);
+      openPetModalForEdit(id);
     } else if (deleteBtn) {
       e.preventDefault();
-      if (!confirm("Delete this pet and all its images? This cannot be undone.")) return;
       deletePet(id);
     }
   }
-/* ------ Open/Close Pet Modals -----*/  
-  function resetPetForm() {
-    if (!petForm) return;
-    petForm.reset();
-    if (petIsDorothyInput) petIsDorothyInput.checked = false;
-    if (petImagesInput) petImagesInput.value = "";
-  }
 
-  function openPetModal(mode, pet = null) {
+  function openPetModalForNew() {
     if (!petModal) return;
 
-    currentPetId = mode === "edit" && pet ? pet.id : null;
+    petForm.dataset.mode = "create";
+    delete petForm.dataset.petId;
 
-    if (petModalTitle) {
-      petModalTitle.textContent = mode === "edit" ? "Edit Pet" : "Add Pet";
-    }
-
-    resetPetForm();
-
-    if (pet) {
-      if (petNameInput) petNameInput.value = pet.pet_name || "";
-      if (petStoryInput) petStoryInput.value = pet.story_description || "";
-      if (petIsDorothyInput) petIsDorothyInput.checked = !!pet.is_dorothy_pet;
-    }
+    petModalTitle.textContent = "Add Pet";
+    petNameInput.value = "";
+    petStoryInput.value = "";
+    petIsDorothyInput.checked = false;
+    if (petImagesInput) petImagesInput.value = "";
 
     petModal.classList.remove("hidden");
     petModal.classList.add("show");
@@ -480,31 +471,48 @@ if (adminRatesSection) {
     document.body.style.overflow = "hidden";
   }
 
+  async function openPetModalForEdit(id) {
+    if (!petModal) return;
+
+    try {
+      const res = await fetch(`/api/pets/${id}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const pet = await res.json();
+
+      petForm.dataset.mode = "edit";
+      petForm.dataset.petId = String(id);
+
+      petModalTitle.textContent = "Edit Pet";
+      petNameInput.value = pet.pet_name || "";
+      petStoryInput.value = pet.story_description || "";
+      petIsDorothyInput.checked = !!pet.is_dorothy_pet;
+
+      if (petImagesInput) petImagesInput.value = "";
+
+      petModal.classList.remove("hidden");
+      petModal.classList.add("show");
+      petModal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    } catch (err) {
+      console.error("[Admin] Error loading pet for edit:", err);
+      alert("Couldn't load pet details.");
+    }
+  }
+
   function closePetModal() {
     if (!petModal) return;
-    currentPetId = null;
-    resetPetForm();
     petModal.classList.remove("show");
     petModal.classList.add("hidden");
     petModal.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
   }
-/* ------ Load Pet date for Edit -----*/  
-  async function openPetForEdit(id) {
-    try {
-      const res = await fetch(`/api/pets/${id}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const pet = await res.json();
-      openPetModal("edit", pet);
-    } catch (err) {
-      console.error("[Admin] Error loading pet for edit", err);
-      alert("Couldn't load pet details.");
-    }
-  }
-/* ------ Pet Form submit -----*/  
-    async function handlePetFormSubmit(e) {
+
+  async function handlePetFormSubmit(e) {
     e.preventDefault();
-    if (!petNameInput) return;
+    if (!petForm) return;
+
+    const mode  = petForm.dataset.mode || "create";
+    const petId = petForm.dataset.petId;
 
     const name = petNameInput.value.trim();
     if (!name) {
@@ -512,237 +520,275 @@ if (adminRatesSection) {
       return;
     }
 
-    const formData = new FormData();
-    formData.set("pet_name", name);
-    formData.set("story_description", petStoryInput?.value || "");
-    formData.set("is_dorothy_pet", petIsDorothyInput?.checked ? "true" : "false");
-
-    if (petImagesInput && petImagesInput.files?.length) {
-      Array.from(petImagesInput.files).forEach((file) => {
-        formData.append("images", file);
-      });
-    }
-
-    const isEdit = !!currentPetId;
-    const url = isEdit ? `/api/pets/${currentPetId}` : "/api/pets";
-    const method = isEdit ? "PUT" : "POST";
-
     try {
-      const res = await fetch(url, {
-        method,
-        body: formData,
-      });
+      const fd = new FormData(petForm);
 
+      fd.set("pet_name", name);
+      fd.set("story_description", petStoryInput.value.trim());
+      fd.set("is_dorothy_pet", petIsDorothyInput.checked ? "true" : "false");
+
+      let url = "/api/pets";
+      let method = "POST";
+      if (mode === "edit" && petId) {
+        url = `/api/pets/${petId}`;
+        method = "PUT";
+      }
+
+      const res = await fetch(url, { method, body: fd });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       closePetModal();
-      await loadAdminPets();  // refresh table
-      // Note: gallery will update on next page reload; we can hook into it later if needed.
+      await loadAdminPets();
     } catch (err) {
-      console.error("[Admin] Error saving pet", err);
+      console.error("[Admin] Error saving pet:", err);
       alert("Couldn't save pet. Please try again.");
     }
   }
-/* ------ Delete Pets -----*/  
-    async function deletePet(id) {
-    try {
-      const res = await fetch(`/api/pets/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      await loadAdminPets();
-    } catch (err) {
-      console.error("[Admin] Error deleting pet", err);
-      alert("Couldn't delete pet.");
-    }
-  }
-  
-// -----------------------------
-// RATES TAB (with modal form)
-// -----------------------------
-let editingRateId = null;
-let adminRatesCache = [];
 
-// Load Rates
-async function loadAdminRates() {
-  if (!adminRatesSection) return;
-  adminRatesSection.innerHTML = "<p>Loading rates…</p>";
-
-  try {
-    const res = await fetch("/api/rates");
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    adminRatesCache = await res.json();
-
-    if (!adminRatesCache.length) {
-      adminRatesSection.innerHTML = "<p>No rates found.</p>";
+  async function deletePet(id) {
+    if (!confirm("Delete this pet and all its photos? This cannot be undone.")) {
       return;
     }
 
-    const rows = adminRatesCache
-      .map(
-        (r) => `
-        <tr>
-          <td>${escapeHtml(r.service_type || "")}</td>
-          <td>${escapeHtml(r.unit_type || "")}</td>
-          <td>$${Number(r.rate_per_unit).toFixed(2)}</td>
-          <td>${escapeHtml(r.description || "")}</td>
-          <td>${r.is_featured ? "Yes" : "No"}</td>
-          <td>
-            <button class="btn-small js-edit-rate" data-id="${r.id}">Edit</button>
-            <button class="btn-small btn-danger js-delete-rate" data-id="${r.id}">Delete</button>
-          </td>
-        </tr>`
-      )
-      .join("");
-
-    adminRatesSection.innerHTML = `
-      <h3>Service Rates</h3>
-      <button class="btn-primary js-add-rate" style="margin-bottom:15px;">+ Add New Rate</button>
-
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>Service</th>
-            <th>Unit</th>
-            <th>Price</th>
-            <th>Description</th>
-            <th>Featured?</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    `;
-  } catch (err) {
-    console.error("[Admin] Error loading rates", err);
-    adminRatesSection.innerHTML =
-      "<p class='admin-error'>Unable to load rates.</p>";
-  }
-}
-
-// Open Modal
-function openRateModal(rate) {
-  const modal = adminRateModal;
-  if (!modal) return;
-
-  if (rate) {
-    editingRateId = rate.id;
-    rateModalTitle.textContent = "Edit Rate";
-    rateServiceType.value = rate.service_type || "";
-    rateAmount.value = rate.rate_per_unit || "";
-    rateUnit.value = rate.unit_type || "";
-    rateDescription.value = rate.description || "";
-    rateFeatured.checked = !!rate.is_featured;
-  } else {
-    editingRateId = null;
-    rateModalTitle.textContent = "Add New Rate";
-    rateServiceType.value = "";
-    rateAmount.value = "";
-    rateUnit.value = "per_day";
-    rateDescription.value = "";
-    rateFeatured.checked = false;
+    try {
+      const res = await fetch(`/api/pets/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await loadAdminPets();
+    } catch (err) {
+      console.error("[Admin] Error deleting pet:", err);
+      alert("Couldn't delete pet.");
+    }
   }
 
-  modal.classList.remove("hidden");
-  modal.classList.add("show");
-  modal.setAttribute("aria-hidden", "false");
-  document.body.style.overflow = "hidden";
-}
+  // -----------------------------
+  // RATES TAB
+  // -----------------------------
+  async function loadAdminRates() {
+    if (!adminRatesSection) return;
+    adminRatesSection.innerHTML = "<p>Loading rates…</p>";
 
-// Close Modal
-function closeRateModal() {
-  adminRateModal.classList.remove("show");
-  adminRateModal.classList.add("hidden");
-  adminRateModal.setAttribute("aria-hidden", "true");
-  document.body.style.overflow = "";
-}
+    try {
+      const res = await fetch("/api/rates");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const rates = await res.json();
+      adminRatesCache = rates;
 
-// Save (Add/Update)
-async function saveRate(e) {
-  e.preventDefault();
+      if (!rates.length) {
+        adminRatesSection.innerHTML = `
+          <div class="admin-header-row">
+            <h3>Service Rates</h3>
+            <button type="button" class="btn-primary" id="addRateBtn">
+              + Add New Rate
+            </button>
+          </div>
+          <p>No rates found.</p>`;
+        const addBtn = adminRatesSection.querySelector("#addRateBtn");
+        if (addBtn) addBtn.addEventListener("click", () => openRateModalForNew());
+        return;
+      }
 
-  const payload = {
-    service_type: rateServiceType.value.trim(),
-    rate_per_unit: rateAmount.value.trim(),
-    unit_type: rateUnit.value,
-    description: rateDescription.value.trim(),
-    is_featured: rateFeatured.checked ? "true" : "false",
-  };
+      const rows = rates
+        .map((r) => {
+          const price = Number(r.rate_per_unit ?? 0).toFixed(2);
+          let unitLabel = r.unit_type || "";
+          if (unitLabel === "per_visit") unitLabel = "Per Visit";
+          if (unitLabel === "per_day") unitLabel = "Per Day";
+          if (unitLabel === "per_night") unitLabel = "Per Night";
 
-  try {
-    let url = "/api/rates";
-    let method = "POST";
+          return `
+            <tr data-id="${r.id}">
+              <td>${escapeHtml(r.service_type || "")}</td>
+              <td>${escapeHtml(unitLabel)}</td>
+              <td>$${price}</td>
+              <td>${escapeHtml(r.description || "")}</td>
+              <td>${r.is_featured ? "Yes" : "No"}</td>
+              <td>
+                <button type="button"
+                        class="btn-small js-edit-rate"
+                        data-id="${r.id}">
+                  Edit
+                </button>
+                <button type="button"
+                        class="btn-small btn-danger js-delete-rate"
+                        data-id="${r.id}">
+                  Delete
+                </button>
+              </td>
+            </tr>`;
+        })
+        .join("");
 
-    if (editingRateId) {
-      url = `/api/rates/${editingRateId}`;
-      method = "PUT";
+      adminRatesSection.innerHTML = `
+        <div class="admin-header-row">
+          <h3>Service Rates</h3>
+          <button type="button" class="btn-primary" id="addRateBtn">
+            + Add New Rate
+          </button>
+        </div>
+
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Unit</th>
+              <th>Price</th>
+              <th>Description</th>
+              <th>Featured?</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+
+      const addBtn = adminRatesSection.querySelector("#addRateBtn");
+      if (addBtn) addBtn.addEventListener("click", () => openRateModalForNew());
+    } catch (err) {
+      console.error("[Admin] Error loading rates", err);
+      adminRatesSection.innerHTML =
+        "<p class='admin-error'>Unable to load rates.</p>";
+    }
+  }
+
+  function handleRateTableClick(e) {
+    const editBtn = e.target.closest(".js-edit-rate");
+    const deleteBtn = e.target.closest(".js-delete-rate");
+
+    const id = editBtn?.dataset.id || deleteBtn?.dataset.id;
+    if (!id) return;
+
+    if (editBtn) {
+      e.preventDefault();
+      openRateModalForEdit(id);
+    } else if (deleteBtn) {
+      e.preventDefault();
+      deleteRate(id);
+    }
+  }
+
+  function openRateModalForNew() {
+    if (!adminRateModal) return;
+
+    rateModalForm.dataset.mode = "create";
+    delete rateModalForm.dataset.rateId;
+
+    rateModalTitle.textContent = "New Rate";
+    rateServiceTypeInput.value = "";
+    rateAmountInput.value = "";
+    rateUnitSelect.value = "per_visit";
+    rateDescriptionInput.value = "";
+    rateFeaturedCheckbox.checked = false;
+
+    adminRateModal.classList.remove("hidden");
+    adminRateModal.classList.add("show");
+    adminRateModal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function openRateModalForEdit(id) {
+    if (!adminRateModal) return;
+
+    const rate = adminRatesCache.find((r) => String(r.id) === String(id));
+    if (!rate) {
+      alert("Couldn't find that rate.");
+      return;
     }
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    rateModalForm.dataset.mode = "edit";
+    rateModalForm.dataset.rateId = String(id);
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    rateModalTitle.textContent = "Edit Rate";
+    rateServiceTypeInput.value = rate.service_type || "";
+    rateAmountInput.value = rate.rate_per_unit ?? "";
+    rateUnitSelect.value = rate.unit_type || "per_visit";
+    rateDescriptionInput.value = rate.description || "";
+    rateFeaturedCheckbox.checked = !!rate.is_featured;
 
-    closeRateModal();
-    await loadAdminRates();
-  } catch (err) {
-    console.error("[Admin] Error saving rate:", err);
-    alert("Could not save rate.");
-  }
-}
-
-// Delete rate
-async function deleteRate(id) {
-  if (!confirm("Delete this rate? This cannot be undone.")) return;
-
-  try {
-    const res = await fetch(`/api/rates/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    await loadAdminRates();
-  } catch (err) {
-    console.error("[Admin] Error deleting rate:", err);
-    alert("Could not delete rate.");
-  }
-}
-
-// Handle button clicks inside the rate table
-async function handleRateActions(e) {
-  const addBtn = e.target.closest(".js-add-rate");
-  const editBtn = e.target.closest(".js-edit-rate");
-  const deleteBtn = e.target.closest(".js-delete-rate");
-
-  if (addBtn) {
-    openRateModal(null);
-    return;
+    adminRateModal.classList.remove("hidden");
+    adminRateModal.classList.add("show");
+    adminRateModal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
   }
 
-  const id = editBtn?.dataset.id || deleteBtn?.dataset.id;
-  if (!id) return;
-
-  if (editBtn) {
-    const rate = adminRatesCache.find((r) => String(r.id) === String(id));
-    openRateModal(rate);
-    return;
+  function closeRateModal() {
+    if (!adminRateModal) return;
+    adminRateModal.classList.remove("show");
+    adminRateModal.classList.add("hidden");
+    adminRateModal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
   }
 
-  if (deleteBtn) {
-    await deleteRate(id);
+  async function handleRateFormSubmit(e) {
+    e.preventDefault();
+    if (!rateModalForm) return;
+
+    const mode  = rateModalForm.dataset.mode || "create";
+    const rateId = rateModalForm.dataset.rateId;
+
+    const serviceType = rateServiceTypeInput.value.trim();
+    const amountStr   = rateAmountInput.value.trim();
+    const unit        = rateUnitSelect.value;
+    const description = rateDescriptionInput.value.trim();
+    const isFeatured  = rateFeaturedCheckbox.checked;
+
+    if (!serviceType || !amountStr) {
+      alert("Please enter a service name and rate.");
+      return;
+    }
+
+    const amount = Number(amountStr);
+    if (Number.isNaN(amount)) {
+      alert("Please enter a valid number for rate.");
+      return;
+    }
+
+    const payload = {
+      service_type: serviceType,
+      rate_per_unit: amount,
+      unit_type: unit,
+      description,
+      is_featured: isFeatured ? "true" : "false",
+    };
+
+    try {
+      let url = "/api/rates";
+      let method = "POST";
+      if (mode === "edit" && rateId) {
+        url = `/api/rates/${rateId}`;
+        method = "PUT";
+      }
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      closeRateModal();
+      await loadAdminRates();
+    } catch (err) {
+      console.error("[Admin] Error saving rate:", err);
+      alert("Couldn't save rate.");
+    }
   }
-}
 
-// Attach listeners on DOM loaded
-document.addEventListener("DOMContentLoaded", () => {
-  rateModalClose?.addEventListener("click", closeRateModal);
-  rateModalCancel?.addEventListener("click", closeRateModal);
-  rateModalForm?.addEventListener("submit", saveRate);
+  async function deleteRate(id) {
+    if (!confirm("Delete this rate? This cannot be undone.")) return;
 
-  adminRatesSection?.addEventListener("click", handleRateActions);
-});  
+    try {
+      const res = await fetch(`/api/rates/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      await loadAdminRates();
+    } catch (err) {
+      console.error("[Admin] Error deleting rate:", err);
+      alert("Couldn't delete rate.");
+    }
+  }
+
   // -----------------------------
   // CONTACTS TAB
   // -----------------------------
@@ -756,37 +802,35 @@ document.addEventListener("DOMContentLoaded", () => {
       const contacts = await res.json();
 
       if (!contacts.length) {
-        adminContactsSection.innerHTML = "<p>No contact requests.</p>";
+        adminContactsSection.innerHTML = "<p>No contact requests yet.</p>";
         return;
       }
 
       const rows = contacts
         .map(
           (c) => `
-          <tr>
-            <td>${escapeHtml(c.name || "")}</td>
-            <td>${escapeHtml(c.email || "")}</td>
-            <td>${escapeHtml(c.phone || "")}</td>
-            <td>${escapeHtml(c.service || "")}</td>
-            <td>${escapeHtml(c.start_date || "")}</td>
-            <td>${escapeHtml(c.message || "")}</td>
-            <td class="admin-actions">
-              <button
-                type="button"
-                class="btn-primary"
-                data-id="${c.id}"
-                data-action="contacted">
-                Mark Contacted
-              </button>
-              <button
-                type="button"
-                class="btn-danger"
-                data-id="${c.id}"
-                data-action="delete-contact">
-                Delete
-              </button>
-            </td>
-          </tr>`
+            <tr data-id="${c.id}">
+              <td>${escapeHtml(c.name || "")}</td>
+              <td>${escapeHtml(c.email || "")}</td>
+              <td>${escapeHtml(c.phone || "")}</td>
+              <td>${escapeHtml(c.service || "")}</td>
+              <td>${escapeHtml(c.start_date || "")}</td>
+              <td>${escapeHtml(c.message || "")}</td>
+              <td>
+                <button type="button"
+                        class="btn-small"
+                        data-action="contacted"
+                        data-id="${c.id}">
+                  Contacted
+                </button>
+                <button type="button"
+                        class="btn-small btn-danger"
+                        data-action="delete"
+                        data-id="${c.id}">
+                  Delete
+                </button>
+              </td>
+            </tr>`
         )
         .join("");
 
@@ -799,7 +843,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <th>Email</th>
               <th>Phone</th>
               <th>Service</th>
-              <th>Start Date</th>
+              <th>Start date</th>
               <th>Details</th>
               <th>Actions</th>
             </tr>
@@ -813,6 +857,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function handleContactActions(e) {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+
+    if (!id || !action) return;
+
+    if (action === "contacted") {
+      markContacted(id);
+    } else if (action === "delete") {
+      deleteContact(id);
+    }
+  }
+
   async function markContacted(id) {
     try {
       const res = await fetch(`/api/admin/contacts/${id}/contacted`, {
@@ -823,7 +883,7 @@ document.addEventListener("DOMContentLoaded", () => {
       await loadAdminContacts();
     } catch (err) {
       console.error("[Admin] Error marking contact as contacted:", err);
-      alert("Couldn't mark contact as contacted.");
+      alert("Couldn't mark as contacted.");
     }
   }
 
@@ -843,24 +903,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-    function handlePetActions(e) {
-    const editBtn = e.target.closest(".js-edit-pet");
-    const deleteBtn = e.target.closest(".js-delete-pet");
-
-    if (!editBtn && !deleteBtn) return;
-
-    const id = editBtn?.dataset.id || deleteBtn?.dataset.id;
-    if (!id) return;
-
-    if (editBtn) {
-      e.preventDefault();
-      openPetForEdit(id);
-    } else if (deleteBtn) {
-      e.preventDefault();
-      if (!confirm("Delete this pet and all its images? This cannot be undone.")) return;
-      deletePet(id);
-    }
-  }
   // -----------------------------
   // REVIEWS TAB
   // -----------------------------
@@ -884,34 +926,34 @@ document.addEventListener("DOMContentLoaded", () => {
       const pendingRows = pending
         .map(
           (r) => `
-          <tr data-id="${r.id}">
-            <td>${escapeHtml(r.customer_name || "")}</td>
-            <td>${"★".repeat(r.rating || 0)}</td>
-            <td>${escapeHtml(r.review_text || "")}</td>
-            <td>
-              <button type="button"
-                      class="btn-small js-approve-review"
-                      data-id="${r.id}">
-                Approve
-              </button>
-              <button type="button"
-                      class="btn-small btn-danger js-delete-review"
-                      data-id="${r.id}">
-                Delete
-              </button>
-            </td>
-          </tr>`
+            <tr data-id="${r.id}">
+              <td>${escapeHtml(r.customer_name || "")}</td>
+              <td>${"★".repeat(r.rating || 0)}</td>
+              <td>${escapeHtml(r.review_text || "")}</td>
+              <td>
+                <button type="button"
+                        class="btn-small js-approve-review"
+                        data-id="${r.id}">
+                  Approve
+                </button>
+                <button type="button"
+                        class="btn-small btn-danger js-delete-review"
+                        data-id="${r.id}">
+                  Delete
+                </button>
+              </td>
+            </tr>`
         )
         .join("");
 
       const approvedRows = approved
         .map(
           (r) => `
-          <tr>
-            <td>${escapeHtml(r.customer_name || "")}</td>
-            <td>${"★".repeat(r.rating || 0)}</td>
-            <td>${escapeHtml(r.review_text || "")}</td>
-          </tr>`
+            <tr>
+              <td>${escapeHtml(r.customer_name || "")}</td>
+              <td>${"★".repeat(r.rating || 0)}</td>
+              <td>${escapeHtml(r.review_text || "")}</td>
+            </tr>`
         )
         .join("");
 
@@ -957,7 +999,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function handleReviewActions(e) {
     const approveBtn = e.target.closest(".js-approve-review");
-    const deleteBtn = e.target.closest(".js-delete-review");
+    const deleteBtn  = e.target.closest(".js-delete-review");
 
     const id = approveBtn?.dataset.id || deleteBtn?.dataset.id;
     if (!id) return;
