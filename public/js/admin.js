@@ -357,209 +357,290 @@
     }
   }
 
-  // -----------------------------
-  // PETS TAB
-  // -----------------------------
-  async function loadAdminPets() {
-    if (!adminPetsSection) return;
-    adminPetsSection.innerHTML = "<p>Loading pets…</p>";
+// -----------------------------
+// PETS TAB (WITH IMAGE MANAGER)
+// -----------------------------
 
-    try {
-      const res = await fetch("/api/pets");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const pets = await res.json();
+async function loadAdminPets() {
+  if (!adminPetsSection) return;
+  adminPetsSection.innerHTML = "<p>Loading pets…</p>";
 
-      if (!pets.length) {
-        adminPetsSection.innerHTML = `
-          <div class="admin-header-row">
-            <h3>Pets</h3>
-            <button type="button" class="btn-primary" id="addPetBtn">
-              + Add Pet
-            </button>
+  try {
+    const res = await fetch("/api/pets");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const pets = await res.json();
+
+    const header = `
+      <div class="admin-header-row">
+        <h3>Pets</h3>
+        <button type="button" class="btn-primary" id="addPetBtn">
+          + Add Pet
+        </button>
+      </div>
+    `;
+
+    if (!pets.length) {
+      adminPetsSection.innerHTML = header + "<p>No pets found.</p>";
+      adminPetsSection.querySelector("#addPetBtn")
+        .addEventListener("click", openPetModalForNew);
+      return;
+    }
+
+    const rows = pets.map(p => `
+      <tr data-id="${p.id}">
+        <td>${escapeHtml(p.pet_name || "")}</td>
+        <td>${p.is_dorothy_pet ? "Dorothy" : "Client"}</td>
+        <td>${escapeHtml(p.story_description || "")}</td>
+        <td>${(p.images || []).length}</td>
+        <td>
+          <button class="btn-small js-edit-pet" data-id="${p.id}">Edit</button>
+          <button class="btn-small btn-danger js-delete-pet" data-id="${p.id}">Delete</button>
+        </td>
+      </tr>
+    `).join("");
+
+    adminPetsSection.innerHTML = `
+      ${header}
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Owner</th>
+            <th>Story</th>
+            <th>Photos</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+
+    document.querySelector("#addPetBtn")
+      .addEventListener("click", openPetModalForNew);
+
+  } catch (err) {
+    console.error("[Admin] Error loading pets", err);
+    adminPetsSection.innerHTML = "<p class='admin-error'>Unable to load pets.</p>";
+  }
+}
+
+function handlePetTableClick(e) {
+  const editBtn = e.target.closest(".js-edit-pet");
+  const deleteBtn = e.target.closest(".js-delete-pet");
+  const id = editBtn?.dataset.id || deleteBtn?.dataset.id;
+  if (!id) return;
+
+  if (editBtn) openPetModalForEdit(id);
+  if (deleteBtn) deletePet(id);
+}
+
+// ---------------------------------
+// MODAL — NEW PET
+// ---------------------------------
+function openPetModalForNew() {
+  petForm.dataset.mode = "create";
+  delete petForm.dataset.petId;
+
+  petModalTitle.textContent = "Add Pet";
+  petNameInput.value = "";
+  petStoryInput.value = "";
+  petIsDorothyInput.checked = false;
+  petImagesInput.value = "";
+
+  renderPetImageManager([]);  // empty
+
+  showPetModal();
+}
+
+// ---------------------------------
+// MODAL — EDIT PET
+// ---------------------------------
+async function openPetModalForEdit(id) {
+  try {
+    const res = await fetch(`/api/pets/${id}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const pet = await res.json();
+
+    petForm.dataset.mode = "edit";
+    petForm.dataset.petId = id;
+
+    petModalTitle.textContent = "Edit Pet";
+    petNameInput.value = pet.pet_name || "";
+    petStoryInput.value = pet.story_description || "";
+    petIsDorothyInput.checked = !!pet.is_dorothy_pet;
+
+    renderPetImageManager(pet.images);
+
+    showPetModal();
+  } catch (err) {
+    console.error("[Admin] Error loading pet:", err);
+    alert("Error loading pet details.");
+  }
+}
+
+// ---------------------------------
+// IMAGE MANAGER RENDERING
+// ---------------------------------
+function renderPetImageManager(images) {
+  const container = document.getElementById("petImageManager");
+  if (!container) return;
+
+  if (!images.length) {
+    container.innerHTML = "<p>No images uploaded yet.</p>";
+    return;
+  }
+
+  container.innerHTML = `
+    <ul id="petImageList" class="image-list">
+      ${images.map(img => `
+        <li class="image-item" data-id="${img.id}">
+          <img src="${img.image_url}" class="thumb">
+          <div class="img-actions">
+            <button class="btn-small btn-danger js-delete-img" data-id="${img.id}">Delete</button>
+            <span class="drag-handle">☰</span>
           </div>
-          <p>No pets found.</p>`;
-        const addBtn = adminPetsSection.querySelector("#addPetBtn");
-        if (addBtn) addBtn.addEventListener("click", () => openPetModalForNew());
-        return;
-      }
+        </li>
+      `).join("")}
+    </ul>
+    <p class="modal-help-text">Drag images to reorder them. Delete will remove from S3 + database.</p>
+  `;
 
-      const rows = pets
-        .map(
-          (p) => `
-            <tr data-id="${p.id}">
-              <td>${escapeHtml(p.pet_name || "")}</td>
-              <td>${p.is_dorothy_pet ? "Dorothy" : "Client"}</td>
-              <td>${escapeHtml(p.story_description || "")}</td>
-              <td>${(p.images || []).length}</td>
-              <td>
-                <button type="button"
-                        class="btn-small js-edit-pet"
-                        data-id="${p.id}">
-                  Edit
-                </button>
-                <button type="button"
-                        class="btn-small btn-danger js-delete-pet"
-                        data-id="${p.id}">
-                  Delete
-                </button>
-              </td>
-            </tr>`
-        )
-        .join("");
+  enableImageDragSorting();
+}
 
-      adminPetsSection.innerHTML = `
-        <div class="admin-header-row">
-          <h3>Pets</h3>
-          <button type="button" class="btn-primary" id="addPetBtn">
-            + Add Pet
-          </button>
-        </div>
+// ---------------------------------
+// DRAG & DROP SORTING FOR IMAGES
+// ---------------------------------
+function enableImageDragSorting() {
+  const list = document.getElementById("petImageList");
+  if (!list) return;
 
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Owner</th>
-              <th>Story</th>
-              <th># Photos</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>`;
+  let dragItem = null;
 
-      const addBtn = adminPetsSection.querySelector("#addPetBtn");
-      if (addBtn) addBtn.addEventListener("click", () => openPetModalForNew());
-    } catch (err) {
-      console.error("[Admin] Error loading pets", err);
-      adminPetsSection.innerHTML =
-        "<p class='admin-error'>Unable to load pets.</p>";
-    }
-  }
+  list.querySelectorAll(".image-item").forEach(item => {
+    item.draggable = true;
 
-  function handlePetTableClick(e) {
-    const editBtn = e.target.closest(".js-edit-pet");
-    const deleteBtn = e.target.closest(".js-delete-pet");
+    item.addEventListener("dragstart", (e) => {
+      dragItem = item;
+      e.dataTransfer.effectAllowed = "move";
+    });
 
-    const id = editBtn?.dataset.id || deleteBtn?.dataset.id;
-    if (!id) return;
-
-    if (editBtn) {
+    item.addEventListener("dragover", (e) => {
       e.preventDefault();
-      openPetModalForEdit(id);
-    } else if (deleteBtn) {
-      e.preventDefault();
-      deletePet(id);
-    }
+      const after = (e.clientY - item.getBoundingClientRect().top) > item.offsetHeight / 2;
+      list.insertBefore(dragItem, after ? item.nextSibling : item);
+    });
+
+    item.addEventListener("dragend", () => (dragItem = null));
+  });
+}
+
+// ---------------------------------
+// PET IMAGE DELETE
+// ---------------------------------
+petModal.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".js-delete-img");
+  if (!btn) return;
+
+  const imgId = btn.dataset.id;
+  const petId = petForm.dataset.petId;
+
+  if (!confirm("Delete this image permanently?")) return;
+
+  try {
+    const res = await fetch(`/api/pets/${petId}/images/${imgId}`, { method: "DELETE" });
+    if (!res.ok) throw new Error();
+
+    const refreshed = await (await fetch(`/api/pets/${petId}`)).json();
+    renderPetImageManager(refreshed.images);
+  } catch (err) {
+    console.error("[Admin] Delete image failed", err);
+    alert("Couldn't delete image.");
   }
+});
 
-  function openPetModalForNew() {
-    if (!petModal) return;
+// ---------------------------------
+// SAVE PET (includes reorder & new uploads)
+// ---------------------------------
+async function handlePetFormSubmit(e) {
+  e.preventDefault();
 
-    petForm.dataset.mode = "create";
-    delete petForm.dataset.petId;
+  const mode = petForm.dataset.mode;
+  const petId = petForm.dataset.petId;
 
-    petModalTitle.textContent = "Add Pet";
-    petNameInput.value = "";
-    petStoryInput.value = "";
-    petIsDorothyInput.checked = false;
-    if (petImagesInput) petImagesInput.value = "";
+  try {
+    // STEP 1 — Gather text + checkbox fields
+    const fd = new FormData();
+    fd.append("pet_name", petNameInput.value.trim());
+    fd.append("story_description", petStoryInput.value.trim());
+    fd.append("is_dorothy_pet", petIsDorothyInput.checked ? "true" : "false");
 
-    petModal.classList.remove("hidden");
-    petModal.classList.add("show");
-    petModal.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
-  }
-
-  async function openPetModalForEdit(id) {
-    if (!petModal) return;
-
-    try {
-      const res = await fetch(`/api/pets/${id}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const pet = await res.json();
-
-      petForm.dataset.mode = "edit";
-      petForm.dataset.petId = String(id);
-
-      petModalTitle.textContent = "Edit Pet";
-      petNameInput.value = pet.pet_name || "";
-      petStoryInput.value = pet.story_description || "";
-      petIsDorothyInput.checked = !!pet.is_dorothy_pet;
-
-      if (petImagesInput) petImagesInput.value = "";
-
-      petModal.classList.remove("hidden");
-      petModal.classList.add("show");
-      petModal.setAttribute("aria-hidden", "false");
-      document.body.style.overflow = "hidden";
-    } catch (err) {
-      console.error("[Admin] Error loading pet for edit:", err);
-      alert("Couldn't load pet details.");
-    }
-  }
-
-  function closePetModal() {
-    if (!petModal) return;
-    petModal.classList.remove("show");
-    petModal.classList.add("hidden");
-    petModal.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
-  }
-
-  async function handlePetFormSubmit(e) {
-    e.preventDefault();
-    if (!petForm) return;
-
-    const mode  = petForm.dataset.mode || "create";
-    const petId = petForm.dataset.petId;
-
-    const name = petNameInput.value.trim();
-    if (!name) {
-      alert("Please enter a pet name.");
-      return;
+    // STEP 2 — Add new images (if any)
+    for (const file of petImagesInput.files) {
+      fd.append("images", file);
     }
 
-    try {
-      const fd = new FormData(petForm);
+    // STEP 3 — Save/update pet
+    const url = mode === "edit" ? `/api/pets/${petId}` : "/api/pets";
+    const method = mode === "edit" ? "PUT" : "POST";
 
-      fd.set("pet_name", name);
-      fd.set("story_description", petStoryInput.value.trim());
-      fd.set("is_dorothy_pet", petIsDorothyInput.checked ? "true" : "false");
+    const res = await fetch(url, { method, body: fd });
+    if (!res.ok) throw new Error();
 
-      let url = "/api/pets";
-      let method = "POST";
-      if (mode === "edit" && petId) {
-        url = `/api/pets/${petId}`;
-        method = "PUT";
-      }
+    // If editing → send reorder
+    if (mode === "edit") {
+      const orderedIds = [...document.querySelectorAll(".image-item")]
+        .map(el => el.dataset.id);
 
-      const res = await fetch(url, { method, body: fd });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      closePetModal();
-      await loadAdminPets();
-    } catch (err) {
-      console.error("[Admin] Error saving pet:", err);
-      alert("Couldn't save pet. Please try again.");
+      await fetch(`/api/pets/${petId}/images/reorder`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: orderedIds }),
+      });
     }
+
+    closePetModal();
+    loadAdminPets();
+  } catch (err) {
+    console.error("[Admin] save pet failed", err);
+    alert("Couldn't save pet.");
   }
+}
 
-  async function deletePet(id) {
-    if (!confirm("Delete this pet and all its photos? This cannot be undone.")) {
-      return;
-    }
+// ---------------------------------
+// DELETE PET
+// ---------------------------------
+async function deletePet(id) {
+  if (!confirm("Delete pet and ALL images?")) return;
 
-    try {
-      const res = await fetch(`/api/pets/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      await loadAdminPets();
-    } catch (err) {
-      console.error("[Admin] Error deleting pet:", err);
-      alert("Couldn't delete pet.");
-    }
+  try {
+    const res = await fetch(`/api/pets/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error();
+
+    loadAdminPets();
+  } catch (err) {
+    console.error("[Admin] delete pet failed", err);
+    alert("Couldn't delete pet.");
   }
+}
 
+// ---------------------------------
+// SHOW / HIDE PET MODAL
+// ---------------------------------
+function showPetModal() {
+  petModal.classList.remove("hidden");
+  petModal.classList.add("show");
+  petModal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closePetModal() {
+  petModal.classList.remove("show");
+  petModal.classList.add("hidden");
+  petModal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+  
   // -----------------------------
   // RATES TAB
   // -----------------------------
