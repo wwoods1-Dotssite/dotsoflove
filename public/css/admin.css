@@ -189,6 +189,41 @@
   filter: brightness(1.05);
 }
 
+.image-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+.image-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  margin-bottom: 6px;
+  border-radius: 6px;
+}
+
+.image-item .thumb {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.img-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.drag-handle {
+  cursor: grab;
+  font-size: 20px;
+  opacity: 0.6;
+}
 
 /* ---------------------------------
    LISTS / CARDS
