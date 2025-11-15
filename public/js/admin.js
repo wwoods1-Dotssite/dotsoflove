@@ -180,7 +180,7 @@
       console.log("[Admin] Attempting admin login…");
 
       // TODO: adjust URL if your backend uses a different login endpoint
-      const res = await fetch("/api/admin/login", {
+      const res = await fetch("/api/admin/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })
