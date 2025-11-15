@@ -466,7 +466,7 @@ app.post("/api/contact", async (req, res) => {
 // ----------------------
 // Contacts (Admin Enhancements)
 // ----------------------
-app.get("/api/contacts", async (_req, res) => {
+app.get("/api/admin/contacts", async (_req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM contacts WHERE contacted = false ORDER BY created_at ASC"
@@ -478,13 +478,29 @@ app.get("/api/contacts", async (_req, res) => {
   }
 });
 
-app.put("/api/contacts/:id/contacted", async (req, res) => {
+app.put("/api/admin/contacts/:id/contacted", async (req, res) => {
   try {
     const { id } = req.params;
     await pool.query("UPDATE contacts SET contacted = true WHERE id = $1", [id]);
     res.json({ success: true });
   } catch (err) {
     console.error("❌ Update contact:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+app.delete("/api/admin/contacts/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query(
+      `DELETE FROM contacts
+       WHERE id = $1`,
+      [id]
+    );
+    console.log("🗑️ Deleted contact:", id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Error deleting contact:", err);
     res.status(500).json({ success: false });
   }
 });
