@@ -777,6 +777,103 @@
   margin-top: 0.25rem;
 }
 
+/* -------------------------------------------
+   Modal scroll behavior
+--------------------------------------------*/
+#petModal .modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+  padding-bottom: 16px;
+}
+
+#petModal .modal-body {
+  max-height: calc(90vh - 140px);
+  overflow-y: auto;
+  padding-right: 14px;
+}
+
+/* -------------------------------------------
+   Image Grid Layout
+--------------------------------------------*/
+#petImageList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.image-item {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: box-shadow 0.2s ease;
+}
+
+.image-item:hover {
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+}
+
+.thumb {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+/* -------------------------------------------
+   Action bar (Delete + Drag)
+--------------------------------------------*/
+.img-actions {
+  width: 100%;
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* -------------------------------------------
+   Delete Icon Button
+--------------------------------------------*/
+.btn-img-delete {
+  background: #e74c3c;
+  border: none;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  transition: background 0.2s ease;
+}
+
+.btn-img-delete:hover {
+  background: #c0392b;
+}
+
+.btn-img-delete i {
+  pointer-events: none;
+}
+
+/* -------------------------------------------
+   Drag Handle Icon
+--------------------------------------------*/
+.drag-handle {
+  cursor: grab;
+  font-size: 20px;
+  opacity: 0.65;
+  transition: opacity 0.2s ease;
+}
+
+.drag-handle:hover {
+  opacity: 1;
+}
+
 /*----------------------------
    RESPONSIVE
 ---------------------------------- */
