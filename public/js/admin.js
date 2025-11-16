@@ -502,32 +502,33 @@
 
     const petId = petForm?.dataset.petId || "";
 
-    container.innerHTML = `
-      <ul id="petImageList" class="image-list">
-        ${images
-          .map(
-            (img) => `
-          <li class="image-item" data-id="${img.id}">
-            <img src="${escapeHtml(img.image_url)}" class="thumb" alt="">
-            <div class="img-actions">
-              <button
-                type="button"
-                class="btn-small btn-danger js-delete-img"
-                data-img-id="${img.id}"
-                data-pet-id="${petId}"
-              >
-                Delete
-              </button>
-              <span class="drag-handle" title="Drag to reorder">☰</span>
-            </div>
-          </li>`
-          )
-          .join("")}
-      </ul>
-      <p class="modal-help-text">
-        Drag images to reorder them. Deleting removes them from S3 and the database.
-      </p>
-    `;
+container.innerHTML = `
+  <ul id="petImageList">
+    ${images
+      .map(
+        (img) => `
+        <li class="image-item" data-id="${img.id}">
+          <img src="${img.image_url}" class="thumb">
+
+          <div class="img-actions">
+            <button 
+              type="button" 
+              class="btn-img-delete js-delete-img" 
+              data-img-id="${img.id}" 
+              data-pet-id="${img.pet_id}"
+            >
+              <i class="fas fa-trash"></i> Delete
+            </button>
+
+            <span class="drag-handle">⋮⋮</span>
+          </div>
+        </li>
+      `
+      )
+      .join("")}
+  </ul>
+  <p class="modal-help-text">Drag images to reorder. Delete removes from S3 + Database.</p>
+`;
 
     enableImageDragSorting();
   }
