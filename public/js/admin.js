@@ -219,6 +219,37 @@
       adminPetsSection.addEventListener("click", handlePetTableClick);
     }
   }
+  /* 👇 Pet Modal Delete photos👇 */
+if (petModal) {
+  // Delegate clicks inside the pet modal for image delete buttons
+  petModal.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".js-delete-img");
+    if (!btn) return;
+
+    e.preventDefault();
+
+    const imgId = btn.dataset.imgId;
+    const petId = btn.dataset.petId;
+
+    if (!imgId || !petId) return;
+
+    if (!confirm("Delete this photo? This cannot be undone.")) return;
+
+    try {
+      const res = await fetch(`/api/pets/${petId}/images/${imgId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      // Remove the thumbnail from the DOM
+      const thumb = btn.closest(".pet-img-thumb");
+      if (thumb) thumb.remove();
+    } catch (err) {
+      console.error("[Admin] Error deleting image:", err);
+      alert("Couldn't delete image.");
+    }
+  });
+}
 
   // -----------------------------
   // Login modal helpers
@@ -478,6 +509,24 @@ async function openPetModalForEdit(id) {
   }
 }
 
+existingImagesContainer.innerHTML = pet.images
+  .map(
+    (img) => `
+      <div class="pet-img-thumb">
+        <img src="${escapeHtml(img.image_url)}" alt="">
+        <button
+          type="button"
+          class="btn-danger btn-xs js-delete-img"
+          data-img-id="${img.id}"
+          data-pet-id="${pet.id}"
+        >
+          Delete
+        </button>
+      </div>
+    `
+  )
+  .join("");
+
 // ---------------------------------
 // IMAGE MANAGER RENDERING
 // ---------------------------------
@@ -535,47 +584,6 @@ function enableImageDragSorting() {
   });
 }
 
-// ---------------------------------
-// PET IMAGE DELETE
-// ---------------------------------
-petModal.addEventListener("click", async (e) => {
-  const btn = e.target.closest(".js-delete-img");
-  if (!btn) return;
-
-  // 🛑 Stop this click from submitting the form or closing the modal
-  e.preventDefault();
-  e.stopPropagation();
-
-  const imgId = btn.dataset.id;
-  const petId = petForm?.dataset.petId;
-
-  if (!petId || !imgId) {
-    console.error("[Admin] Missing petId or imgId for delete", { petId, imgId });
-    return;
-  }
-
-  if (!window.confirm("Delete this image permanently?")) return;
-
-  try {
-    console.log("[Admin] Deleting pet image", { petId, imgId });
-
-    const res = await fetch(`/api/pets/${petId}/images/${imgId}`, {
-      method: "DELETE",
-    });
-
-    if (!res.ok) {
-      console.error("[Admin] Delete image HTTP error:", res.status);
-      throw new Error(`HTTP ${res.status}`);
-    }
-
-    // Re-fetch the pet to refresh the image list
-    const refreshed = await (await fetch(`/api/pets/${petId}`)).json();
-    renderPetImageManager(refreshed.images);
-  } catch (err) {
-    console.error("[Admin] Delete image failed", err);
-    alert("Couldn't delete image.");
-  }
-});
 
 // ---------------------------------
 // SAVE PET (includes reorder & new uploads)
